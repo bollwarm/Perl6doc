@@ -1,5 +1,10 @@
+language:
+  - minimal
+
 os:
-    - linux
+  - linux
+
+dist: bionic
 
 cache:
     directories:
@@ -7,6 +12,7 @@ cache:
         - html
         - highlights/node_modules
         - $HOME/.rakudobrew
+
 
 services:
   - docker
@@ -31,5 +37,4 @@ script:
 
 matrix:
     include:
-        - env: BUILDENV=whateverable
         - env: BUILDENV=docker

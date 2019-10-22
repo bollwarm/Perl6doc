@@ -1,10 +1,10 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("domain-specific")
 
 =TITLE class Match
 
 =SUBTITLE Result of a successful regex match
 
-    class Match is Capture is Cool {}
+    class Match is Capture is Cool does NQPMatchRole {}
 
 C<Match> objects are the result of a successful regex match, this does include
 any zero-width match. They store a reference to the original string (C<.orig>),
@@ -13,23 +13,26 @@ in the original string, and a payload referred to as I<AST> (abstract syntax
 tree), which can be used to build data structures from complex regexes and
 grammars.
 
-The last match is also stored in the X<C<$¢>> C<Match> object:
+The last match is also stored in the X<C<$¢>> C<Match> object, which is
+lexically scoped to the regex, that is, only available from within the regular
+expression, as shown here:
 
     my $c;
     'abc' ~~ /.$${ $c = $¢ }/;
     say $c; # OUTPUT: «｢c｣␤»
 
 In this case, we are running the code among curly braces when the match occurs,
-in this case the last letter in the string; C<$c> gets the value of the cursor
-C<$¢>, which contains the C<Match>. This C<$¢> offers a way of capturing the
-Match inside a regular expression; if you are not going to use it inside that
-you can simply use L<C<$/>|/syntax/$$SOLIDUS>
+in this case the last letter in the string (actually, the last, indicated by the
+double C<$>, character); C<$c> gets the value of the cursor C<$¢>, which
+contains the C<Match>; when used with C<say>, the C<Match> is stringified by
+calling C<.Str> on it. This C<$¢> offers a way of capturing the Match inside a
+regular expression; outside, you need to use L<C<$/>|/syntax/$$SOLIDUS>
 
     my $c; 'camelia' ~~ /<[ l m ]> {$c = $¢}/;
     say $c; # OUTPUT: «｢m｣␤»
     say $/; # OUTPUT: «｢m｣␤»
 
-B<Note>: This feature works only from Perl 6 version 2018.02. It would have
+B<Note>: This feature works only from Raku version 2018.02. It would have
 returned C<Nil> with any previous version. Alternatively and prior to that
 version, you could use C<$/> which, inside the regex, has the same value:
 
@@ -38,18 +41,76 @@ version, you could use C<$/> which, inside the regex, has the same value:
 The main difference between C<$/> and C<$¢> is scope: the latter only has a
 value inside the regex:
 
-    '123' ~~ / (\d) { say $/; say $¢; } \d+ /; # OUTPUT: «｢1｣␤ 0 => ｢1｣␤｢1｣␤ 0 => ｢1｣␤»
-    say "¢ → ", $¢, "/ is $/"; ; # OUTPUT: «¢ → Nil/ is 123␤»
+=begin code
+'123' ~~ / (\d) { say $/; say $¢; } \d+ /; # OUTPUT: «｢1｣␤ 0 => ｢1｣␤｢1｣␤ 0 => ｢1｣␤»
+say "¢ → ", $¢, "/ is $/"; ; # OUTPUT: «¢ → Nil/ is 123␤»
+=end code
 
 Submatches are also C<Match> objects (or lists of C<Match> objects,
 if the corresponding regex was quantified), so each match object
 can be seen as the root of a tree of match objects.
 
+A C<Match> object can also hold the result of a match in progress
+(while the grammar engine is running), in which case the C<pos> method
+returns the current position. This view on C<Match> objects is only visible
+if you call code from within a regex.
+
+B<Note (deprecated)>: There is a synonym for this class, X<C<Cursor>|Cursor>,
+ defined as:
+
+        my constant Cursor = Match
+
+Initially, it was used to keep track of initial position in regex matches. In
+current versions, it's an alias for L<C<Match>|/type/Match>.
+
 =head1 Methods
+
+=head2 method pos
+
+    method pos()
+
+Returns the current position as a string index into C<Match.target> for a regex match
+in progress:
+
+    my $a = 'abcdef';
+    $a ~~ /b. {say $/.pos }../; say $/.pos;     # OUTPUT: «3␤»
+
+You should not use this method on finished Match, as the output can be implementation
+specific.
+
+=head2 method target
+
+    method target()
+
+Returns a string representation of the object against which the regex matches. This is the value that the regex engine works with internally.
+
+    my $a = "þor" ~~ /o/;
+    say $a.target # OUTPUT: «þor␤»
+
+=head2 method chars
+
+Returns the numbers of characters in the matched string.
+
+Returns the same as C<.Str.chars>.
+
+=head2 method clone
+
+Defined as:
+
+    method clone()
+
+Clones the C<Match> object.
 
 =head2 method orig
 
-Returns the original string that the regex was matched against.
+Returns the original input to the regex engine, which is usually a string,
+but doesn't need to be (could be anything that can be coerced to a string):
+
+    42 ~~ /.+/;
+    say $/.orig;            # OUTPUT: «42»
+    say $/.orig.^name;      # OUTPUT: «Int»
+
+See L<#method target> for a close equivalent that always returns a string.
 
 =head2 method from
 
@@ -61,14 +122,39 @@ Returns the index of the end position of the match.
 
 =head2 method made
 
-Returns the payload that was set with L<#method make>.
+Returns the payload that was set with L<C<make>|/routine/make>.
+
+=head2 method make
+
+Defined as
+
+    method make(Match:D: Mu $payload)
+    sub make(Mu $payload)
+
+Sets the C<.ast> attribute, which will be retrieved using C<.made>.
+
+    $/.make("your payload here");
+
+That is, it stores an arbitrary payload into the C<Match> object that can later
+be retrieved via L«C<.made>|/routine/made» method.
+
+This is typically used in a L<grammar|/language/grammars>'s actions class
+methods, where a piece of data is stored by one method and then later retrieved
+by another. It's up to you what data you store. It could be a tree node, L<result
+of a calculation|/language/grammars#Protoregexes>, or a list of values.
+
+The sub form operates on the current Match C<$/>, which can be a convenient shortcut:
+
+    method my-action ($/) {
+        make "foo: $/";
+    }
 
 =head2 method actions
 
     method actions(Match:D: --> Mu)
 
-Returns the actions object (if any was set; else L<Mu>) that the grammar used
-from which this Match object was created.
+Returns the actions object (if any was set; else L<Mu|/type/Mu>) that the
+grammar used from which this Match object was created.
 
 =head2 method ast
 
@@ -96,6 +182,19 @@ Returns the matched text.
 
     "abc123def" ~~ /\d+/;
     say $/.Str;               # OUTPUT: «123␤»
+
+=head2 method Int
+
+Defined as:
+
+    method Int(Match:D: --> Int:D)
+
+Tries to convert stringified result of the matched text into Int.
+
+    say ('12345' ~~ /234/).Int;       # OUTPUT: «234␤»
+    say ('12345' ~~ /234/).Int.^name; # OUTPUT: «Int␤»
+    # the next line produces a warning about using Nil (result of a no match) in numeric context
+    say ('one-two' ~~ /234/).Int;     # OUTPUT: «0␤» # because Nil.Int returns 0
 
 =head2 method caps
 
@@ -150,24 +249,15 @@ Returns the part of the original string following the match.
     "abc123def" ~~ m:g/\d/;
     say $/.[1].postmatch;     # OUTPUT: «3def␤»
 
-=head2 method make
+=head2 method infix:<eqv>
 
-    method make(Match:D: Mu $payload)
-    sub make(Mu $payload)
+Defined as:
 
-Stores an arbitrary payload into the C<Match> object that can later be retrieved
-via L«C<.made>|/routine/made» method.
+    multi sub infix:<eqv>(Match:D \a, Match:D \b)
 
-This is typically used in a L<grammar|/language/grammars>'s actions class
-methods, where a piece of data is stored by one method and then later retrieved
-by another. It's up to you what data you store. It could be a tree node, L<result
-of a calculation|/language/grammars#Protoregexes>, or a list of values.
-
-The sub form operates on the current C<$/>, which can be a convenient shortcut:
-
-    method my-action ($/) {
-        make "foo: $/";
-    }
+Returns C<True> if the attributes C<pos>, C<from> and C<orig> are equal, and if
+C<made>, C<Capture::list> and C<Capture::hash> are either the same or both
+undefined.
 
 =end pod
 

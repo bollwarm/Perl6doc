@@ -1,13 +1,13 @@
-=begin pod :tag<pod6>
+=begin pod :kind("Language") :subkind("Language") :category("reference")
 
 =TITLE Pod 6 tables
 
 =SUBTITLE The good, the bad and the ugly
 
-The official specification for Perl 6 POD tables is located in the
+The official specification for Pod 6 tables is located in the
 Documentation specification here:
 L<Tables|https://raw.githubusercontent.com/perl6/specs/master/S26-documentation.pod>.
-Although Pod 6 specifications are not completely handled properly yet,
+Although Pod 6 specifications are not completely and properly handled yet,
 several projects are ongoing to correct the situation; one such
 project is ensuring the proper handling of Pod 6 tables.
 
@@ -38,11 +38,13 @@ V<'|'>, and V<'='>.
 
 5. Leading and trailing row-separator lines generate a warning.
 
-6. Formatting blocks in table cells currently are ignored and treated as plain text.
+6. Formatting blocks in table cells are currently ignored and treated as
+plain text.
 
 HINT: During development, use of the environment variable C<RAKUDO_POD6_TABLE_DEBUG>
-will show you how Rakudo interprets your pod tables before they are passed
-to renderers such as B<Pod::To::HTML>, B<Pod::To::Text>, and B<Pod::To::Markdown>.
+will show you how Rakudo interprets your Pod tables before they are passed
+to renderers such as C<Pod::To::HTML>, C<Pod::To::Text>, and
+C<Pod::To::Markdown>.
 
 =head1 Best practices
 
@@ -50,10 +52,10 @@ HINT: Not adhering to the following best practices may require more table
 processing due to additional looping over table rows.
 
 1. Use of WS for column separators is fragile, and they should only be
-used for simple tables.  The C<Ugly Tables> section below illustrates
+used for simple tables. The C<Ugly Tables> section below illustrates
 the problem.
 
-2. Align table columns and rows carefully.  See the examples in later
+2. Align table columns and rows carefully. See the examples in later
 best practices.
 
 3. Don't use visual borders on the table.
@@ -103,7 +105,7 @@ of the table.  For example,
 =end code
 
 6. For tables with many rows and no multi-line content, using no row
-separators is fine.  However, with one or more rows with multi-line
+separators is fine. However, with one or more rows with multi-line
 content, it is easier to ensure proper results by using a row
 separator line (visible or invisible) between every content row.
 
@@ -244,13 +246,14 @@ trigger an unhandled exception during parsing.
 
 =item Mixed column separator types in the same row are not allowed:
 
-=begin code :skip-test<pod error>
+=begin code
 =begin table
 r0c0 +  r0c1 | r0c3
 =end table
 =end code
 
-=item  Mixed visual and whitespace column separator types in the same table are not allowed:
+=item  Mixed visual and whitespace column separator types in the same table
+are not allowed:
 
 =begin code :skip-test<pod error>
 =begin table
@@ -280,7 +283,7 @@ will parse as a single-column table.
 
 Notice the second row has the two words separated by only B<one> WS
 character, while it takes at least B<two> adjacent WS characters to define
-a column separation.  B<This is a valid table but will be parsed as a
+a column separation. B<This is a valid table but will be parsed as a
 single-column table>.
 
 =begin code

@@ -1,8 +1,8 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("metamodel")
 
 =TITLE class Metamodel::ClassHOW
 
-=SUBTITLE Metaobject representing a Perl 6 class.
+=SUBTITLE Metaobject representing a Raku class.
 
     class Metamodel::ClassHOW
         does Metamodel::Naming
@@ -29,12 +29,13 @@
         does Metamodel::Finalization
             { }
 
-C<Metamodel::ClassHOW> is the meta class behind the C<class> keyword.
+C<Metamodel::ClassHOW> is the metaclass behind the C<class> keyword.
 
     say so Int.HOW ~~ Metamodel::ClassHOW;    # OUTPUT: «True␤»
     say Int.^methods(:all).pick.name;         # OUTPUT: «random Int method name␤»
 
-I<Warning>: This class is part of the Rakudo implementation, and is not a part of the language specification.
+I<Warning>: This class is part of the Rakudo implementation, not a part of the
+language itself.
 
 =head1 Methods
 
@@ -57,15 +58,15 @@ If C<$condition> returns a false value, the
 next fallback (if any) is tried, and if none matches, an exception
 L<of type X::Method::NotFound|/type/X::Method::NotFound> is thrown.
 
-User-facing code (that is, code not dabbling with meta classes) should use
+User-facing code (that is, code not dabbling with metaclasses) should use
 method C<FALLBACK> instead.
 
 =head2 method can
 
     method can(Metamodel::ClassHOW:D: $obj, $method-name)
 
-Given a method name, it returns a L<List> of methods that are available
-with this name.
+Given a method name, it returns a L<List|/type/List> of methods that are
+available with this name.
 
     class A      { method x($a) {} };
     class B is A { method x()   {} };
@@ -84,10 +85,11 @@ C<$a>).
 
     method lookup(Metamodel::ClassHOW:D: $obj, $method-name --> Method:D)
 
-Returns the first matching L<Method|/type/Method> with the provided name. If no method was found,
-returns a VM-specific sentinel value (typically a low-level NULL value) that can be tested for
-with a test for L<definedness|/routine/defined>.
-It is potentially faster than C<.^can> but does not provide a full list of all candidates.
+Returns the first matching L<Method|/type/Method> with the provided name. If no
+method was found, returns a VM-specific sentinel value (typically a low-level
+NULL value) that can be tested for with a test for
+L<definedness|/routine/defined>. It is potentially faster than C<.^can> but does
+not provide a full list of all candidates.
 
     say Str.^lookup('Int').perl; # OUTPUT: «method Int (Str:D $: *%_) { #`(Method|39910024) ... }␤»
 
@@ -103,7 +105,7 @@ It is potentially faster than C<.^can> but does not provide a full list of all c
 
       method compose(Metamodel::ClassHOW:D: $obj)
 
-A call to C<compose> brings the meta object and thus the class it represents
+A call to C<compose> brings the metaobject and thus the class it represents
 into a fully functional state, so if you construct or modify a class, you must
 call the compose method before working with the class.
 
@@ -126,6 +128,11 @@ Creates a new type from the metamodel, which we can proceed to build
     my $instance = $type.new;
     $instance.hey; # OUTPUT: «Hey␤»
 
-We add a single method by using L<Higher Order Workings|/language/mop#index-entry-syntax_HOW-HOW> methods, and then we can use that method directly as class method; we can then C<compose> the type, following which we can create already an instance, which will behave in the exact same way.
+We add a single method by using
+L<Higher Order Workings|/language/mop#index-entry-syntax_HOW-HOW> methods, and
+then we can use
+that method directly as class method; we can then C<compose> the type, following
+which we can create already an instance, which will behave in the exact same
+way.
 
 =end pod

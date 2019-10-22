@@ -1,4 +1,4 @@
-=begin pod :tag<perl6>
+=begin pod :kind("Language") :subkind("Language") :category("fundamental")
 
 =TITLE Lists, sequences, and arrays
 
@@ -6,13 +6,13 @@
 
 Lists have been a central part of computing since before there were
 computers, during which time many devils have taken up residence in
-their details. They were actually one of the hardest parts of Perl 6 to
-design, but through persistence and patience, Perl 6 has arrived with an
+their details. They were actually one of the hardest parts of Raku to
+design, but through persistence and patience, Raku has arrived with an
 elegant system for handling them.
 
 =head1 Literal lists
 
-Literal L<C<List>s|/type/List> are created with commas and semicolons B<not>
+Literal L<C<List>s|/type/List> are created with commas and semicolons, B<not>
 with parentheses, so:
 
     1, 2;                # This is two-element list
@@ -21,10 +21,11 @@ with parentheses, so:
     $list = (1);         # This is not a List, just a 1 in parentheses
     $list = (1,);        # This is a one-element List
 
-There is one exception, empty lists are created with just parenthesis:
+There is one exception, empty lists are created with just a pair of parentheses:
 
-=for code :skip-test
+=for code
 ();          # This is an empty List
+=for code :skip-test<syntax error>
 (,);         # This is a syntax error
 
 Note that hanging commas are just fine as long as the beginning and
@@ -47,7 +48,7 @@ index multidimensional arrays.
 
 Unlike a comma, a hanging semicolon does not create a multidimensional list
 in a literal.  However, be aware that this behavior changes in most argument
-lists, where the exact behavior depends on the function... but will usually
+lists, where the exact behavior depends on the function... But will usually
 be:
 
     say('foo';);   # a list with one element and the empty list
@@ -69,30 +70,33 @@ use a sigil before the parenthesis:
 Individual elements can be pulled out of a list using a subscript.  The
 first element of a list is at index number zero:
 
-    =begin code :skip-test
-    say (1, 2)[0];  # says 1
-    say (1, 2)[1];  # says 2
-    say (1, 2)[2];  # says Nil
-    say (1, 2)[-1]; # Error
-    say ((<a b>,<c d>),(<e f>,<g h>))[1;0;1]; # says "f"
-    =end code
+=for code
+say (1, 2)[0];  # says 1
+say (1, 2)[1];  # says 2
+say (1, 2)[2];  # says Nil
+=for code :skip-test<syntax error>
+say (1, 2)[-1]; # Error
+=for code
+say ((<a b>,<c d>),(<e f>,<g h>))[1;0;1]; # says "f"
 
 =head1 The @ sigil
 
-Variables in Perl 6 whose names bear the C<@> sigil are expected to
+Variables in Raku whose names bear the C<@> sigil are expected to
 contain some sort of list-like object. Of course, other variables may
 also contain these objects, but C<@>-sigiled variables always do, and
 are expected to act the part.
 
-By default, when you assign a C<List> to an C<@>-sigiled variable, you create
-an C<Array>. Those are described below. If instead you want to refer directly to a
-C<List> object using an C<@>-sigiled variable, you can use binding with C<:=> instead.
+By default, when you assign a C<List> to an C<@>-sigiled variable, you create an
+C<Array>. Those are described below. If instead you want to refer directly to a
+C<List> object using an C<@>-sigiled variable, you can use binding with C<:=>
+instead.
 
     my @a := 1, 2, 3;
 
 One of the ways C<@>-sigiled variables act like lists is by always supporting
-L<positional subscripting|/language/subscripts>. Anything bound to a C<@>-sigiled
-value must support the L<Positional|/type/Positional> role which guarantees that this is going to fail:
+L<positional subscripting|/language/subscripts>. Anything bound to a
+C<@>-sigiled value must support the L<Positional|/type/Positional> role which
+guarantees that this is going to fail:
 
     my @a := 1; # Type check failed in binding; expected Positional but got Int
 
@@ -159,12 +163,13 @@ L<if there's a comma, anything preceding it is an element|https://perl6advent.wo
 and the list thus created becomes the I<single element>. That happens in
 the case of the two arrays separated by a comma which are the third in
 the C<Array> we are iterating. In general, quoting the article linked
-above, the single argument rule I<... makes for behavior as the programmer would expect>.
+above, the single argument rule I<... makes for behavior as the programmer
+would expect>.
 
 =head1 Testing for elements
 
 To test for elements in a C<List> or C<Array>, you can use the
-L<"is element of"|https://docs.perl6.org/language/setbagmix#infix_(elem)>
+L<"is element of"|/language/setbagmix#infix_(elem)>
 L<C<Set>|/type/Set> operator.
 
     my @a = <foo bar buzz>;
@@ -174,7 +179,7 @@ L<C<Set>|/type/Set> operator.
 This is the equivalent of:
 
 =for code :preamble<my @a>
-    'bar' (elem) @a.Set;    # convert the array to a Set first
+'bar' (elem) @a.Set;    # convert the array to a Set first
 
 except that, if possible, it won't actually do the conversion.
 
@@ -191,12 +196,12 @@ of type L<Seq|/type/Seq>. As it so happens, loops return C<Seq>s.
 
     (loop { 42.say })[2]  # OUTPUT: «42␤42␤42␤»
 
-So, it is fine to have infinite lists in Perl 6, just so long as you
+So, it is fine to have infinite lists in Raku, just so long as you
 never ask them for all their elements.  In some cases, you may want to
-avoid asking them how long they are too – Perl 6 will try to return
+avoid asking them how long they are too – Raku will try to return
 C<Inf> if it knows a sequence is infinite, but it cannot always know.
 
-These lists can be built using the L<...|/operators#infix_...> operator,
+These lists can be built using the L<...|/language/operators#infix_...> operator,
 which builds lazy lists using a variety of generating expressions.
 
 Although the C<Seq> class does provide some positional subscripting, it
@@ -239,9 +244,9 @@ C<Seq>|/type/Seq> for details.
 
 =head2 Using C<.iterator>
 
-All lists mix in the L<Iterator> role, and as such have an C<.iterator>
-method they can use for a finer control over a list. We can use it like
-this, for instance:
+All lists mix in the L<Iterator|/type/Iterator> role, and as such have an
+C<.iterator> method they can use for a finer control over a list. We can use it
+like this, for instance:
 
 =begin code
 my @multiples-of-five = 0,5,10 … 500;
@@ -284,43 +289,46 @@ value, but unlike the above options, it will break L<Scalars|/type/Scalar>.
 X<|laziness in Iterable objects>
 =head1 Lazy lists
 
-C<List>s, C<Seq>s (and any class that subclasses them, like C<Array>s) and any
-other class thet implements the L<Iterable> role can be lazy, which means that
-their values are computed on demand and stored for later use. To create a lazy
-object use L<gather/take|/language/control#gather/take> or the L<sequence
+C<List>s, C<Seq>s, C<Array>s and any other class that implements the
+L<Iterator|/type/Iterator> role can be lazy, which means that their values are
+computed on demand and stored for later use. One of the ways to create a lazy
+object is to use L<gather/take|/language/control#gather/take> or the L<sequence
 operator|/language/operators#infix_...>. You can also write a class that
 implements the role L<Iterator|/type/Iterator> and returns C<True> on a call to
 L<is-lazy|/routine/is-lazy>. Please note that some methods like C<elems> cannot
 be called on a lazy List and will result in a thrown
 L<Exception|/type/Exception>.
 
-    # This array is lazy and its elements will not be available
-    # until explicitly requested.
+=begin code
+# This array is lazy and its elements will not be available
+# until explicitly requested.
 
-    my @lazy-array = lazy 1, 11, 121 ... 10**100;
-    say @lazy-array.is-lazy;     # OUTPUT: «True␤»
-    say @lazy-array[];           # OUTPUT: «[...]␤»
+my @lazy-array = lazy 1, 11, 121 ... 10**100;
+say @lazy-array.is-lazy;     # OUTPUT: «True␤»
+say @lazy-array[];           # OUTPUT: «[...]␤»
 
-    # Once all elements have been retrieved, the List
-    # is no longer considered lazy.
+# Once all elements have been retrieved, the list
+# is no longer considered lazy.
 
-    my @no-longer-lazy = eager @lazy-array;  # Forcing eager evaluation
-    say @no-longer-lazy.is-lazy;             # OUTPUT: «False␤»
-    say @no-longer-lazy[];
-    # OUTPUT: (sequence starting with «[1 11 121» ending with a 300 digit number)
+my @no-longer-lazy = eager @lazy-array;  # Forcing eager evaluation
+say @no-longer-lazy.is-lazy;             # OUTPUT: «False␤»
+say @no-longer-lazy[];
+# OUTPUT: (sequence starting with «[1 11 121» ending with a 300 digit number)
+=end code
 
 In the example above, C<@lazy-array> is an C<Array> which, through construction,
-is made C<lazy>. Calling C<is-lazy> on it returns an C<Iterator>,
-which, since it originates in a lazy list, is itself lazy.
+is made C<lazy>. Calling C<is-lazy> on it actually calls the method mixed in by
+the role C<Iterator>, which, since it originates in a lazy list, is itself lazy.
 
 A common use case for lazy C<Seq>s is the processing of infinite sequences of
 numbers, whose values have not been computed yet and cannot be computed in their
 entirety. Specific values in the List will only be computed when they are
 needed.
 
-    my  $l := 1, 2, 4, 8 ... Inf;
-    say $l[0..16];
-    # OUTPUT: «(1 2 4 8 16 32 64 128 256 512 1024 2048 4096 8192 16384 32768 65536)␤»
+=for code
+my  $l := 1, 2, 4, 8 ... Inf;
+say $l[0..16];
+#OUTPUT: «(1 2 4 8 16 32 64 128 256 512 1024 2048 4096 8192 16384 32768 65536)␤»
 
 You can easily assign lazy objects to other objects, conserving their laziness:
 
@@ -359,14 +367,22 @@ very context sensitive on a syntactical level.
 
 =head2 List assignment context
 
-When a list appears on the right-hand side of an assignment into a C<@>-sigiled
-variable, it is "eagerly" evaluated.  This means that a C<Seq> will be iterated
-until it can produce no more elements.  This is one of the places you do not want
-to put an infinite list, lest your program hang and, eventually, run out of memory:
+When a list (or something that is going to be converted into a list) appears on
+the right-hand side of an assignment into a C<@>-sigiled variable, it is
+"eagerly" evaluated.  This means that a C<Seq> will be iterated until it can
+produce no more elements, for instance.  This is one of the places you do not
+want to put an infinite list, lest your program hang and, eventually, run out of
+memory:
 
-    my $i = 3;
-    my @a = (loop { $i.say; last unless --$i }); # OUTPUT: «3␤2␤1␤»
-    say "take off!";
+    my @divisors = (gather {
+        for <2 3 5 7> {
+            take $_ if 70 %% $_;
+        }
+    });
+    say @divisors; # OUTPUT: «[2 5 7]␤»
+
+The L<C<gather> statement|/language/control#index-entry-lazy_list_gather>
+creates a lazy list, which is eagerly evaluated when assigned to C<@divisors>.
 
 =head2 Flattening "context"
 
@@ -434,7 +450,7 @@ as named parameters:
 
 From the perspective of the C<List> inside a L<slice subscript|/language/subscripts#Slices>,
 is only remarkable in that it is unremarkable: because
-L<adverbs|/language/subscripts#Adverbs> to a  slice are attached after the C<]>,
+L<adverbs|/language/subscripts#Adverbs> to a slice are attached after the C<]>,
 the inside of a slice is B<not> an argument list, and no special processing
 of pair forms happens.
 
@@ -460,14 +476,16 @@ Slices can be taken also across several dimensions using I<semilists>, which are
     my @sliceable = [[ ^10 ], ['a'..'h'], ['Ⅰ'..'Ⅺ']];
     say @sliceable[ ^3; 4..6 ]; #OUTPUT: «(4 5 6 e f g Ⅴ Ⅵ Ⅶ)␤»
 
-which is selecting the 4 to 6th element from the three  first dimensions (C<^3>).
+which is selecting the 4 to 6th element from the three first dimensions (C<^3>).
 
 =head2 Range as slice
 
-A L<C<Range>|/type/Range> is a container for a lower and a upper boundary.
-Generating a slice with a C<Range> will include any index between those bounds,
-including the bounds. For infinite upper boundaries we agree with
-mathematicians that C<Inf> equals C<Inf-1>.
+A L<C<Range>|/type/Range> is a container for a lower and an upper boundary,
+either of which may be excluded. Generating a slice with a C<Range> will
+include any index between the bounds, though an infinite Range will
+L<truncate|/language/subscripts#Truncating_slices> non-existent elements.
+An infinite range with excluded upper boundary (e.g. C<0..^Inf>) is still
+infinite and will reach all elements.
 
     my @a = 1..5;
     say @a[0..2];     # OUTPUT: «(1 2 3)␤»
@@ -475,6 +493,23 @@ mathematicians that C<Inf> equals C<Inf-1>.
     say @a[0..*];     # OUTPUT: «(1 2 3 4 5)␤»
     say @a[0..^*];    # OUTPUT: «(1 2 3 4 5)␤»
     say @a[0..Inf-1]; # OUTPUT: «(1 2 3 4 5)␤»
+
+Note that when the upper boundary is a WhateverCode instead of just a Whatever,
+the range is not infinite but becomes a Callable producing Ranges. This is
+normal behavior of the L<..|/type/Range> operator. The subscript operator
+L<[]|/language/subscripts#Slices> evaluates the WhateverCode providing the
+list's C<.elems> as an argument and uses the resulting range to slice:
+
+    =for code :preamble<my @a = 1..5>
+    say @a[0..*-1];   # OUTPUT: «(1 2 3 4 5)␤»
+    say @a[0..^*-1];  # OUTPUT: «(1 2 3 4)␤»
+    # Produces 0..^2.5 as the slice range
+    say @a[0..^*/2];  # OUTPUT: «(1 2 3)␤»
+
+Notice that C<0..^*> and C<0..^*+0> behave consistently in subscripts despite
+one being an infinite range and the other a WhateverCode producing ranges,
+but C<0..*+0> will give you an additional trailing C<Nil> because, unlike the
+infinite range C<0..*>, it does not truncate.
 
 =head2 Array constructor context
 
@@ -510,6 +545,8 @@ change its type by specifying the type of the elements when declaring it:
 
     =begin code
     my Int @a = 1, 2, 3;              # An Array that contains only Ints
+    # the same as
+    my @a of Int = 1, 2, 3;           # An Array of Ints
     my @b := Array[Int].new(1, 2, 3); # Same thing, but the variable is not typed
     my @b := Array[Int](1, 2, 3);     # Rakudo shortcut for the same code
     say @b eqv @a;                    # says True.
@@ -544,7 +581,7 @@ Given the following sub declaration:
 
 Calls that pass an Array[Int] will be successful:
 
-    =begin code :skip-test
+    =begin code :preamble<sub mean(Int @a) {}>
     my Int @b = 1, 3, 5;
     say mean(@b);                       # @b is Array[Int]
     say mean(Array[Int].new(1, 3, 5));  # Anonymous Array[Int]
@@ -555,7 +592,7 @@ However, the following calls will all fail, due to passing an untyped array,
 even if the array just happens to contain Int values at the point it is
 passed:
 
-    =begin code :skip-test
+    =begin code :skip-test<illustrates error>
     my @c = 1, 3, 5;
     say mean(@c);                       # Fails, passing untyped Array
     say mean([1, 3, 5]);                # Same
@@ -566,14 +603,14 @@ Note that in any given compiler, there may be fancy, under-the-hood, ways to
 bypass the type check on arrays, so when handling untrusted input, it can be
 good practice to perform additional type checks, where it matters:
 
-    =begin code :skip-test
+    =begin code :preamble<my @a;my $i>
     for @a -> Int $i { $_++.say };
     =end code
 
 However, as long as you stick to normal assignment operations inside a trusted
 area of code, this will not be a problem, and typecheck errors will happen
 promptly during assignment to the array, if they cannot be caught at compile
-time.  None of the core functions provided in Perl 6 for operating on lists
+time.  None of the core functions provided in Raku for operating on lists
 should ever produce a wonky typed Array.
 
 Nonexistent elements (when indexed), or elements to which C<Nil> has been
@@ -591,35 +628,51 @@ an undefined C<Any>:
     @n.default.perl.say;            # OUTPUT: «Real␤»
     @n[0].say;                      # OUTPUT: «(Real)␤»
 
+
+X<|Shaped arrays>
 =head2 Fixed size arrays
 
-To limit the dimensions of an C<Array> provide the dimensions separated by C<,>
-or C<;> in brackets after the name of the array container. The values of such
-an C<Arrays> will default to C<Any>. The shape can be accessed at runtime via
-the C<shape> method.
+To limit the dimensions of an C<Array>, provide the dimensions separated by C<,>
+or C<;> in square brackets after the name of the array container in case there is more
+than one dimension; these are called I<shaped> arrays too. The values of such a
+kind of C<Array> will default to C<Any>. The shape can be accessed at runtime
+via the C<shape> method.
 
     my @a[2,2];
     say @a.perl;
     # OUTPUT: «Array.new(:shape(2, 2), [Any, Any], [Any, Any])␤»
-    say @a.shape;
-    # OUTPUT: «(2 2)␤»
+    say @a.shape;         # OUTPUT: «(2 2)␤»
+    my @just-three[3] = <alpha beta kappa>;
+    say @just-three.perl;
+    # OUTPUT: «Array.new(:shape(3,), ["alpha", "beta", "kappa"])␤»
 
-Assignment to a fixed size Array will promote a List of Lists to an Array of
-Arrays.
+Shape will control the amount of elements that can be assigned by dimension:
+
+=begin code
+my @just-two[2] = <alpha beta kappa>;
+# Will throw exception: «Index 2 for dimension 1 out of range (must be 0..1)»
+=end code
+
+Assignment to a fixed size C<Array> will promote a List of Lists to an Array of
+Arrays (making then mutable in the process).
 
     my @a[2;2] = (1,2; 3,4);
+    say @a.Array; # OUTPUT: «[1 2 3 4]␤»
     @a[1;1] = 42;
     say @a.perl;
     # OUTPUT: «Array.new(:shape(2, 2), [1, 2], [3, 42])␤»
 
+As the third statement shows, you can assign directly to an element in a shaped
+array too. B<Note>: the second statement works only from version 2018.09.
+
 =head2 Itemization
 
-For most uses, Arrays consist of a number of slots each containing a C<Scalar>
-of the correct type.  Each such C<Scalar>, in turn, contains a value of that
-type. Perl 6 will automatically type-check values and create Scalars to contain
-them when Arrays are initialized, assigned to, or constructed.
+For most uses, C<Array>s consist of a number of slots each containing a
+C<Scalar> of the correct type.  Every such C<Scalar>, in turn, contains a value
+of that type. Raku will automatically type-check values and create Scalars to
+contain them when Arrays are initialized, assigned to, or constructed.
 
-This is actually one of the trickiest parts of Perl 6 list handling to get a
+This is actually one of the trickiest parts of Raku list handling to get a
 firm understanding of.
 
 First, be aware that because itemization in Arrays is assumed, it essentially
@@ -654,9 +707,9 @@ This can irk users of data you provide if you have deeply nested Arrays
 where they want flat data.  Currently they have to deeply map the structure
 by hand to undo the nesting:
 
-    say gather [0, [(1, 2), [3, 4]], $(5, 6)].deepmap: *.take; # OUTPUT: «(1 2 3 4 5 6)␤»
+    say gather [0, [(1, 2), [3, 4]], $(5, 6)].deepmap: *.take; # OUTPUT: «(0 1 2 3 4 5 6)␤»
 
-... Future versions of Perl 6 might find a way to make this easier.
+... Future versions of Raku might find a way to make this easier.
 However, not returning Arrays or itemized lists from functions, when
 non-itemized lists are sufficient, is something that one should consider
 as a courtesy to their users:
@@ -725,7 +778,7 @@ are:
 ... But binding C<Array> slots directly to values is strongly
 discouraged.  If you do, expect surprises with built-in functions.  The
 only time this would be done is if a mutable container that knows the
-difference between values and Scalar-wrapped values is needed, or for
+difference between values and C<Scalar>-wrapped values is needed, or for
 very large C<Array>s where a native-typed array cannot be used. Such a
 creature should never be passed back to unsuspecting users.
 

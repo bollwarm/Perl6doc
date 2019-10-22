@@ -1,4 +1,4 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("domain-specific")
 
 =TITLE class Promise
 
@@ -68,6 +68,45 @@ this method:
     my $p1 = Promise.start({ ;#`( do something here ) });
     my $p2 = start { ;#`( do something here ) };
 
+As of the 6.d version of the language, C<start> statement prefix used in
+L<sink|/routine/sink> context will automatically attach an exceptions handler. If an
+exception occurs in the given code, it will be printed and the program
+will then exit, like if it were thrown without any C<start> statement
+prefixes involved.
+
+    =begin code :solo
+    use v6.c;
+    start { die }; sleep ⅓; say "hello"; # OUTPUT: «hello␤»
+    =end code
+
+    =begin code :solo
+    use v6.d;
+    start { die }; sleep ⅓; say "hello";
+    # OUTPUT:
+    # Unhandled exception in code scheduled on thread 4
+    # Died
+    #     in block  at -e line 1
+    =end code
+
+If you wish to avoid this behavior, use C<start> in non-sink context or
+catch the exception yourself:
+
+    =begin code
+    # Don't sink it:
+    my $ = start { die }; sleep ⅓; say "hello"; # OUTPUT: «hello␤»
+
+    # Catch yourself:
+    start { die; CATCH { default { say "caught" } } };
+    sleep ⅓;
+    say "hello";
+    # OUTPUT: «caught␤hello␤»
+    =end code
+
+This behavior exists only syntactically, by using an alternate C<.sink> method
+for L<Promise|/type/Promise> objects created by C<start> blocks in sink context, thus simply
+sinking a L<Promise|/type/Promise> object that was created by other means won't trigger this
+behavior.
+
 =head2 method in
 
     method in(Promise:U: $seconds, :$scheduler = $*SCHEDULER --> Promise:D)
@@ -88,36 +127,35 @@ Creates a new Promise that will be kept in C<$seconds> seconds, or later.
     # OUTPUT: «timeout␤»
 
 C<$seconds> can be fractional or negative. Negative values are treated as
-C<0> (i.e. L<keeping|/routine/keep> the returned L<Promise> right away).
+C<0> (i.e. L<keeping|/routine/keep> the returned L<Promise|/type/Promise> right away).
 
-Please note that situations like these are often more clearly handled wit
-a L<react and whenever block|language/concurrency#index-entry-react-react>.
+Please note that situations like these are often more clearly handled with
+a L<react and whenever block|/language/concurrency#index-entry-react-react>.
 
 =head2 method at
 
     method at(Promise:U: $at, :$scheduler = $*SCHEDULER --> Promise:D)
 
 Creates a new C<Promise> that will be kept C<$at> the given time—which is
-given as an L<Instant> or equivalent L<Numeric>—or as soon as possible after it.
+given as an L<Instant|/type/Instant> or equivalent L<Numeric|/type/Numeric>—or as soon as possible after it.
 
     my $p = Promise.at(now + 2).then({ say "2 seconds later" });
     # do other stuff here
 
     await $p;   # wait here until the 2 seconds are over
 
-If the given time is in the past, it will be treated as L<now> (i.e.
-L<keeping|/routine/keep> the returned L<Promise> right away).
+If the given time is in the past, it will be treated as L<now|/routine/now> (i.e.
+L<keeping|/routine/keep> the returned L<Promise|/type/Promise> right away).
 
-Please note that situations like these are often more clearly handled wit
-a L<react and whenever block|language/concurrency#index-entry-react-react>.
+Please note that situations like these are often more clearly handled with
+a L<react and whenever block|/language/concurrency#index-entry-react-react>.
 
 =head2 method kept
 
-    multi method kept(Promise:U: --> Promise:D)
-    multi method kept(Promise:U: \result --> Promise:D)
+    multi method kept(Promise:U: \result = True --> Promise:D)
 
 Returns a new promise that is already kept, either with the given value,
-or with the default value True.
+or with the default value C<True>.
 
 =head2 method broken
 
@@ -125,7 +163,7 @@ or with the default value True.
     multi method broken(Promise:U: \exception --> Promise:D)
 
 Returns a new promise that is already broken, either with the given value,
-or with the default value "Died".
+or with the default value C«X::AdHoc.new(payload => "Died")»
 
 =head2 method allof
 
@@ -187,13 +225,12 @@ creates a chained promise.
 
 =head2 method keep
 
-    multi method keep(Promise:D:)
-    multi method keep(Promise:D: \result)
+    multi method keep(Promise:D: \result = True)
 
 Keeps a promise, optionally setting the result. If no result is passed, the
 result will be C<True>.
 
-Throws an exception  of type C<X::Promise::Vowed> if a vow has already been
+Throws an exception of type C<X::Promise::Vowed> if a vow has already been
 taken. See method C<vow> for more information.
 
     my $p = Promise.new;
@@ -207,8 +244,7 @@ taken. See method C<vow> for more information.
 
 =head2 method break
 
-    multi method break(Promise:D:)
-    multi method break(Promise:D: \cause)
+    multi method break(Promise:D: \cause = False)
 
 Breaks a promise, optionally setting the cause. If no cause is passed, the
 cause will be C<False>.
@@ -249,7 +285,7 @@ C<Planned>.
 
 Returns the current state of the promise: C<Kept>, C<Broken> or C<Planned>:
 
-=for code :skip-test
+=for code :skip-test<compile time error>
 say "promise got Kept" if $promise.status ~~ Kept;
 
 =head2 method scheduler
@@ -281,8 +317,8 @@ exception of type C<X::Promise::Vowed>.
 
     method Supply(Promise:D:)
 
-Returns a L<Supply> that will emit the C<result> of the L<Promise> being Kept
-or C<quit> with the C<cause> if the L<Promise> is Broken.
+Returns a L<Supply|/type/Supply> that will emit the C<result> of the L<Promise|/type/Promise> being Kept
+or C<quit> with the C<cause> if the L<Promise|/type/Promise> is Broken.
 
 
 =head2 sub await

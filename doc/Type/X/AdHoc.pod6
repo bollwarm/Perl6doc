@@ -1,18 +1,18 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("exception")
 
 =TITLE class X::AdHoc
 
-=SUBTITLE Error with a custom error message
+=SUBTITLE Error with a custom message
 
 =for code
 class X::AdHoc is Exception { }
 
 C<X::AdHoc> is the type into which objects are wrapped if they are
-thrown as exceptions, but don't inherit from L<Exception>.
+thrown as exceptions, but don't inherit from L<Exception|/type/Exception>.
 
-Its benefit over returning non-C<Exception> objects is that it gives
-access to all the methods from class L<Exception>, like C<backtrace>
-and C<rethrow>.
+Its benefit over returning non-C<Exception> objects is that it gives access to
+all the methods from class L<Exception|/type/Exception>, like C<backtrace> and
+C<rethrow>.
 
 You can obtain the original object with the C<payload> method.
 
@@ -22,21 +22,48 @@ You can obtain the original object with the C<payload> method.
     print "Got HTTP code ",
         $!.payload[0],          # 404
         " and backtrace ",
-        $!.backtrace;
+        $!.backtrace.Str;
 
-Note that young code will often be prototyped using C<X::AdHoc> and
-then later be revised to use more specific subtypes of C<Exception>.
-As such it is usually best not to explicitly rely on receiving an
-C<X::AdHoc> – in many cases using the string returned by the
-C<.message> method, which all C<Exception>s must have, is preferable.
+Note that young code will often be prototyped using C<X::AdHoc> and then later
+be revised to use more specific subtypes of C<Exception>. As such it is usually
+best not to explicitly rely on receiving an C<X::AdHoc> – in many cases using
+the string returned by the C<.message> method, which all C<Exception>s must
+have, is preferable. Please note that we need to explicitly call C<.Str> to
+stringify the backtrace correctly.
 
 =head1 Methods
 
 =head2 method payload
 
-    method payload(X::AdHoc:D)
-
 Returns the original object which was passed to C<die>.
 
-=end pod
+=head2 method Numeric
 
+Defined as
+
+    method Numeric()
+
+Converts the payload to C<Numeric> and returns it
+
+=head2 method from-slurpy
+
+Defined as
+
+    method from-slurpy (|cap)
+
+X<|SlurpySentry>
+Creates a new exception from a capture and returns it. The capture will have the
+C<SlurpySentry> role mixed in, so that the C<.message> method behaves in a
+different when printing the message.
+
+=for code
+try {
+    X::AdHoc.from-slurpy( 3, False, "Not here" ).throw
+};
+print $!.payload.^name; # OUTPUT: «Capture+{X::AdHoc::SlurpySentry}»
+print $!.message;       # OUTPUT: «3FalseNot here»
+
+The C<SlurpySentry> role joins the elements of the payload, instead of directly
+converting them to a string.
+
+=end pod

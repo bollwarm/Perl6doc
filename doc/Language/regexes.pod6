@@ -1,4 +1,4 @@
-=begin pod :tag<perl6>
+=begin pod :kind("Language") :subkind("Language") :category("fundamental")
 
 =TITLE Regexes
 
@@ -6,72 +6,362 @@
 
 X<|Regular Expressions>
 
-Regular expressions, I<regexes> for short, are a sequence of characters that
-describe a pattern of text. Pattern matching is the process of matching
-those patterns to actual text.
+A I<regular expression> is a sequence of characters that defines a certain text
+pattern, typically one that one wishes to find in some large body of text.
+
+In theoretical computer science and formal language theory, regular expressions
+are used to describe so-called
+L<I<regular languages>|https://en.wikipedia.org/wiki/Regular_language>. Since
+their inception in the 1950's, practical implementations of regular expressions,
+for instance in the text search and replace functions of text editors, have outgrown
+their strict scientific definition. In acknowledgement of this, and in an attempt
+to disambiguate, a regular expression in Raku is normally referred to as a
+I<regex> (from: I<reg>ular I<ex>pression), a term that is also in common use in
+other programming languages.
+
+In Raku, regexes are written in a
+L<I<domain-specific language>|https://en.wikipedia.org/wiki/Domain-specific_language>,
+i.e. a sublanguage or I<slang>. This page describes this language, and explains how
+regexes can be used to search for text patterns in strings in a process called
+I<pattern matching>.
 
 =head1 X<Lexical conventions|quote,/ /;quote,rx;quote,m>
 
-Perl 6 has special syntax for writing regexes:
+Fundamentally, Raku regexes are very much like subroutines: both are code
+objects, and just as you can have anonymous subs and named subs, you can have
+anonymous and named regexes.
 
-    m/abc/;         # a regex that is immediately matched against $_
-    rx/abc/;        # a Regex object; allow adverbs to be used before regex
-    /abc/;          # a Regex object; shorthand version of 'rx/ /' operator
+A regex, whether anonymous or named, is represented by a L<C<Regex>|/type/Regex>
+object. Yet, the syntax for constructing anonymous and named C<Regex> objects
+differs. We will therefore discuss them in turn.
 
-For the first two examples, delimiters other than the slash can be used:
+=head2 Anonymous regex definition syntax
 
-    m{abc};
-    rx{abc};
+An anonymous regex may be constructed in one of the following ways:
 
-Note that neither the colon nor round parentheses can be delimiters; the colon
-is forbidden because it clashes with adverbs, such as C<rx:i/abc/>
-(case insensitive regexes), and round parentheses indicate a function call
-instead.
+    rx/pattern/;          # an anonymous Regex object; 'rx' stands for 'regex'
+    /pattern/;            # an anonymous Regex object; shorthand for 'rx/.../'
 
-Example of difference between C<m/ /> and C</ /> operators:
+    regex { pattern };    # keyword-declared anonymous regex; this form is
+                          # intended for defining named regexes and is discussed
+                          # in that context in the next section
+
+The C<rx/ /> form has two advantages over the bare shorthand form C</ />.
+
+Firstly, it enables the use of delimiters other than the slash, which may be
+used to improve the readability of the regex definition:
+
+    rx{ '/tmp/'.* };      # the use of curly braces as delimiters makes this first
+    rx/ '/tmp/'.* /;      # definition somewhat easier on the eyes than the second
+
+Although the choice is vast, not every character may be chosen as an alternative
+regex delimiter:
+
+=begin item
+You cannot use whitespace or alphanumeric characters as delimiters. Whitespace
+in regex definition syntax is generally optional, except where it is required to
+distinguish from function call syntax (discussed hereafter).
+=end item
+
+=begin item
+Parentheses can be used as alternative regex delimiters, but only with a space
+between C<rx> and the opening delimiter. This is because identifiers that are
+immediately followed by parentheses are always parsed as a subroutine call. For example,
+in C<rx()> the L<call operator|/language/operators#postcircumfix_(_)> C<()>
+invokes the subroutine C<rx>. The form C<rx ( abc )>, however, I<does> define a
+C<Regex> object.
+=end item
+
+=begin item
+Use of a colon as a delimiter would clash with the use of
+L<adverbs|/language/regexes#Adverbs>, which take the form C<:adverb>;
+accordingly, such use of the colon is forbidden.
+=end item
+
+=begin item
+The hashmark C<#> is not available as a delimiter since it is parsed as the start
+of a L<comment|/language/syntax#Single-line_comments> that runs until the end of
+the line.
+=end item
+
+Secondly, the C<rx> form enables the use of
+L<regex adverbs|/language/regexes#Regex_adverbs>, which may be placed between C<rx> and the
+opening delimiter to modify the definition of the entire regex:
+
+    rx:r:s/pattern/;            # :r (:ratchet) and :s (:sigspace) adverbs, defining
+                                # a ratcheting regex in which whitespace is significant
+
+Although anonymous regexes are not, as such, I<named>, they may effectively be
+given a name by putting them inside a named variable, after which they can be
+referenced, both outside of an embedding regex and from within an embedding
+regex by means of L<interpolation|/language/regexes#Regex_interpolation>:
+
+  my $regex = / R \w+ /;
+  say "Zen Buddhists like Raku too" ~~ $regex; # OUTPUT: ｢Raku｣
+
+  my $regex = /pottery/;
+  "Japanese pottery rocks!" ~~ / <$regex> /;  # Interpolation of $regex into /.../
+  say $/;                                     # OUTPUT: ｢pottery｣
+
+=head2 Named regex definition syntax
+
+A named regex may be constructed using the C<regex> declarator as follows:
+
+    regex R { pattern };        # a named Regex object, named 'R'
+
+Unlike with the C<rx> form, you cannot chose your preferred delimiter: curly
+braces are mandatory. In this regard it should be noted that the definition of a
+named regex using the C<regex> form is syntactically similar to the definition
+of a subroutine:
+
+    my sub   S { /pattern/ };   # definition of Sub object (returning a Regex)
+    my regex R {  pattern  };   # definition of Regex object
+
+which emphasizes the fact that a L<C<Regex>|/type/Regex> object represents code
+rather than data:
+
+=begin code :preamble<my sub   S { /pattern/ }; my regex R {  pattern  };>
+&S ~~ Code;                 # OUTPUT: True
+
+&R ~~ Code;                 # OUTPUT: True
+&R ~~ Method;               # OUTPUT: True (A Regex is really a Method!)
+=end code
+
+Also unlike with the C<rx> form for defining an anonymous regex, the definition
+of a named regex using the C<regex> keyword does not allow for adverbs to be
+inserted before the opening delimiter. Instead, adverbs that are to modify the
+entire regex pattern may be included first thing within the curly braces:
+
+    regex R { :i pattern };     # :i (:ignorecase), renders pattern case insensitive
+
+Alternatively, by way of shorthand, it is also possible (and recommended) to use
+the C<rule> and C<token> variants of the C<regex> declarator for defining a
+C<Regex> when the C<:ratchet> and C<:sigspace> adverbs are of interest:
+
+=for code
+regex R { :r pattern };     # apply :r (:ratchet) to entire pattern
+
+and, alternatively
+
+=for code
+token R { pattern };        # same thing: 'token' implies ':r'
+
+Or
+
+=for code
+regex R { :r :s pattern };  # apply :r (:ratchet) and :s (:sigspace) to pattern
+
+with this alternative:
+
+=for code
+rule  R { pattern };        # same thing: 'rule' implies ':r:s'
+
+Named regexes may be used as building blocks for other regexes, as they are
+methods that may called from within other regexes using the C«<regex-name>»
+syntax. When they are used this way, they are often referred to as I<subrules>;
+see for more details on their use L<here|/language/regexes#Subrules>.
+L<C<Grammars>|/type/Grammar> are the natural habitat of subrules, but many common
+predefined character classes are also implemented as named regexes.
+
+=head2 Regex readability: whitespace and comments
+
+Whitespace in regexes is ignored unless the
+L<C<:sigspace>|/language/regexes#Sigspace> adverb is used to make whitespace
+syntactically significant.
+
+In addition to whitespace, comments may be used inside of regexes to improve
+their comprehensibility just as in code in general. This is true for both
+L<single line comments|/language/syntax#Single-line_comments> and
+L<multi line/embedded comments|/language/syntax#Multi-line_/_embedded_comments>:
+
+    my $regex =  rx/ \d ** 4            #`(match the year YYYY)
+                     '-'
+                     \d ** 2            # ...the month MM
+                     '-'
+                     \d ** 2 /;         # ...and the day DD
+
+    say '2015-12-25'.match($regex);     # OUTPUT: «｢2015-12-25｣␤»
+
+=head2 Match syntax
+
+There are a variety of ways to match a string against a regex. Irrespective of
+the syntax chosen, a successful match results in a L<C<Match>|/type/Match>
+object. In case the match is unsuccessful, the result is L<C<Nil>|/type/Nil>. In
+either case, the result of the match operation is available via the special
+match variable L<C<$/>|/syntax/$$SOLIDUS>.
+
+The most common ways to match a string against an anonymous regex C</pattern/> or
+against a named regex C<R> include the following:
+
+=begin item
+I«Smartmatch: "string" ~~ /pattern/, or "string" ~~ /<R>/»
+
+L<Smartmatching|/language/operators#index-entry-smartmatch_operator> a string
+against a C<Regex> performs a regex match of the string against the C<Regex>:
+
+    say "Go ahead, make my day." ~~ / \w+ /;   # OUTPUT: «｢Go｣␤»
+
+    my regex R { me|you };
+    say "You talkin' to me?" ~~ / <R> /;       # OUTPUT: «｢me｣␤ R => ｢me｣␤»
+    say "May the force be with you." ~~ &R ;   # OUTPUT: «｢you｣␤»
+
+The different outputs of the last two statements show that these two ways of
+smartmatching against a named regex are not identical. The difference arises
+because the method call C«<R>» from within the anonymous regex C</ /> installs
+a so-called L<'named capture'|/language/regexes#Named_captures> in the C<Match>
+object, while the smartmatch against the named C<Regex> as such does not.
+=end item
+
+=begin item
+I«Explicit topic match: m/pattern/, or m/<R>/»
+
+The match operator C<m/ /> immediately matches the topic variable
+L<C<$_>|/language/variables#index-entry-topic_variable> against the regex
+following the C<m>.
+
+As with the C<rx/ /> syntax for regex definitions, the match operator may be
+used with adverbs in between C<m> and the opening regex delimiter, and with
+delimiters other than the slash. However, while the C<rx/ /> syntax may only be
+used with L<I<regex adverbs>|/language/regexes#Regex_adverbs> that affect the
+compilation of the regex, the C<m/ /> syntax may additionally be used with
+L<I<matching adverbs>|/language/regexes#Matching_adverbs> that determine how the
+regex engine is to perform pattern matching.
+
+Here's an example that illustrates the primary difference between the C<m/ />
+and C</ /> syntax:
 
     my $match;
     $_ = "abc";
     $match = m/.+/; say $match; say $match.^name; # OUTPUT: «｢abc｣␤Match␤»
     $match =  /.+/; say $match; say $match.^name; # OUTPUT: «/.+/␤Regex␤»
+=end item
 
-Whitespace in regexes is generally ignored (except with the C<:s> or,
-completely, C<:sigspace> adverb).
+=begin item
+I«Implicit topic match in sink and boolean contexts»
 
-Comments work within a regular expression:
+In case a C<Regex> object is used in sink context, or in a context in which it
+is coerced to L<C<Bool>|/type/Bool>, the topic variable
+L<C<$_>|/language/variables#index-entry-topic_variable> is automatically matched
+against it:
 
-    / word #`(match lexical "word") /
+  $_ = "dummy string";        # Set the topic explicitly
 
-=head1 Literals
+  rx/ s.* /;                  # Regex object in sink context matches automatically
+  say $/;                     # OUTPUT: ｢string｣
 
-The simplest case for a regex is a match against a string literal:
+  say $/ if rx/ d.* /;        # Regex object in boolean context matches automatically
+                              # OUTPUT: ｢dummy string｣
+=end item
 
-    if 'properly' ~~ / perl / {
-        say "'properly' contains 'perl'";
-    }
+=begin item
+I«Match method: "string".match: /pattern/, or "string".match: /<R>/»
 
-Alphanumeric characters and the underscore C<_> are matched literally. All
-other characters must either be escaped with a backslash (for example, C<\:>
-to match a colon), or be within quotes:
+The L<C<match>|/type/Str#method_match> method is analogous to the C<m/ />
+operator discussed above. Invoking it on a string, with a C<Regex> as an
+argument, matches the string against the C<Regex>.
+=end item
 
-    / 'two words' /;     # matches 'two words' including the blank
-    / "a:b"       /;     # matches 'a:b' including the colon
-    / '#' /;             # matches a hash character
+=begin item
+I«Parsing grammars: grammar-name.parse($string)»
+
+Although parsing a L<Grammar|/language/grammars> involves more than just
+matching a string against a regex, this powerful regex-based text destructuring
+tool can't be left out from this overview of common pattern matching methods.
+
+If you feel that your needs exceed what simple regexes have to offer, check out this
+L<grammar tutorial>|/language/grammar_tutorial> to take regexes to the next level.
+=end item
+
+
+=head1 Literals and metacharacters
+
+A regex describes a pattern to be matched in terms of literals and
+metacharacters. Alphanumeric characters and the underscore C<_> constitute the
+literals: these characters match themselves and nothing else. Other characters
+act as metacharacters and may, as such, have a special meaning, either by
+themselves (such as the dot C<.>, which serves as a wildcard) or together with
+other characters in larger metasyntactic constructs (such as C«<?before ...>»,
+which defines a lookahead assertion).
+
+In its simplest form a regex comprises only literals:
+
+    /Cześć/;           # "Hello" in Polish
+    /こんばんは/;        # "Good afternoon" in Japanese
+    /Καλησπέρα/;       # "Good evening" in Greek
+
+If you want a regex to literally match one or more characters that normally act
+as metacharacters, those characters must either be escaped using a backslash, or
+be quoted using single or double quotes.
+
+The backslash serves as a switch. It switches a single metacharacter into a
+literal, and vice versa:
+
+    / \# /;             # matches the hash metacharacter literally
+    / \w /;             # turns literal 'w' into a character class (see below)
+    /Hallelujah\!/;     # matches string 'Hallelujah!' incl. exclamation mark
+
+Even if a metacharacter does not (yet) have a special meaning in Raku,
+escaping (or quoting) it is required to ensure that the regex compiles and
+matches the character literally. This allows the clear distinction between
+literals and metacharacters to be maintained. So, for instance, to match a
+comma this will work:
+
+    / \, /;             # matches a literal comma ','
+
+while this will fail:
+=for code :skip-test<deliberate error>
+/ ,  /;             # !! error: an as-yet meaningless/unrecognized metacharacter
+                    # does not automatically match literally
+
+While an escaping backslash exerts its effect on the next individual character,
+both a single metacharacter and a sequence of metacharacters may be turned into
+literally matching strings by quoting them in single or double quotes:
+
+    / "abc" /;          # quoting literals does not make them more literal
+    / "Hallelujah!" /;  # yet, this form is generally preferred over /Hallelujah\!/
+
+    / "two words" /;    # quoting a space renders it significant, so this matches
+                        # the string 'two words' including the intermediate space
+
+    / '#!:@' /;         # this regex matches the string of metacharacters '#!:@'
+
+Quoting does not simply turn every metacharacter into a literal, however. This
+is because quotes allow for backslash-escapes and interpolation. Specifically:
+in single quotes, the backslash may be used to escape single quotes and the
+backslash itself; double quotes additionally enable the interpolation of
+variables, and of code blocks of the form C<{...}>. Hence all of this works:
+
+    / '\\\'' /;          # matches a backslash followed by a single quote: \'
+
+    my $x = 'Hi';
+    / "$x there!" /;     # matches the string 'Hi there!'
+
+    / "1 + 1 = {1+1}" /; # matches the string '1 + 1 = 2'
+
+while these examples illustrate mistakes that you will want to avoid:
+=begin code :skip-test<deliberate error>
+/ '\' /;             # !! error: this is NOT the way to literally match a
+                     # backslash because now it escapes the second quote
+
+/"Price tag $0.50"/; # !! error: "$0" is interpreted as the first positional
+                     # capture (which is Nil), not as '$0'
+=end code
 
 Strings are searched left to right, so it is enough if only part of the string
 matches the regex:
 
     if 'Life, the Universe and Everything' ~~ / and / {
-        say ~$/;           # OUTPUT: «and␤»
-        say $/.prematch;   # OUTPUT: «Life, the Universe ␤»
-        say $/.postmatch;  # OUTPUT: « Everything␤»
+        say ~$/;            # OUTPUT: «and␤»
+        say $/.prematch;    # OUTPUT: «Life, the Universe ␤»
+        say $/.postmatch;   # OUTPUT: « Everything␤»
         say $/.from;        # OUTPUT: «19␤»
         say $/.to;          # OUTPUT: «22␤»
     };
 
-Match results are stored in the C<$/> variable and are also returned from
-the match. The result is of type L<Match|/type/Match> if the match was
-successful; otherwise it is L<Nil|/type/Nil>.
+
+Match results are always stored in the C<$/> variable and are also returned from
+the match. They are both of type L<Match|/type/Match> if the match was
+successful; otherwise both are of type L<Nil|/type/Nil>.
 
 
 =head1 X<Wildcards|regex, .>
@@ -85,25 +375,24 @@ So, these all match:
     'perl' ~~ / pe.l /;     # the . matches the r
     'speller' ~~ / pe.l/;   # the . matches the first l
 
-This doesn't match:
+while this doesn't match:
 
     'perl' ~~ /. per /;
 
 because there's no character to match before C<per> in the target string.
 
-Note that C<.> now does match B<any> single character, that is, it matches
-C<\n>. So the text below match:
+Notably C<.> also matches a logical newline C<\n>:
 
     my $text = qq:to/END/
       Although I am a
       multi-line text,
-      now can be matched
+      I can be matched
       with /.*/.
       END
       ;
 
     say $text ~~ / .* /;
-    # OUTPUT «｢Although I am a␤multi-line text,␤now can be matched␤with /.*/␤｣»
+    # OUTPUT «｢Although I am a␤multi-line text,␤I can be matched␤with /.*/.␤｣»
 
 =head1 Character classes
 
@@ -112,19 +401,22 @@ C<\n>. So the text below match:
 There are predefined character classes of the form C<\w>. Its negation is
 written with an upper-case letter, C<\W>.
 
-=item X<C<\n> and C<\N>|regex,\n;regex,\N>
+=head3 X<C<\n> and C<\N>|regex,\n;regex,\N>
 
-C<\n> matches a single, logical newline character.C<\N> matches a single
-character that's not a logical newline.
+C<\n> matches a logical newline. C<\N> matches a single character that's not a
+logical newline.
 
-What is considered as a single newline character is defined via the compile
-time variable L«C<$?NL>|/language/variables#index-entry-$?NL», and the
-L<newline pragma|/language/pragmas>.
+The definition of what constitutes a logical newline follows the
+L<Unicode definition of a line boundary|https://unicode.org/reports/tr18/#Line_Boundaries>
+and includes in particular all of: a line feed (LF) C<\U+000A>, a vertical tab
+(VT) C<\U+000B>, a form feed (FF) C<\U+000C>, a carriage return (CR) C<\U+000D>,
+and the Microsoft Windows style newline sequence CRLF.
 
-Therefore, C<\n> is supposed to be able to match either a Unix-like
-newline C<"\n">, a Microsoft Windows style one C<"\r\n">, or one in the Mac style C<"\r">.
+The interpretation of C<\n> in regexes is independent of the value of the
+variable C<$?NL> controlled by the L<newline pragma|/language/pragmas#newline>.
 
-=item X<C<\t> and C<\T>|regex,\t;regex,\T>
+
+=head3 X<C<\t> and C<\T>|regex,\t;regex,\T>
 
 C<\t> matches a single tab/tabulation character, C<U+0009>. C<\T> matches a
 single character that is not a tab.
@@ -132,12 +424,12 @@ single character that is not a tab.
 Note that exotic tabs like the C<U+000B VERTICAL TABULATION> character are not
 included here.
 
-=item X<C<\h> and C<\H>|regex,\h;regex,\H>
+=head3 X<C<\h> and C<\H>|regex,\h;regex,\H>
 
 C<\h> matches a single horizontal whitespace character. C<\H> matches a
 single character that is not a horizontal whitespace character.
 
-Examples for horizontal whitespace characters are
+Examples of horizontal whitespace characters are
 
     =begin code :lang<text>
     U+0020 SPACE
@@ -146,15 +438,15 @@ Examples for horizontal whitespace characters are
     U+2001 EM QUAD
     =end code
 
-Vertical whitespace like newline characters are explicitly excluded; those
-can be matched with C<\v>, and C<\s> matches any kind of whitespace.
+Vertical whitespace such as newline characters are explicitly excluded; those
+can be matched with C<\v>; C<\s> matches any kind of whitespace.
 
-=item X<C<\v> and C<\V>|regex,\v;regex,\V>
+=head3 X<C<\v> and C<\V>|regex,\v;regex,\V>
 
 C<\v> matches a single vertical whitespace character. C<\V> matches a single
 character that is not vertical whitespace.
 
-Examples for vertical whitespace characters:
+Examples of vertical whitespace characters:
 
     =begin code :lang<text>
     U+000A LINE FEED
@@ -168,7 +460,7 @@ Examples for vertical whitespace characters:
 
 Use C<\s> to match any kind of whitespace, not just vertical whitespace.
 
-=item X<C<\s> and C<\S>|regex,\s;regex,\S>
+=head3 X<C<\s> and C<\S>|regex,\s;regex,\S>
 
 C<\s> matches a single whitespace character. C<\S> matches a single
 character that is not whitespace.
@@ -176,7 +468,7 @@ character that is not whitespace.
     say $/.prematch if 'Match the first word.' ~~ / \s+ /;
     # OUTPUT: «Match␤»
 
-=item X<C<\d> and C<\D>|regex,\d;regex,\D>
+=head3 X<C<\d> and C<\D>|regex,\d;regex,\D>
 
 C<\d> matches a single digit (Unicode property C<N>) and C<\D> matches a
 single character that is not a digit.
@@ -187,16 +479,16 @@ single character that is not a digit.
 Note that not only the Arabic digits (commonly used in the Latin
 alphabet) match C<\d>, but also digits from other scripts.
 
-Examples for digits are:
+Examples of digits are:
 
-    =begin code :lang<text>
-    U+0035 5 DIGIT FIVE
-    U+0BEB ௫ TAMIL DIGIT FIVE
-    U+0E53 ๓ THAI DIGIT THREE
-    U+17E5 ៥ KHMER DIGIT FIVE
-    =end code
+=begin code :lang<text>
+U+0035 5 DIGIT FIVE
+U+0BEB ௫ TAMIL DIGIT FIVE
+U+0E53 ๓ THAI DIGIT THREE
+U+17E5 ៥ KHMER DIGIT FIVE
+=end code
 
-=item X<C<\w> and C<\W>|regex,\w;regex,\W>
+=head3 X<C<\w> and C<\W>|regex,\w;regex,\W>
 
 C<\w> matches a single word character, i.e. a letter (Unicode category
 L), a digit or an underscore. C<\W> matches a single character that is
@@ -218,7 +510,7 @@ Examples of word characters:
 
     Class    | Shorthand | Description
     =========+===========+=============
-    <alpha>  |           | Alphabetic characters including _
+    <alpha>  |           | Alphabetic characters plus underscore (_)
     <digit>  | \d        | Decimal digits
     <xdigit> |           | Hexadecimal digit [0-9A-Fa-f]
     <alnum>  | \w        | <alpha> plus <digit>
@@ -231,16 +523,26 @@ Examples of word characters:
     <lower>  | <:Ll>     | Lowercase characters
     <upper>  | <:Lu>     | Uppercase characters
     <same>   |           | Matches between two identical characters
-    <wb>     |           | Word Boundary
+    <wb>     |           | Word boundary
     <ws>     |           | Whitespace. This is actually a default rule.
-    <ww>     |           | Within Word
+    <ww>     |           | Within word
     <ident>  |           | Identifier. Also a default rule.
 
 =end table
 
-Note that the character classes C«<same>», C«<wb>» and C«<ww>» are
-so called zero-width assertions, which do not really match a
-character.
+The predefined character classes in the leftmost column are all of the form
+C«<name>», a hint to the fact that they are implemented as built-in
+L<named regexes|/language/regexes#Subrules>.
+As such they are subject to the usual capturing semantics. This means that if
+a character class is called with the syntax C«<name>» (i.e. as indicated in
+the leftmost column), it will not only match, but also capture, installing a
+correspondingly named L<'named capture'|/language/regexes#Named_captures> in the
+resulting L<Match object|/type/Match>. In case just a match and no capture is
+desired, the capture may be suppressed through the use of call syntax that
+includes a leading dot: C«<.name>».
+
+Note that the character classes C«<same>», C«<wb>» and C«<ww>» are so-called
+zero-width assertions, which do not really match any character.
 
 =head2 X«Unicode properties|regex,<:property>»
 
@@ -257,7 +559,7 @@ L<C<uniprop>|/routine/uniprop>:
     "a".uniprop('Block');                  # OUTPUT: «Basic Latin␤»
     "a" ~~ / <:Block('Basic Latin')> /;    # OUTPUT: «｢a｣␤»
 
-These are the unicode general categories used for matching:
+These are the Unicode general categories used for matching:
 
 =begin table
 
@@ -341,7 +643,7 @@ whitespace.
     "αβγ" ~~ /<[\c[GREEK SMALL LETTER ALPHA]..\c[GREEK SMALL LETTER GAMMA]]>*/;
 
 Within the C«< >» you can use C<+> and C<-> to add or remove multiple range
-definitions and even mix in some of the unicode categories above. You can also
+definitions and even mix in some of the Unicode categories above. You can also
 write the backslashed forms for character classes between the C<[ ]>.
 
     / <[\d] - [13579]> /;
@@ -352,25 +654,26 @@ write the backslashed forms for character classes between the C<[ ]>.
 You can include Unicode properties in the list as well:
 
     /<:Zs + [\x9] - [\xA0]>/
-    # Any character with "Zs" property, or a tab, but not a newline
+    # Any character with "Zs" property, or a tab, but not a "no-break space"
 
+X<|escaping characters>
 You can use C<\> to escape characters that would have some meaning in the
 regular expression:
 
     say "[ hey ]" ~~ /<-[ \] \[ \s ]>+/; # OUTPUT: «｢hey｣␤»
 
-To negate a character class, put a C<-> after the opening angle:
+To negate a character class, put a C<-> after the opening angle bracket:
 
-    say 'no quotes' ~~ /  <-[ " ]> + /;  # matches characters except "
+    say 'no quotes' ~~ /  <-[ " ]> + /;  # <-["]> matches any character except "
 
 A common pattern for parsing quote-delimited strings involves negated
 character classes:
 
     say '"in quotes"' ~~ / '"' <-[ " ]> * '"'/;
 
-This first matches a quote, then any characters that aren't quotes, and then
-a quote again. The meaning of C<*> and C<+> in the examples above are
-explained in the next section, Quantifier.
+This regex first matches a quote, then any characters that aren't quotes, and
+then a quote again. The meaning of C<*> and C<+> in the examples above are
+explained in the next section on quantifiers.
 
 Just as you can use the C<-> for both set difference and negation of a
 single value, you can also explicitly put a C<+> in front:
@@ -379,9 +682,8 @@ single value, you can also explicitly put a C<+> in front:
 
 =head1 Quantifiers
 
-A quantifier makes the preceding atom match a
-variable number of times. For example, C<a+> matches one or more C<a>
-characters.
+A quantifier makes the preceding atom match a variable number of times. For
+example, C<a+> matches one or more C<a> characters.
 
 Quantifiers bind tighter than concatenation, so C<ab+> matches one C<a>
 followed by one or more C<b>s. This is different for quotes, so C<'ab'+>
@@ -402,7 +704,7 @@ like this:
 The C<*> quantifier makes the preceding atom match zero or more times, with
 no upper limit.
 
-For example, to allow optional whitespace between C<a> and C<b> you can write
+For example, to allow optional whitespace between C<a> and C<b> you can write:
 
     / a \s* b /
 
@@ -410,31 +712,32 @@ For example, to allow optional whitespace between C<a> and C<b> you can write
 
 The C<?> quantifier makes the preceding atom match zero or once.
 
-From example, to match C<dog> or C<dogs>, you can write:
+For example, to match C<dog> or C<dogs>, you can write:
 
     / dogs? /
 
 =head2 X<General quantifier: C<** min..max>|regex quantifier,**>
 
-To quantify an atom an arbitrary number of times, use C<**> quantifier.
-The quantifier takes a single L<Int> or a L<Range> on the right-hand side
-that specifies the number of times to match. If L<Range> is specified,
-the end-points specify the minimum and maximum number of times to match.
+To quantify an atom an arbitrary number of times, use the C<**> quantifier,
+which takes a single L<Int|/type/Int> or a L<Range|/type/Range> on the
+right-hand side that specifies the number of times to match. If a
+L<Range|/type/Range> is specified, the end-points specify the minimum and
+maximum number of times to match.
 
-    =begin code
-    say 'abcdefg' ~~ /\w ** 4/;      # OUTPUT: «｢abcd｣␤»
-    say 'a'       ~~ /\w **  2..5/;  # OUTPUT: «Nil␤»
-    say 'abc'     ~~ /\w **  2..5/;  # OUTPUT: «｢abc｣␤»
-    say 'abcdefg' ~~ /\w **  2..5/;  # OUTPUT: «｢abcde｣␤»
-    say 'abcdefg' ~~ /\w ** 2^..^5/; # OUTPUT: «｢abcd｣␤»
-    say 'abcdefg' ~~ /\w ** ^3/;     # OUTPUT: «｢ab｣␤»
-    say 'abcdefg' ~~ /\w ** 1..*/;   # OUTPUT: «｢abcdefg｣␤»
-    =end code
+=begin code
+say 'abcdefg' ~~ /\w ** 4/;      # OUTPUT: «｢abcd｣␤»
+say 'a'       ~~ /\w **  2..5/;  # OUTPUT: «Nil␤»
+say 'abc'     ~~ /\w **  2..5/;  # OUTPUT: «｢abc｣␤»
+say 'abcdefg' ~~ /\w **  2..5/;  # OUTPUT: «｢abcde｣␤»
+say 'abcdefg' ~~ /\w ** 2^..^5/; # OUTPUT: «｢abcd｣␤»
+say 'abcdefg' ~~ /\w ** ^3/;     # OUTPUT: «｢ab｣␤»
+say 'abcdefg' ~~ /\w ** 1..*/;   # OUTPUT: «｢abcdefg｣␤»
+=end code
 
-Only basic literal syntax for the right-hand side of the quantifier
-is supported, to avoid ambiguities with other regex constructs. If you need
-to use a more complex expression; for example, a L<Range> made from
-variables—enclose the L<Range> into curly braces:
+Only basic literal syntax for the right-hand side of the quantifier is
+supported, to avoid ambiguities with other regex constructs. If you need to use
+a more complex expression, for example, a L<Range|/type/Range> made from
+variables, enclose the L<Range|/type/Range> in curly braces:
 
     =begin code
     my $start = 3;
@@ -451,10 +754,10 @@ Negative values are treated like zero:
     say 'abcdefg' ~~ /\w ** {-42..-10}/; # OUTPUT: «｢｣␤»
     =end code
 
-If then, the resultant value is C<Inf>
-or C<NaN> or the resultant L<Range> is empty, non-Numeric, contains C<NaN>
-end-points, or has minimum effective end-point as C<Inf>, the
-C<X::Syntax::Regex::QuantifierValue> exception will be thrown:
+If then, the resultant value is C<Inf> or C<NaN> or the resultant
+L<Range|/type/Range> is empty, non-Numeric, contains C<NaN> end-points, or has
+minimum effective end-point as C<Inf>, the C<X::Syntax::Regex::QuantifierValue>
+exception will be thrown:
 
     =begin code
     (try say 'abcdefg' ~~ /\w ** {42..10}/  )
@@ -497,8 +800,10 @@ ordinary and a modified quantifier:
 
 =head2 X<Preventing backtracking: C<:>|regex,:>
 
-You can prevent backtracking in regexes by attaching a C<:> modifier
-to the quantifier:
+One way to prevent L<backtracking|/language/regexes#Preventing_backtracking> is
+through the use of the C<ratchet> adverb as described
+L<below|language/regexes#Ratchet>. Another more fine-grained way of preventing
+backtracking in regexes is attaching a C<:> modifier to a quantifier:
 
 =begin code
 my $str = "ACG GCT ACT An interesting chain";
@@ -517,15 +822,17 @@ In most cases, you will want to prevent backtracking for efficiency reasons, for
 instance here:
 
 =for code :preamble<my $str>
-    say $str ~~ m:g/[(<[ACGT]> **: 3) \s*]+ \s+ (<[A..Z a..z \s]>+)/;
-    # OUTPUT:
-    # (｢ACG GCT ACT An interesting chain｣
-    # 0 => ｢ACG｣
-    # 0 => ｢GCT｣
-    # 0 => ｢ACT｣
-    # 1 => ｢An interesting chain｣)
+say $str ~~ m:g/[(<[ACGT]> **: 3) \s*]+ \s+ (<[A..Z a..z \s]>+)/;
+# OUTPUT:
+# (｢ACG GCT ACT An interesting chain｣
+# 0 => ｢ACG｣
+# 0 => ｢GCT｣
+# 0 => ｢ACT｣
+# 1 => ｢An interesting chain｣)
 
-Although in this case, eliminating the C<:> from behind C<**> would make it behave exactly in the same way. The best use is to create I<tokens> that will not be backtracked:
+Although in this case, eliminating the C<:> from behind C<**> would make it
+behave exactly in the same way. The best use is to create I<tokens> that will
+not be backtracked:
 
     $_ = "ACG GCT ACT IDAQT";
     say  m:g/[(\w+:) \s*]+ (\w+) $$/;
@@ -538,22 +845,22 @@ Although in this case, eliminating the C<:> from behind C<**> would make it beha
 
 Without the C<:> following C<\w+>, the I<ID> part captured would have been
 simply C<T>, since the pattern would go ahead and match everything, leaving a
-single letter to match the C<\w+> expression at the end of tne line.
+single letter to match the C<\w+> expression at the end of the line.
 
 =head2 X<Greedy versus frugal quantifiers: C<?>|regex,?>
 
 By default, quantifiers request a greedy match:
 
-    =begin code
-    'abababa' ~~ /a .* a/ && say ~$/;   # OUTPUT: «abababa␤»
-    =end code
+=for code
+'abababa' ~~ /a .* a/ && say ~$/;   # OUTPUT: «abababa␤»
+
 
 You can attach a C<?> modifier to the quantifier to enable frugal
 matching:
 
-    =begin code
-    'abababa' ~~ /a .*? a/ && say ~$/;   # OUTPUT: «aba␤»
-    =end code
+=for code
+'abababa' ~~ /a .*? a/ && say ~$/;   # OUTPUT: «aba␤»
+
 
 You can also enable frugal matching for general quantifiers:
 
@@ -584,6 +891,14 @@ That is, either a word surrounded by square brackets, or a string of
 non-whitespace characters, followed by zero or more spaces, followed by the
 equals sign C<=>, followed again by optional whitespace, followed by another
 string of non-whitespace characters.
+
+An empty string as the first branch is ignored, to allow you to format
+branches consistently. You could have written the previous example as
+
+    /
+    || '[' \w+ ']'
+    || \S+ \s* '=' \s* \S*
+    /
 
 Even in non-backtracking contexts, the alternation operator C<||> tries
 all the branches in order until the first one matches.
@@ -645,6 +960,16 @@ Note that the space after the first C«<» is significant here: C«<food>»
 calls the named rule C<food> while C«< food >» and C«< food>» specify
 quoted lists with a single element, C<'food'>.
 
+If the first branch is an empty string, it is ignored. This allows you to
+format your regexes consistently:
+
+    /
+    | f
+    | fo
+    | foo
+    | food
+    /
+
 Arrays can also be interpolated into a regex to achieve the same effect:
 
     my @increasingly-edible = <f fo foo food>;
@@ -673,6 +998,8 @@ looking when the quoted string stops matching.
     say 'abc' ~~ / <?before a> .. /;      # OUTPUT: «｢ab｣␤»
     =end code
 
+Just like with C<||>, empty first branches are ignored.
+
 =head1 X<Conjunction: C<&>|regex,&>
 
 Much like C<&&> in a regex, it matches successfully if all segments
@@ -680,6 +1007,8 @@ separated by C<&> match the same part of the target string.
 
 C<&> (unlike C<&&>) is considered declarative, and notionally all the
 segments can be evaluated in parallel, or in any order the compiler chooses.
+
+Just like with C<||> and C<&>, empty first branches are ignored.
 
 =head1 Anchors
 
@@ -778,10 +1107,9 @@ two leading spaces each.
 =head2 X«Word boundary|regex, <|w>;regex, <!|w>»
 
 To match any word boundary, use C«<|w>» or C«<?wb>». This is similar to
-X«C<\b>|regex deprecated,\b» of other languages.
-
-To match not a word boundary, use C«<!|w>» or C«<!wb>». This is similar to
-X«C<\B>|regex deprecated,\B» of other languages.
+X«C<\b>|regex deprecated,\b» in other languages. To match the opposite, any
+character that is not bounding a word, use C«<!|w>» or C«<!wb>». This is similar
+to X«C<\B>|regex deprecated,\B» in other languages.
 
 These are both zero-width regex elements.
 
@@ -852,14 +1180,44 @@ character of an input string.
 
 =head1 Zero-width assertions
 
-Zero-Width Assertions can help you implement your own anchor.
-
-A zero-width assertion turns another regex into an anchor, making
-them consume no characters of the input string. There are two variants:
-lookahead and lookbehind assertions.
+Zero-Width assertions can help you implement your own anchor: it turns another
+regex into an anchor, making them consume no characters of the input string.
+There are two variants: lookahead and lookbehind assertions.
 
 Technically, anchors are also zero-width assertions, and they can look
 both ahead and behind.
+
+=head2 X«Lookaround assertions|regex,positive lookaround assertion;regex,negative lookaround assertion»
+
+Lookaround assertions work both ways. They match, but they don't consume a
+character.
+
+=begin code
+my regex key {^^ <![#-]> \d+ }
+say "333" ~~ &key;                  # OUTPUT: «｢333｣␤»
+say '333$' ~~ m/ \d+ <?[$]>/;       # OUTPUT: «｢333｣␤»
+say '$333' ~~ m/^^ <?[$]> . \d+ /;  # OUTPUT: «｢$333｣␤»
+=end code
+
+They can be positive or negative: C<![]> is negative, while C<?[]> is
+positive; the square brackets will include the characters or backslashed
+character classes that are going to be matched.
+
+You can use predefined character classes and Unicode properties directly
+preceded by the semicolon:
+
+=for code
+say '333' ~~ m/^^ <?alnum> \d+ /;          # OUTPUT: «｢333｣␤»
+say '333' ~~ m/^^ <?:Nd> \d+ /;            # OUTPUT: «｢333｣␤»
+say '333' ~~ m/^^ <!:L> \d+ /;             # OUTPUT: «｢333｣␤»
+say '333' ~~ m/^^ \d+ <!:Script<Tamil>> /; # OUTPUT: «｢33｣␤»
+
+
+In the first two cases, the character class matches, but does not consume,
+the first digit, which is then consumed by the expression; in the third, the
+negative lookaround assertion behaves in the same way. In the fourth
+statement the last digit is matched but not consumed, thus the match includes
+ only the first two digits.
 
 =head2 X<Lookahead assertions|regex,before>
 
@@ -951,7 +1309,7 @@ use part of the characters in the assertion for capture.
 
 =head1 Grouping and capturing
 
-In regular (non-regex) Perl 6, you can use parentheses to group things
+In regular (non-regex) Raku, you can use parentheses to group things
 together, usually to override operator precedence:
 
     say 1 + 4 * 2;     # OUTPUT: «9␤», parsed as 1 + (4 * 2)
@@ -968,15 +1326,15 @@ The same grouping applies to quantifiers:
     / (a b)+ /;        # matches one or more sequences of 'ab'
     / (a || b)+ /;     # matches a string of 'a's and 'b's, except empty string
 
-An unquantified capture produces a L<Match> object. When a capture is
-quantified (except with the C<?> quantifier) the capture becomes a list of
-L<Match> objects instead.
+An unquantified capture produces a L<Match|/type/Match> object. When a capture
+is quantified (except with the C<?> quantifier) the capture becomes a list of
+L<Match|/type/Match> objects instead.
 
 =head2 X«Capturing|regex,( )»
 
 The round parentheses don't just group, they also I<capture>; that is, they
 make the string matched within the group available as a variable, and also as
-an element of the resulting L<Match> object:
+an element of the resulting L<Match|/type/Match> object:
 
     my $str =  'number 42';
     if $str ~~ /'number ' (\d+) / {
@@ -1016,14 +1374,14 @@ which, by default, don't capture.
 
 If you do not need the captures, using non-capturing C<[ ... ]>
 groups provides the following benefits:
-=item  they more cleanly communicate the regex intent;
-=item  they make it easier to count the capturing groups that do mean;
+=item  they more cleanly communicate the regex intent,
+=item  they make it easier to count the capturing groups that do mean and
 =item  they make matching a bit faster.
 
 =head2 Capture numbers
 
 It is stated above that captures are numbered from left to right. While true
-in principle, this is also over simplification.
+in principle, this is also an over simplification.
 
 The following rules are listed for the sake of completeness. When you find
 yourself using them regularly, it's worth considering named captures (and
@@ -1048,23 +1406,38 @@ the one with the most captures determines the index of the next capture:
         say ~$2;            # OUTPUT: «d␤»
     }
 
-Captures can be nested, in which case they are numbered per level
+Captures can be nested, in which case they are numbered per level; level 0 gets
+to use the capture variables, but it will become a list with the rest of the
+levels behaving as elements of that list
 
     if 'abc' ~~ / ( a (.) (.) ) / {
         say "Outer: $0";                # OUTPUT: Outer: abc
         say "Inner: $0[0] and $0[1]";   # OUTPUT: Inner: b and c
     }
 
-If you need to refer to a capture from within another capture, store
-it in a variable first:
+These capture variables are only available outside the regex.
 
-    # !!WRONG!! The $0 refers to a capture *inside* the second capture
-    say "11" ~~ /(\d) ($0)/; # OUTPUT: «Nil␤»
+=begin code
+# !!WRONG!! The $0 refers to a capture *inside* the second capture
+say "11" ~~ /(\d) ($0)/; # OUTPUT: «Nil␤»
+=end code
 
-    # CORRECT: $0 is saved into a variable outside the second capture
-    # before it is used inside (the `{}` is needed to update the current match)
-    say "11" ~~ /(\d) {} :my $c = $0; ($c)/; # OUTPUT: «｢11｣␤ 0 => ｢1｣␤ 1 => ｢1｣␤»
-    say "Matched $c"; # OUTPUT: «␤Matched 1␤»
+In order to make them available inside the regex, you need to insert a code
+block behind the match; this code block may be empty if there's nothing
+meaningful to do:
+
+=begin code
+# CORRECT: $0 is saved into a variable outside the second capture
+# before it is used inside
+say "11" ~~ /(\d) {} :my $c = $0; ($c)/; # OUTPUT: «｢11｣␤ 0 => ｢1｣␤ 1 => ｢1｣␤»
+say "Matched $c"; # OUTPUT: «␤Matched 1␤»
+=end code
+
+This code block I<publishes> the capture inside the regex, so that it can be
+assigned to other variables or used for subsequent matches
+
+=for code
+say "11" ~~ /(\d) {} $0/; # OUTPUT: «｢11｣␤ 0 => ｢1｣␤»
 
 
 X<|:my>
@@ -1076,8 +1449,26 @@ regex. This can be used for debugging inside regular expressions, for instance:
     $paragraph ~~ rx| :my $counter = 0; ( \V* { ++$counter } ) *%% \n |;
     say "Matched $counter lines"; # OUTPUT: «Matched 3 lines␤»
 
+Since C<:my> blocks are simply declarations, the match variable C<$/> or
+numbered matches such as C<$0> will not be available in them unless they are
+previously I<published> by inserting the empty block (or any block):
+
+=for code
+"aba" ~~ / (a) b {} :my $c = $/; /;
+say $c; # OUTPUT: «｢ab｣␤ 0 => ｢a｣␤»
+
+Any other code block will also reveal the variables and make them available in
+declarations:
+
+=for code
+"aba" ~~ / (a) {say "Check so far ", ~$/} b :my $c = ~$0; /;
+# OUTPUT: «Check so far a␤»
+say "Capture $c"; # OUTPUT: «Capture a␤»
+
 X<|:our>
-The C<:our>, similarly to L<C<our>|/syntax/our> in classes, can be used in L<Grammar>s to declare variables that can be accessed, via its fully qualified name, from outside the grammar:
+The C<:our>, similarly to L<C<our>|/syntax/our> in classes, can be used in
+L<Grammar|/type/Grammar>s to declare variables that can be accessed, via its
+fully qualified name, from outside the grammar:
 
 =begin code
 grammar HasOur {
@@ -1103,15 +1494,16 @@ and slightly verbose, way of naming captures is like this:
         say ~$<myname>      # OUTPUT: «abc␤»
     }
 
-The square brackets in the above example, which don't usually capture, will now capture its grouping
-with the given name.
+The square brackets in the above example, which don't usually capture, will now
+capture its grouping with the given name.
 
 The access to the named capture, C«$<myname>», is a shorthand for indexing
 the match object as a hash, in other words: C<$/{ 'myname' }> or C«$/<myname>».
 
-We can also use round brackets in the above example, but they will work exactly the same as square brackets.
-The captured group will only be accessible by its name as a key from the match object and not from
-its position in the list with C<$/[0]> or C<$0>.
+We can also use parentheses in the above example, but they will work exactly the
+same as square brackets. The captured group will only be accessible by its name
+as a key from the match object and not from its position in the list with
+C<$/[0]> or C<$0>.
 
 Named captures can also be nested using regular capture group syntax:
 
@@ -1137,7 +1529,7 @@ all named captures:
     }
 
 A more convenient way to get named captures is by using named regex as discussed in
-the L<Subrules|#Subrules> section.
+the L<Subrules|/language/regexes#Subrules> section.
 
 =head2 X«Capture markers: C«<( )>»|regex,<( )>»
 
@@ -1185,12 +1577,12 @@ Note that neither the colon C<:> nor balancing delimiters such as C<{}> or
 C<()> can be substitution delimiters. Colons clash with adverbs such as
 C<s:i/Foo/bar/> and the other delimiters are used for other purposes.
 
-If you use balancing brackets/braces/parentheses, the substitution works like
-this instead:
+If you use balancing curly braces, square brackets, or parentheses, the
+substitution works like this instead:
 
     s[replace] = 'with';
 
-The right-hand side is now a (not quoted) Perl 6 expression, in which C<$/>
+The right-hand side is now a (not quoted) Raku expression, in which C<$/>
 is available as the current match:
 
     $_ = 'some 11 words 21';
@@ -1198,8 +1590,7 @@ is available as the current match:
     .say;                    # OUTPUT: «some 22 words 42␤»
 
 Like the C<m//> operator, whitespace is ignored in the regex part of a
-substitution. Comments, as in Perl 6 in general, start with the hash
-character C<#> and go to the end of the current line.
+substitution.
 
 =head2 Replacing string literals
 
@@ -1269,7 +1660,7 @@ Named capture can be used too:
     s/ $<y>=(\d+)\-$<m>=(\d+)\-$<d>=(\d+) /$<m>-$<d>-$<y>/;
     .say;                                 # OUTPUT: «01-23-2016 18:09:00␤»
 
-Since the right-hand side is effectively a regular Perl 6 interpolated string,
+Since the right-hand side is effectively a regular Raku interpolated string,
 you can reformat the time from C<HH:MM> to C<h:MM {AM,PM}> like so:
 
     $_ = '18:38';
@@ -1329,11 +1720,27 @@ that their regular expression needs to match every piece of data in the line,
 including what they want to match. Write just enough to match the data you're
 looking for, no more, no less.
 
+=head2 X«C<S///> non-destructive substitution»
+
+    say S/o .+ d/new/ with 'old string';      # OUTPUT: «new string»
+    S:g/« (.)/$0.uc()/.say for <foo bar ber>; # OUTPUT: «Foo␤Bar␤Ber»
+
+C<S///> uses the same semantics as the C<s///> operator, except
+it leaves the original string intact
+and I<returns the resultant string> instead of C<$/> (C<$/> still being set
+to the same values as with C<s///>).
+
+B<Note:> since the result is obtained as a return value, using this
+operator with the C<~~> smartmatch operator is a mistake and will issue a
+warning. To execute the substitution on a variable that isn't the C<$_> this
+operator uses, alias it to C<$_> with C<given>, C<with>, or any other way.
+Alternatively, use the L«C<.subst> method|/routine/subst».
+
 =head1 X<Tilde for nesting structures|regex, tilde; regex, ~>
 
 The C<~> operator is a helper for matching nested subrules with a
 specific terminator as the goal. It is designed to be placed between
-an opening and closing bracket, like so:
+an opening and closing delimiter pair, like so:
 
     / '(' ~ ')' <expression> /
 
@@ -1349,11 +1756,11 @@ But beyond that, when it rewrites the atoms it also inserts the
 apparatus that will set up the inner expression to recognize the
 terminator, and to produce an appropriate error message if the inner
 expression does not terminate on the required closing atom. So it
-really does pay attention to the left bracket as well, and it actually
+really does pay attention to the left delimiter as well, and it actually
 rewrites our example to something more like:
 
 X<|SETGOAL>
-    =begin code :skip-test
+    =begin code :skip-test<incomplete code>
     $<OPEN> = '(' <SETGOAL: ')'> <expression> [ $GOAL || <FAILGOAL> ]
     =end code
 
@@ -1372,12 +1779,12 @@ will be called on parse failure:
     # OUTPUT: «X::AdHoc: Cannot find ']'  near position 4␤»
 
 Note that you can use this construct to set up expectations for a
-closing construct even when there's no opening bracket:
+closing construct even when there's no opening delimiter:
 
     "3)"  ~~ / <?> ~ ')' \d+ /;  # RESULT: «｢3)｣»
     "(3)" ~~ / <?> ~ ')' \d+ /;  # RESULT: «｢3)｣»
 
-Here <?> returns true on the first null string.
+Here C«<?>» successfully matches the null string.
 
 The order of the regex capture is original:
 
@@ -1446,50 +1853,154 @@ documents.
 
 =head1 X<Regex interpolation|regex, Regex Interpolation>
 
-If you want to build a regex using a pattern given at runtime, regex
-interpolation is what you are looking for.
+Instead of using a literal pattern for a regex match, you can use a variable
+that holds that pattern. This variable can then be 'interpolated' into a regex,
+such that its appearance in the regex is replaced with the pattern that it
+holds. The advantage of using interpolation this way, is that the pattern need
+not be hardcoded in the source of your Raku program, but may instead be
+variable and generated at runtime.
 
-There are four ways you can interpolate a string into regex as a pattern.
-That is using C«$pattern», C«$($pattern)», C«<$pattern>» or
-C«<{$pattern.method}>».
+There are four different ways of interpolating a variable into a regex as a
+pattern, which may be summarized as follows:
 
-If the variable to be interpolated is statically typed as a C«Str» or C«str»
-(like C«$pattern0» and C«$pattern2» are below) and only interpolated literally
-(like the first example below), than the compiler can optimize that and it runs
-much faster.
+=begin table
 
-    my Str $text = 'camelia';
-    my Str $pattern0 = 'camelia';
-    my     $pattern1 = 'ailemac';
-    my str $pattern2 = '\w+';
+    Syntax         | Description
+    ===============+===========================================================
+    $variable      | Interpolates stringified contents of variable literally.
+    ---------------------------------------------------------------------------
+    $(code)        | Runs Raku code inside the regex, and interpolates the
+                   | stringified return value literally.
+    ---------------------------------------------------------------------------
+    <$variable>    | Interpolates stringified contents of variable as a regex.
+    ---------------------------------------------------------------------------
+    <{code}>       | Runs Raku code inside the regex, and interpolates the
+                   | stringified return value as a regex.
 
-    say $text ~~ / $pattern0 /;                # OUTPUT: «｢camelia｣␤»
-    say $text ~~ / $($pattern0) /;             # OUTPUT: «｢camelia｣␤»
-    say $text ~~ / $($pattern1.flip) /;        # OUTPUT: «｢camelia｣␤»
-    say 'ailemacxflip' ~~ / $pattern1.flip /;  # OUTPUT: «｢ailemacxflip｣␤»
-    say '\w+' ~~ / $pattern2 /;                # OUTPUT: «｢\w+｣␤»
-    say '\w+' ~~ / $($pattern2) /;             # OUTPUT: «｢\w+｣␤»
+=end table
 
-    say $text ~~ / <{$pattern1.flip}> /;       # OUTPUT: «｢camelia｣␤»
-    # say $text ~~ / <$pattern1.flip> /;       # !!Compile Error!!
-    say $text ~~ / <$pattern2> /;              # OUTPUT: «｢camelia｣␤»
-    say $text ~~ / <{$pattern2}> /;            # OUTPUT: «｢camelia｣␤»
+Let's start with the first two syntactical forms: C«$variable» and C«$(code)».
+These forms will interpolate the stringified value of the variable or the
+stringified return value of the code literally, provided that the respective
+value isn't a L<C<Regex>|/type/Regex> object. If the value is a C<Regex>, it
+will not be stringified, but instead be interpolated as such. 'Literally' means
+I<strictly literally>, that is: as if the respective stringified value is quoted
+with a basic C<Q> string L<C<Q[...]>|/language/quoting#Literal_strings:_Q>.
+Consequently, the stringified value will not itself undergo any further
+interpolation.
 
-Note that the first two syntax interpolate the string lexically, while
-C«<$pattern>» and C«<{$pattern.method}>» causes L«implicit EVAL|
-/language/traps#<{$x}>_vs_$($x):_Implicit_EVAL», which is a known trap.
+For C«$variable» this means the following:
+
+    my $string   = 'Is this a regex or a string: 123\w+False$pattern1 ?';
+    my $pattern1 = 'string';
+    my $pattern2 = '\w+';
+    my $number   = 123;
+    my $regex    = /\w+/;
+
+    say $string.match: / 'string' /;                      #  [1] OUTPUT: ｢string｣
+    say $string.match: / $pattern1 /;                     #  [2] OUTPUT: ｢string｣
+    say $string.match: / $pattern2 /;                     #  [3] OUTPUT: ｢\w+｣
+    say $string.match: / $regex /;                        #  [4] OUTPUT: ｢Is｣
+    say $string.match: / $number /;                       #  [5] OUTPUT: ｢123｣
+
+In this example, the statements C<[1]> and C<[2]> are equivalent and meant to
+illustrate a plain case of regex interpolation. Since unescaped/unquoted
+alphabetic characters in a regex match literally, the single quotes in the regex
+of statement C<[1]> are functionally redundant; they have merely been included
+to emphasize the correspondence between the first two statements. Statement
+C<[3]> unambiguously shows that the string pattern held by C<$pattern2> is
+interpreted literally, and not as a regex. In case it would have been
+interpreted as a regex, it would have matched the first word of C<$string>, i.e.
+C<｢Is｣>, as can be seen in statement C<[4]>. Statement C<[5]> shows how the
+stringified number is used as a match pattern.
+
+This code exemplifies the use of the C«$(code)» syntax:
+
+    my $string   = 'Is this a regex or a string: 123\w+False$pattern1 ?';
+    my $pattern1 = 'string';
+    my $pattern3 = 'gnirts';
+    my $pattern4 = '$pattern1';
+    my $bool     = True;
+    my sub f1    { return Q[$pattern1] };
+
+    say $string.match: / $pattern3.flip /;                #  [6] OUTPUT: Nil
+    say $string.match: / "$pattern3.flip()" /;            #  [7] OUTPUT: ｢string｣
+    say $string.match: / $($pattern3.flip) /;             #  [8] OUTPUT: ｢string｣
+    say $string.match: / $([~] $pattern3.comb.reverse) /; #  [9] OUTPUT: ｢string｣
+    say $string.match: / $(!$bool) /;                     # [10] OUTPUT: ｢False｣
+
+    say $string.match: / $pattern4 /;                     # [11] OUTPUT: ｢$pattern1｣
+    say $string.match: / $(f1) /;                         # [12] OUTPUT: ｢$pattern1｣
+
+Statement C<[6]> does not work as probably intended. To the human reader, the
+dot C<.> may seem to represent the L<method call operator|/language/operators#methodop_.>,
+but since a dot is not a valid character for an L<ordinary identifier|/language/syntax#Ordinary_identifiers>,
+and given the regex context, the compiler will parse it as the regex wildcard
+L<.|/language/regexes#Wildcards> that matches any character. The apparent
+ambiguity may be resolved in various ways, for instance through the use of
+straightforward L<string interpolation|/language/quoting#Interpolation:_qq>
+from the regex as in statement C<[7]> (note that the inclusion of the call
+operator C<()> is key here), or by using the second syntax form from the above
+table as in statement C<[8]>, in which case the match pattern C<string> first
+emerges as the return value of the C<flip> method call. Since general Raku
+code may be run from within the parentheses of C<$( )>, the same effect can
+also be achieved with a bit more effort, like in statement C<[9]>. Statement
+C<[10]> illustrates how the stringified version of the code's return value (the
+boolean value C<False>) is matched literally.
+
+Finally, statements C<[11]> and C<[12]> show how the value of C<$pattern4> and
+the return value of C<f1> are I<not> subject to a further round of
+interpolation. Hence, in general, after possible stringification, C«$variable»
+and C«$(code)» provide for a strictly literal match of the variable or return
+value.
+
+Now consider the second two syntactical forms from the table above:
+C«<$variable>» and C«<{code}>». These forms will stringify the value of the
+variable or the return value of the code and interpolate it as a regex. If the
+respective value is a C<Regex>, it is interpolated as such:
+
+    my $string         = 'Is this a regex or a string: 123\w+$x ?';
+    my $pattern1       = '\w+';
+    my $number         = 123;
+    my sub f1          { return /s\w+/ };
+
+    say $string.match: / <$pattern1>  /;                  # OUTPUT: ｢Is｣
+    say $string.match: / <$number>    /;                  # OUTPUT: ｢123｣
+    say $string.match: / <{ f1 }>     /;                  # OUTPUT: ｢string｣
+
+Importantly, 'to interpolate as a regex' means to interpolate/insert into the
+target regex without protective quoting. Consequently, if the value of the
+variable C<$variable1> is itself of the form C<$variable2>, evaluation of
+C«<$variable1>» or C«<{ $variable1 }>» inside a target regex C</.../> will cause
+the target regex to assume the form C</$variable2/>. As described above, the
+evaluation of this regex will then trigger further interpolation of
+C<$variable2>:
+
+    my $string    = Q[Mindless \w+ $variable1 $variable2];
+    my $variable1 = Q[\w+];
+    my $variable2 = Q[$variable1];
+    my sub f1     { return Q[$variable2] };
+
+    # /<{ f1 }>/ ==> /$variable2/ ==> / '$variable1' /
+    say $string.match: / <{ f1 }>     /; # OUTPUT: ｢$variable1｣
+
+    # /<$variable2>/ ==> /$variable1/ ==> / '\w+' /
+    say $string.match: /<$variable2>/;   # OUTPUT: ｢\w+｣
+
+    # /<$variable1>/ ==> /\w+/
+    say $string.match: /<$variable1>/;   # OUTPUT: ｢Mindless｣
 
 When an array variable is interpolated into a regex, the regex engine handles it
 like a C<|> alternative of the regex elements (see the documentation on
-L<embedded lists|#Quoted lists are LTM matches>, above).  The interpolation
-rules for individual elements are the same as for scalars, so strings and
-numbers match literally, and L</type/Regex|Regex> objects match as regexes. Just
-as with ordinary C<|> interpolation, the longest match succeeds:
+L<embedded lists|/language/regexes#Quoted_lists_are_LTM_matches>, above). The
+interpolation rules for individual elements are the same as for scalars, so
+strings and numbers match literally, and L<C<Regex>|/type/Regex> objects match as
+regexes. Just as with ordinary C<|> interpolation, the longest match succeeds:
 
     my @a = '2', 23, rx/a.+/;
     say ('b235' ~~ /  b @a /).Str;      # OUTPUT: «b23»
 
-The use of hash variables in regexes is preserved.
+The use of hashes in regexes is reserved.
 
 =head2 Regex boolean condition check
 
@@ -1499,8 +2010,9 @@ continues. In other words, it is possible to check in a boolean context a part
 of a regular expression and therefore invalidate the whole match (or allow it to
 continue) even if the match succeeds from a syntactic point of view.
 
-In particular the C«<?{}>» operator requires a C<True> value in order to allow the regular expression to match, while its
-negated form  C«<!{}>» requires a C<False> value.
+In particular the C«<?{}>» operator requires a C<True> value in order to allow
+the regular expression to match, while its negated form C«<!{}>» requires a
+C<False> value.
 
 In order to demonstrate the above operator, please consider the following
 example that involves a simple IPv4 address matching:
@@ -1561,27 +2073,38 @@ say $/<ipv4-octet>;   # OUTPUT: [｢127｣ ｢0｣ ｢0｣ ｢1｣]
 
 =head1 Adverbs
 
-Adverbs modify how regexes work and provide convenient shortcuts for
-certain kinds of recurring tasks.
+Adverbs, which modify how regexes work and provide convenient shortcuts for
+certain kinds of recurring tasks, are combinations of one or more letters
+preceded by a colon C<:>.
 
-There are two kinds of adverbs: regex adverbs apply at the point where a
-regex is defined and matching adverbs apply at the point that a regex
-matches against a string.
+The so-called I<regex> adverbs apply at the point where a regex is defined;
+additionally, I<matching> adverbs apply at the point that a regex matches
+against a string and I<substitution> adverbs are applied exclusively in
+substitutions.
 
 This distinction often blurs, because matching and declaration are often
-textually close but using the method form of matching makes the distinction
-clear.
+textually close but using the method form of matching, that is, C<.match>, makes
+the distinction clear.
 
-C<'abc' ~~ /../> is roughly equivalent to C<'abc'.match(/../)>, or even more
-clearly written in separate lines:
+    say "Abra abra CADABRA" ~~ m:exhaustive/:i a \w+ a/;
+    # OUTPUT: «(｢Abra｣ ｢abra｣ ｢ADABRA｣ ｢ADA｣ ｢ABRA｣)␤»
+    my $regex = /:i a \w+ a /;
+    say "Abra abra CADABRA".match($regex,:ex);
+    # OUTPUT: «(｢Abra｣ ｢abra｣ ｢ADABRA｣ ｢ADA｣ ｢ABRA｣)␤»
 
-    my $regex = /../;           # definition
-    if 'abc'.match($regex) {    # matching
-        say "'abc' has at least two characters";
-    }
+In the first example, the matching adverb (C<:exhaustive>) is contiguous to the
+regex adverb (C<:i>), and as a matter of fact, the "definition" and the
+"matching" go together; however, by using C<match> it becomes clear that C<:i>
+is only used when defining the C<$regex> variable, and C<:ex> (short for
+C<:exhaustive>) as an argument when matching. As a matter of fact, matching
+adverbs cannot even be used in the definition of a regex:
 
-Regex adverbs like C<:i> go into the definition line and matching adverbs
-like C<:overlap> are appended to the match call:
+=for code :skip-test<illustrates error>
+my $regex = rx:ex/:i a \w+ a /;
+# ===SORRY!=== Error while compiling (...)␤Adverb ex not allowed on rx
+
+Regex adverbs like C<:i> go into the definition line and matching adverbs like
+C<:overlap> (which can be abbreviated to C<:ov>) are appended to the match call:
 
     my $regex = /:i . a/;
     for 'baA'.match($regex, :overlap) -> $m {
@@ -1591,8 +2114,8 @@ like C<:overlap> are appended to the match call:
 
 =head2 X<Regex adverbs|regex adverb,:ignorecase;regex adverb,:i>
 
-Adverbs that appear at the time of a regex declaration are part of the
-actual regex and influence how the Perl 6 compiler translates the regex into
+The adverbs that appear at the time of a regex declaration are part of the
+actual regex and influence how the Raku compiler translates the regex into
 binary code.
 
 For example, the C<:ignorecase> (C<:i>) adverb tells the compiler to ignore
@@ -1600,15 +2123,14 @@ the distinction between upper case, lower case and title case letters.
 
 So C<'a' ~~ /A/> is false, but C<'a' ~~ /:i A/> is a successful match.
 
-Regex adverbs can come before or inside a regex declaration and only affect
-the part of the regex that comes afterwards, lexically.
-Note that regex adverbs appearing before the regex must appear after
-something that introduces the regex to the parser, like 'rx' or 'm' or a bare '/'.
-This is NOT valid:
+Regex adverbs can come before or inside a regex declaration and only affect the
+part of the regex that comes afterwards, lexically. Note that regex adverbs
+appearing before the regex must appear after something that introduces the regex
+to the parser, like 'rx' or 'm' or a bare '/'. This is NOT valid:
 
-    =begin code :skip-test
-    my $rx1 = :i/a/;      # adverb is before the regex is recognized => exception
-    =end code
+=begin code :skip-test<illustrates error>
+my $rx1 = :i/a/;      # adverb is before the regex is recognized => exception
+=end code
 
 but these are valid:
 
@@ -1630,6 +2152,13 @@ Square brackets and parentheses limit the scope of an adverb:
 
     / (:i a b) c /;         # matches 'ABc' but not 'ABC'
     / [:i a b] c /;         # matches 'ABc' but not 'ABC'
+
+When two adverbs are used together, they keep their colon at the front
+
+    "þor is Þor" ~~ m:g:i/þ/;  # OUTPUT: «(｢þ｣ ｢Þ｣)␤»
+
+That implies that when there are two vowels together after a C<:>, they
+correspond to the same adverb, as in C<:ov> or C<:P5>.
 
 =head3 X<Ignoremark|regex adverb,:ignoremark;regex adverb,:m>
 
@@ -1677,10 +2206,10 @@ have it parse the input in a way you don't expect.
 Since ratcheting behavior is often desirable in parsers, there's a
 shortcut to declaring a ratcheting regex:
 
-    =begin code :skip-test
-    my token thing { .... }
+    =begin code :skip-test<illustrates pattern>
+    my token thing { ... };
     # short for
-    my regex thing { :r ... }
+    my regex thing { :r ... };
     =end code
 
 =head3 X<Sigspace|regex adverb,:sigspace;regex adverb,:s>
@@ -1786,7 +2315,7 @@ to the way Perl 5 regexes behave:
     so 'hello world' ~~ m/^hello (world)/;         # OUTPUT: «False␤»
     so 'hello world' ~~ m/^ 'hello ' ('world')/;   # OUTPUT: «True␤»
 
-The regular behavior is recommended and more idiomatic in Perl 6 of course,
+The regular behavior is recommended and more idiomatic in Raku of course,
 but the B<C<:Perl5>> adverb can be useful when compatibility with Perl5 is required.
 
 =head2 Matching adverbs
@@ -1796,6 +2325,28 @@ matching adverbs only make sense when matching a string against a regex.
 
 They can never appear inside a regex, only on the outside – either as part
 of an C<m/.../> match or as arguments to a match method.
+
+=head3 X<Positional adverbs|matching adverb,:1st;matching adverb,:2nd;matching adverb,:3rd;matching adverb,:nth>
+
+Positional adverbs make the expression match only the string in the indicated
+position:
+
+    my $data = "f fo foo fooo foooo fooooo foooooo";
+    say $data ~~ m:nth(4)/fo+/;   # OUTPUT: «｢foooo｣␤»
+    say $data ~~ m:1st/fo+/;      # OUTPUT: «｢fo｣␤»
+    say $data ~~ m:3rd/fo+/;      # OUTPUT: «｢fooo｣␤»
+    say $data ~~ m:nth(1,3)/fo+/; # OUTPUT: «(｢fo｣ ｢fooo｣)␤»
+
+As you can see, the adverb argument can also be a list. There's actually no
+difference between the C<:nth> adverb and the rest. You choose them only based
+on legibility. From 6.d, you can also use C<Junction>s as arguments.
+
+    my $data = "f fo foo fooo foooo fooooo foooooo";
+    say $data ~~ m:st(1|8)/fo+/;  # OUTPUT: «True␤»
+
+In this case, one of them exists (1), so it returns True. Observe that we have
+used C<:st>. As said above, it's functionally equivalent, although obviously
+less legible than using C<:nth>, so this last form is advised.
 
 =head3 X<Continue|matching adverb,:continue;matching adverb,:c>
 
@@ -1830,20 +2381,19 @@ C<:ex>) adverb.
 
 The above code produces this output:
 
-=begin code :skip-test
-abracadabra
-abracada
-abraca
-abra
-   acadabra
-   acada
-   aca
-     adabra
-     ada
-       abra
-=end code
+    =for code :lang<text>
+    abracadabra
+    abracada
+    abraca
+    abra
+       acadabra
+       acada
+       aca
+         adabra
+         ada
+           abra
 
-=head3 X<Global|regex adverb,:global;regex adverb,:g>
+=head3 X<Global|matching adverb,:global;matching adverb,:g>
 
 Instead of searching for just one match and returning a
 L<Match object|/type/Match>, search for every non-overlapping match and
@@ -1858,7 +2408,7 @@ adverb:
 
 C<:g> is shorthand for C<:global>.
 
-=head3 X<Pos|regex adverb,:pos;regex adverb,:p>
+=head3 X<Pos|matching adverb,:pos;matching adverb,:p>
 
 Anchor the match at a specific position in the string:
 
@@ -1876,7 +2426,7 @@ instead of attempting to match further down the string:
     say "abcdefg" ~~ m:c(3)/e.+/; # OUTPUT: «｢efg｣␤»
     say "abcdefg" ~~ m:p(3)/e.+/; # OUTPUT: «False␤»
 
-=head3 X<Overlap|regex adverb,:overlap;regex adverb,:ov>
+=head3 X<Overlap|matching adverb,:overlap;matching adverb,:ov>
 
 To get several matches, including overlapping matches, but only one (the
 longest) from each starting position, specify the C<:overlap> (short C<:ov>)
@@ -1890,12 +2440,11 @@ adverb:
 
 produces
 
-=begin code :skip-test
-abracadabra
-   acadabra
-     adabra
-       abra
-=end code
+    =for code :lang<text>
+    abracadabra
+       acadabra
+         adabra
+           abra
 
 =head2 Substitution adverbs
 
@@ -1947,209 +2496,9 @@ say S:samespace/a ./c d/.perl given "a\nb";     # OUTPUT: «"c\nd"»
 The C<ss/.../.../> syntactic form is a shorthand for
 C<s:samespace/.../.../>.
 
-=head1 Best practices and gotchas
-
-To help with robust regexes and grammars, here are some best practices
-for code layout and readability, what to actually match, and avoiding common
-pitfalls.
-
-=head2 Code layout
-
-Without the C<:sigspace> adverb, whitespace is not significant in Perl 6
-regexes. Use that to your own advantage and insert whitespace where it
-increases readability. Also, insert comments where necessary.
-
-Compare the very compact
-
-    my regex float { <[+-]>?\d*'.'\d+[e<[+-]>?\d+]? }
-
-to the more readable
-
-    my regex float {
-         <[+-]>?        # optional sign
-         \d*            # leading digits, optional
-         '.'
-         \d+
-         [              # optional exponent
-            e <[+-]>?  \d+
-         ]?
-    }
-
-As a rule of thumb, use whitespace around atoms and inside groups; put
-quantifiers directly after the atom; and vertically align opening and closing
-square brackets and parentheses.
-
-When you use a list of alternations inside parentheses or square brackets, align
-the vertical bars:
-
-    my regex example {
-        <preamble>
-        [
-        || <choice_1>
-        || <choice_2>
-        || <choice_3>
-        ]+
-        <postamble>
-    }
-
-=head2 Keep it small
-
-Regexes are often more compact than regular code. Because they do so much with
-so little, keep regexes short.
-
-When you can name a part of a regex, it's usually best to
-put it into a separate, named regex.
-
-For example, you could take the float regex from earlier:
-
-    my regex float {
-         <[+-]>?        # optional sign
-         \d*            # leading digits, optional
-         '.'
-         \d+
-         [              # optional exponent
-            e <[+-]>?  \d+
-         ]?
-    }
-
-And decompose it into parts:
-
-    my token sign { <[+-]> }
-    my token decimal { \d+ }
-    my token exponent { 'e' <sign>? <decimal> }
-    my regex float {
-        <sign>?
-        <decimal>?
-        '.'
-        <decimal>
-        <exponent>?
-    }
-
-That helps, especially when the regex becomes more complicated. For example,
-you might want to make the decimal point optional in the presence of an exponent.
-
-    my regex float {
-        <sign>?
-        [
-        || <decimal>?  '.' <decimal> <exponent>?
-        || <decimal> <exponent>
-        ]
-    }
-
-=head2 What to match
-
-Often the input data format has no clear-cut specification, or the
-specification is not known to the programmer. Then, it's good to be liberal
-in what you expect, but only so long as there are no possible ambiguities.
-
-For example, in C<ini> files:
-
-    =begin code :skip-test
-    [section]
-    key=value
-    =end code
-
-What can be inside the section header? Allowing only a word might be too
-restrictive. Somebody might write C<[two words]>, or use dashes, etc.
-Instead of asking what's allowed on the inside, it might be worth asking
-instead: I<what's not allowed?>
-
-Clearly, closing square brackets are not allowed, because C<[a]b]> would be
-ambiguous. By the same argument, opening square brackets should be forbidden.
-This leaves us with
-
-    token header { '[' <-[ \[\] ]>+ ']' }
-
-which is fine if you are only processing one line. But if you're processing
-a whole file, suddenly the regex parses
-
-    =begin code :lang<text>
-    [with a
-    newline in between]
-    =end code
-
-which might not be a good idea.  A compromise would be
-
-    token header { '[' <-[ \[\] \n ]>+ ']' }
-
-and then, in the post-processing, strip leading and trailing spaces and tabs
-from the section header.
-
-=head2 Matching whitespace
-
-The C<:sigspace> adverb (or using the C<rule> declarator instead of C<token>
-or C<regex>) is very handy for implicitly parsing whitespace that can appear
-in many places.
-
-Going back to the example of parsing C<ini> files, we have
-
-    my regex kvpair { \s* <key=identifier> '=' <value=identifier> \n+ }
-
-which is probably not as liberal as we want it to be, since the user might
-put spaces around the equals sign. So, then we may try this:
-
-    my regex kvpair { \s* <key=identifier> \s* '=' \s* <value=identifier> \n+ }
-
-But that's looking unwieldy, so we try something else:
-
-    my rule kvpair { <key=identifier> '=' <value=identifier> \n+ }
-
-But wait! The implicit whitespace matching after the value uses up all
-whitespace, including newline characters, so the C<\n+> doesn't have
-anything left to match (and C<rule> also disables backtracking, so no luck
-there).
-
-Therefore, it's important to redefine your definition of implicit whitespace
-to whitespace that is not significant in the input format.
-
-This works by redefining the token C<ws>; however, it only works for
-L<grammars|/language/grammars>:
-
-    grammar IniFormat {
-        token ws { <!ww> \h* }
-        rule header { \s* '[' (\w+) ']' \n+ }
-        token identifier  { \w+ }
-        rule kvpair { \s* <key=identifier> '=' <value=identifier> \n+ }
-        token section {
-            <header>
-            <kvpair>*
-        }
-
-        token TOP {
-            <section>*
-        }
-    }
-
-    my $contents = q:to/EOI/;
-        [passwords]
-            jack = password1
-            joy = muchmoresecure123
-        [quotas]
-            jack = 123
-            joy = 42
-    EOI
-    say so IniFormat.parse($contents);
-
-Besides putting all regexes into a grammar and turning them into tokens
-(because they don't need to backtrack anyway), the interesting new bit is
-
-        token ws { <!ww> \h* }
-
-which gets called for implicit whitespace parsing. It matches when it's not
-between two word characters (C<< <!ww> >>, negated "within word" assertion),
-and zero or more horizontal space characters. The limitation to horizontal
-whitespace is important, because newlines (which are vertical whitespace)
-delimit records and shouldn't be matched implicitly.
-
-Still, there's some whitespace-related trouble lurking. The regex C<\n+>
-won't match a string like C<"\n \n">, because there's a blank between the
-two newlines. To allow such input strings, replace C<\n+> with C<\n\s*>.
-
-
-
 =head1 Backtracking
 
-Perl 6 defaults to I<backtracking> when evaluating regular expressions.
+Raku defaults to I<backtracking> when evaluating regular expressions.
 Backtracking is a technique that allows the engine to try different
 matching in order to allow every part of a regular expression to succeed.
 This is costly, because it requires the engine to usually
@@ -2261,8 +2610,8 @@ say $string.chars - $string.index: 'SQL'; # OUTPUT: 23
 =end code
 
 Since there are 23 chars from the very end of the string to the very first I<S> of I<SQL>
-the backtracking engine will need 23 "useless" matches to find the right one, that
-is will need 24 steps to get the final result.
+the backtracking engine will need 23 "useless" matches to find the right one, that is,
+it will need 24 steps to get the final result.
 
 Backtracking is a costly machinery, therefore it is possible to disable
 it in those cases where the matching can be found I<forward> only.
@@ -2291,7 +2640,7 @@ say $string ~~ / (SQL) (.+) $1 /; # OUTPUT: Nil
 =end code
 
 Since there is no specification for a character before the word I<SQL>,
-the engine will match against the rightmost word I<SQL> an go forward
+the engine will match against the rightmost word I<SQL> and go forward
 from there. Since there is no repetition of I<SQL> remaining, the
 match fails.
 It is possible, again, to inspect what the engine performs
@@ -2360,7 +2709,7 @@ Capture 1 =  database!
 [SQL][ database!]
 =end code
 
-This demonstrate that disabling backtracking does not mean disabling possible
+This demonstrates that disabling backtracking does not mean disabling possible
 multiple iterations of the matching engine, but rather disabling the backward
 matching tuning.
 
@@ -2414,7 +2763,11 @@ say $/<x>;          # OUTPUT: Nil
 say $/<capital>;    # OUTPUT: Nil
 =end code
 
+=head1 Best practices and gotchas
 
+The L<Regexes: Best practices and gotchas|/language/regexes-best-practices>
+provides useful information on how to avoid common pitfalls when writing regexes
+and grammars.
 
 =end pod
 # vim: expandtab softtabstop=4 shiftwidth=4 ft=perl6

@@ -1,15 +1,15 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("domain-specific")
 
 =TITLE class IO::Socket::INET
 
 =SUBTITLE TCP Socket
 
-=for code :skip-test
+=for code :preamble<role IO::Socket {}>
 class IO::Socket::INET does IO::Socket {}
 
 C<IO::Socket::INET> provides TCP sockets, both the server and the client side.
 
-For UDP support, please see L<IO::Socket::Async>.
+For UDP support, please see L<IO::Socket::Async|/type/IO::Socket::Async>.
 
 Here is an example of a very simplistic "echo" server that listens on
 C<localhost>, port C<3333>:
@@ -39,7 +39,7 @@ And a client that connects to it, and prints out what the server answers:
 =begin code
 my $conn = IO::Socket::INET.new( :host<localhost>,
                                  :port(3333) );
-$conn.print: 'Hello, Perl 6';
+$conn.print: 'Hello, Raku';
 say $conn.recv;
 $conn.close;
 =end code
@@ -50,7 +50,7 @@ Please bear in mind that this is a synchronous connection; an attempt by any of 
 
 =head2 method new
 
-=for code :skip-test
+=for code :skip-test<compile time error>
 multi method new(
         :$host,
         :$port,
@@ -89,7 +89,7 @@ the character(s) that separate lines.
     method get()
 
 Reads a line from the socket and returns it as of type L<Str|/type/Str>.
-Return L<Nil> on end-of-file (EOF).
+Return L<Nil|/type/Nil> on end-of-file (EOF).
 
 =head2 method lines
 

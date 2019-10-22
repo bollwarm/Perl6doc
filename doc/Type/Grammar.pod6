@@ -1,10 +1,10 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("domain-specific")
 
 =TITLE class Grammar
 
 =SUBTITLE Formal grammar made up of named regexes
 
-    class Grammar is Cursor {}
+    class Grammar is Match {}
 
 Every type declared with C<grammar> and not explicitly stating its superclass,
 becomes a subclass of I<Grammar>.
@@ -58,11 +58,10 @@ sole positional argument.
 Additional named arguments are used as options for matching, so you can specify
 things like C<:pos(4)> to start parsing from the fourth (zero-base) character.
 All L<matching adverbs|/language/regexes#Adverbs> are allowed, but not all of
-them would take effort. There are several type of adverbs that a regex can have,
-Some of the apply at compile time, like C<:s>, C<:i> etc. You cannot pass those
+them take effect. There are several types of adverbs that a regex can have,
+some of which apply at compile time, like C<:s> and C<:i>. You cannot pass those
 to C<.parse>, because the regexes have already been compiled. But, you can pass
-those adverbs that affect the runtime behavior, such as C<:pos>, C<:continue>,
-are interpreted here.
+those adverbs that affect the runtime behavior, such as C<:pos> and C<:continue>.
 
 =for code :preamble<grammar RepeatChar {}>
 say RepeatChar.parse('bbbbbb', :rule('start'), :args(\('b')), :pos(4)).Str;

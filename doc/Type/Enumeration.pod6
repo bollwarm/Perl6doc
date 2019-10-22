@@ -1,13 +1,18 @@
-=begin pod
+=begin pod :kind("Type") :subkind("role") :category("composite")
+
 =TITLE role Enumeration
+
 =SUBTITLE Working with the role behind the enum type
 
     role Enumeration { }
 
-This is the role implemented by the enum-pairs in the L<C<enum> type|/language/typesystem#enum>. In general, it is used to create constant sets,
+This is the role implemented by the enum-pairs in the
+L<C<enum> type|/language/typesystem#enum>. In general, it is used to create
+constant sets,
 the elements of which become also constant symbols in the current namespace and
 to establish a relationship between the symbols belonging to the same set. In
-general, you will find c<Enumeration> in L<enum> types:
+general, you will find C<Enumeration> in L<enum|/language/typesystem#enum>
+types:
 
     enum norse-gods <Þor Oðin Loki>;
     my $one-of-them = norse-gods.pick;
@@ -60,33 +65,42 @@ T and A
 =end code
 
 
-=head1 methods
+=head1 Methods
 
 These are the methods included in this role:
 
-=head2 key, value
+=head2 method key
+
+An C<Enumeration> property.
+
+    enum Norse-gods <Þor Oðin Freija>;
+    say Freija.key; # OUTPUT: «Freija␤»
+
+
+=head2 method value
 
 These are C<Enumeration> properties.
 
     enum Norse-gods <Þor Oðin Freija>;
-    say Freija.key; # OUTPUT: «Freija␤»
     say Oðin.value; # OUTPUT: «1␤»
 
 The C<value> is assigned automatically by the C<enum> type starting at 0.
 C<Oðin> gets 1 since it is the second in the C<enum>.
 
-=head2 enums
+=head2 method enums
 
 Defined as:
+
     method enums()
 
-Returns the list of C<Enumeration>s for the enum type this particular
-C<Enumeration> is in. Works both on the enum type and any key.
+Returns a L<Map|/type/Map> of enum values. Works both on the enum type
+and any key.
 
     enum Mass ( mg => 1/1000, g => 1/1, kg => 1000/1 );
-    say g.enums; # OUTPUT: «{g => 1, kg => 1000, mg => 0.001}␤»
+    say Mass.enums; # OUTPUT: «Map.new((g => 1, kg => 1000, mg => 0.001))␤»
+    say g.enums;    # OUTPUT: «Map.new((g => 1, kg => 1000, mg => 0.001))␤»
 
-=head2 kv
+=head2 method kv
 
 Defined as:
 
@@ -97,7 +111,7 @@ Returns a list with key and value of the enum-pair.
 =for code :preamble<<enum Mass<g> >>
 say g.kv; # OUTPUT: «(g 1)␤»
 
-=head2 pair
+=head2 method pair
 
 Defined as:
 
@@ -108,36 +122,113 @@ Returns it as a C<Pair>.
 =for code :preamble<<enum Mass<g> >>
 say g.pair; # OUTPUT: «g => 1␤»
 
-=head2 pick, roll
+=head2 method CALL-ME
+
+Defined as:
+
+    multi method CALL-ME(|)
+
+Returns an C<Enumeration> instance given an enum value.
+
+    enum Mass ( mg => 1/1000, g => 1/1, kg => 1000/1 );
+    say Mass(1/1000); # OUTPUT: mg
+
+=head2 method pick
 
 Defined as:
 
     multi method pick(::?CLASS:U:)
     multi method pick(::?CLASS:U: \n)
     multi method pick(::?CLASS:D: *@pos)
+
+It works on the defined class, selecting one element and eliminating it.
+
+=for code :preamble«enum Norse-gods <Þor Oðin Freija>;»
+say Norse-gods.pick() for ^3;  # OUTPUT: «Þor␤Freija␤Oðin␤»
+
+=head2 method roll
+
+Defined as:
+
     multi method roll(::?CLASS:U:)
     multi method roll(::?CLASS:U: \n)
     multi method roll(::?CLASS:D: *@pos)
 
-They work on the defined class, with C<pick> eliminating the element selected,
-and roll without.
+They work on the defined class selecting one or C<n> elements without
+eliminating them.
 
-=for code :preamble<enum Norse-gods <Þor Oðin Freija>;>
-say Norse-gods.roll() for ^3;# OUTPUT: «Freija␤Freija␤Oðin␤»
-say Norse-gods.pick() for ^3;# OUTPUT: «Þor␤Freija␤Oðin␤»
+=for code :preamble«enum Norse-gods <Þor Oðin Freija>;»
+say Norse-gods.roll() for ^3;  # OUTPUT: «Freija␤Freija␤Oðin␤»
 
-
-=head2 pred, succ
+=head2 method pred
 
 Defined as:
 
     method pred(::?CLASS:D:)
 
-=for code :preamble<enum Norse-gods <Þor Oðin Freija>;>
-say Freija.pred;# OUTPUT: «Oðin␤»
+=for code :preamble«enum Norse-gods <Þor Oðin Freija>;»
+say Freija.pred;  # OUTPUT: «Oðin␤»
+
+=head2 method succ
+
+Defined as:
+
+    method succ(::?CLASS:D:)
+
+=for code :preamble«enum Norse-gods <Þor Oðin Freija>;»
 say Oðin.succ;  # OUTPUT: «Freija␤»
 
-=head2 C<===>
+=head2 method Numeric
+
+Defined as:
+
+    multi method Numeric(::?CLASS:D:)
+
+Takes a value of an enum and returns it after coercion to C<Numeric>:
+
+    enum Numbers ( cool => '42', almost-pi => '3.14', sqrt-n-one => 'i' );
+    say cool.Numeric;       # OUTPUT: «42␤»
+    say almost-pi.Numeric;  # OUTPUT: «3.14␤»
+    say sqrt-n-one.Numeric; # OUTPUT: «0+1i␤»
+
+Note that if the value cannot be coerced to C<Numeric>, an exception
+will be thrown.
+
+=head2 method Int
+
+Defined as:
+
+    multi method Int(::?CLASS:D:)
+
+Takes a value of an enum and returns it after coercion to C<Int>:
+
+    enum Numbers ( cool => '42', almost-pi => '3.14', sqrt-n-one => 'i' );
+    say cool.Int;           # OUTPUT: «42␤»
+    say almost-pi.Int;      # OUTPUT: «3␤»
+    try say sqrt-n-one.Int;
+    say $!.message if $!;   # OUTPUT: «Cannot convert 0+1i to Int: imaginary part not zero␤»
+
+Note that if the value cannot be coerced to C<Int>, an exception will
+be thrown.
+
+=head2 method Real
+
+Defined as:
+
+    multi method Real(::?CLASS:D:)
+
+Takes a value of an enum and returns it after coercion to C<Real>:
+
+    enum Numbers ( cool => '42', almost-pi => '3.14', sqrt-n-one => 'i' );
+    say cool.Real;           # OUTPUT: «42␤»
+    say almost-pi.Real;      # OUTPUT: «3.14␤»
+    try say sqrt-n-one.Real;
+    say $!.message if $!;    # OUTPUT: «Cannot convert 0+1i to Real: imaginary part not zero␤»
+
+Note that if the value cannot be coerced to C<Real>, an exception will
+be thrown.
+
+=head2 method C<===>
 
 Defined as
 
@@ -145,7 +236,7 @@ Defined as
 
 Equality of C<Enumeration> symbols:
 
-=for code :preamble< enum Norse-gods <Þor Oðin Freija>;>
+=for code :preamble«enum Norse-gods <Þor Oðin Freija>;»
 say Norse-gods.pick() === Freija for ^3; # OUTPUT: «False␤False␤True␤»
 
 

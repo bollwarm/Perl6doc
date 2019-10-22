@@ -1,0 +1,238 @@
+=begin pod :kind("Language") :subkind("Language") :category("fundamental")
+
+=TITLE Statement prefixes
+
+=SUBTITLE Prefixes that alter the behavior of a statement or a set of them
+
+Statement prefixes are written in front of a
+statement, and change their meaning, their output, or the moment they are going
+to be run. Since they have a specific behavior, they are also sometimes specific
+to some statement or group of statements.
+
+=head2 X<C<lazy>|lazy (statement prefix)>
+
+As a statement prefix, C<lazy> acts in front of any statement, including C<for>
+loops, saving the execution for when the variable they are assigned to is
+actually needed.
+
+=for code
+my $incremented = 0;
+my $var = lazy for <1 2 3 4> -> $d {
+    $incremented++
+};
+say $incremented; # OUTPUT: «0␤»
+say eager $var;   # OUTPUT: «(0 1 2 3)␤»
+say $incremented; # OUTPUT: «4␤»
+
+The C<$incremented> variable is only incremented, that is, the internal part of
+the loop is only run when we eagerly evaluate the variable C<$var> that
+contains the lazy loop. Eagerness can be applied on a variable in other ways,
+such as calling the C<.eager> method on it.
+
+=for code
+my @array = lazy { (^3).map( *² )  };
+say @array;       # OUTPUT: «[...]»
+say @array.eager; # OUTPUT: «[0 1 4]␤»
+
+This prefix can also be used L<in front of
+C<gather>|/language/control#gather/take> to make the inner statements behave
+lazily; in general, any set of statements that returns a value will be made
+lazy using this.
+
+=head2 X<C<eager>|eager (statement prefix)>
+
+The C<eager> statement prefix will eagerly return the result of the statements
+behind, throwing away laziness and returning the result.
+
+=for code
+my $result := eager gather { for 1..3 { say "Hey"; take $_² } };
+say $result[0]; # OUTPUT: «Hey␤Hey␤Hey␤1␤»
+
+C<gather> is L<implicitly lazy when bound to a scalar|/syntax/gather%20take>.
+However, with C<eager> as a statement prefix it will run all three iterations in
+the loop, as shown by the printed "Hey", even if we are just requesting the
+first one in a row.
+
+=head2 X<C<hyper>|hyper (statement prefix)>, X<C<race>|race (statement prefix)>
+
+C<hyper> and C<race> use (maybe simultaneous) threads to run different
+iterations in a loop:
+
+=for code
+my @a = hyper for ^100_000 { .is-prime }
+
+This code is around 3x faster than the bare for. But there are a couple of
+caveats here:
+
+=item The operation inside the loop should take enough time for threading
+to make sense.
+
+=item There should be no read or write access to the same data structure inside
+the loop. Let the loop produce a result, and assign it.
+
+=item If there's an I/O operation inside the loop, there might be some contention
+so please avoid it.
+
+Main difference between C<hyper> and C<race> is the ordering of results. Use
+C<hyper> if you need the loop results to be produced in order, C<race> if you
+don't care.
+
+=head2 X<C<quietly>|quietly (statement prefix)>
+
+As a statement prefix, C<quietly> suppresses all warnings produced by the
+statement it precedes.
+
+=for code
+sub marine() {};
+quietly say ~&marine; # OUTPUT: «marine␤»
+
+Calling L<C<.Str> on C<code> produces a warning|/type/Code#method_Str>.
+Preceding the statement with C<quietly > will just produce the output, the name
+of the routine.
+
+=head2 X<C<try>|try (statement prefix)>
+
+If you use C<try> in front of a statement, it will contain the exception
+produced in it and store it in the C<$!> variable, just like when L<it's used in
+front of a block|language/exceptions#try_blocks>.
+
+=for code
+try [].pop;
+say $!; # OUTPUT: «Cannot pop from an empty Array␤..»
+
+=head2 X<C<do>|do (statement prefix)>
+
+C<do> can be used as an statement prefix to disambiguate the statement they
+precede; this is needed, for instance, if you want to assign the result of a
+C<for> statement. A bare C<for> will fail, but this will work:
+
+=for code
+my $counter = 0;
+my $result = do for ^5 { $counter++ };
+say $counter; # OUTPUT: «5␤»
+say $result;  # OUTPUT: «(0 1 2 3 4)␤»
+
+C<do> is equivalent, as in other cases, to surrounding a statement with a
+parenthesis. It can be used as an alternative with a (possibly more)
+straightforward syntax.
+
+=head2 X<C<sink>|sink (statement prefix)>
+
+As in the L<case of the routine|/routine/sink>, C<sink> will run the statement
+throwing away the result. Use it in case you want to run some statement for the
+side effects it produces.
+
+=for code
+my $counter = 0;
+my $result = sink for ^5 { $counter++ };
+say $counter; #  OUTPUT: «5␤»
+say $result;  #  OUTPUT: «(Any)␤»
+
+=head2 X<C<once>|once (statement prefix)>
+
+Within a loop, runs the prefixed statement only once.
+
+=for code
+my $counter;
+my $result = do for ^5 { once $counter = 0; $counter++ };
+say $result; # OUTPUT: «(0 1 2 3 4)␤»
+
+=head2 X<C<gather>|gather (statement prefix)>
+
+C<gather> can be used in front of a statement, receiving and gathering in a list
+all data structures emitted from a C<take> run anywhere from that statement:
+
+=begin code
+proto sub fact( Int ) {*}
+multi sub fact( 1 --> 1 ) {}
+multi sub fact( $x ) { take $x * fact( $x-1 ) }
+
+my @factors = gather say fact(13); # OUTPUT: «6227020800»
+say @factors;
+# OUTPUT: «[2 6 24 120 720 5040 40320 362880 3628800 ...]»
+=end code
+
+In this example, C<gather> precedes C<say>, which prints the first result of the
+factorial; at the same time, it's harvesting the result from every call to
+C<fact>, which goes to C<@factor>.
+
+=head2 X<C<start>|start (statement prefix)>
+
+As a statement prefix, C<start> behaves in the same way as L<in front of a
+block|/language/control#flow%29_start>, that is, it runs the statement
+asynchronously, and returns a promise.
+
+=begin code
+proto sub fact( Int ) {*}
+multi sub fact( 1 --> 1 ) {}
+multi sub fact( $x ) {  $x * fact( $x-1 ) }
+
+my @promises = gather {
+    for <3 4> {
+        take start fact( 10 ** $_ );
+    }
+}
+
+say await @promises;
+=end code
+
+The L<C<Promise>s|/type/Promise> created by start are gathered in an array,
+which returns the result of the operation once the promises have been fulfilled.
+
+=head2 X<C<react>|react (statement prefix)>
+
+C<react> can be used in concurrent programs to create blocks of code that run
+whenever some event occurs. It L<works with blocks|/syntax/react>, and also as a
+statement prefix.
+
+=begin code
+my Channel $KXGA .= new;
+for ^100 {
+    $KXGA.send( (100000..200000).pick );
+}
+
+my @sums = ( start react whenever $KXGA -> $number {
+    say "In thread ", $*THREAD.id;
+    say "→ ", (^$number).sum;
+} ) for ^10;
+
+start { sleep 10; $KXGA.close(); }
+
+await @sums;
+=end code
+
+In this case C<react> prefixes C<whenever>, which makes a long sum with every
+number read from a channel.
+
+=head2 X<C<supply>|supply (statement prefix)>
+
+The keyword C<supply> creates
+L<on-demand supplies|/language/concurrency#index-entry-supply_(on-demand)>
+that you can tap. It pairs with C<emit>, which can be used anywhere from within
+a C<supply> prefixed statement.
+
+=begin code
+my &cards = ->  {
+    my @cards = 1..10 X~ <♠ ♥ ♦ ♣>;
+    emit($_) for @cards.pick(@cards.elems);
+}
+my $supply = supply cards;
+
+$supply.tap( -> $v { say "Drawing: $v" });
+$supply.tap( -> $v { say "Drawing: $v" }, done => { say "No more cards" });
+# OUTPUT:
+# [...]
+# Drawing: 1♥
+# Drawing: 7♥
+# Drawing: 9♥
+# No more cards
+=end code
+
+In this example, C<supply> acts as prefix of the previously defined C<cards>
+routine. It would very well be defined as a block, but giving it a name in this
+case might increase legibility or simply give the responsibility of defining it
+to other module.
+
+=end pod
+
+# vim: expandtab softtabstop=4 shiftwidth=4 ft=perl6

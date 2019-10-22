@@ -1,4 +1,4 @@
-=begin pod :tag<perl6>
+=begin pod :kind("Language") :subkind("Language") :category("fundamental")
 
 =TITLE Packages
 
@@ -6,20 +6,21 @@
 
 =begin comment
 
+TODO
 * Take a lot of stuff from S02 for this
 * Document 'import'
 
 =end comment
 
 Packages are nested namespaces of named program elements.
-L<Modules|/language/module-packages>, classes, grammars, and others are
-types of packages. Like files in a directory, you can generally refer to
-named elements with their short-name if they are local, or with the
-longer name that includes the namespace to disambiguate.
+L<Modules|/language/module-packages>, classes, grammars, and others are types of
+packages. Like files in a directory, you can generally refer to named elements
+with their short-name if they are local, or with the longer name that includes
+the namespace to disambiguate as long as their scope allows that.
 
 =head1 Names
 
-A I<name> is anything that is a legal part of a variable name (not
+A package I<name> is anything that is a legal part of a variable name (not
 counting the sigil). This includes:
 
 =begin code
@@ -33,8 +34,8 @@ class Foo {
 }
 
 my $foo;                # simple identifiers
-say Foo::Bar.baz;       # Calling a method; OUTPUT: «Þor is mighty␤»
-say $Foo::Bar::zape;    # compound identifiers separated by ::; OUTPUT: «zipi␤»
+say Foo::Bar.baz;       # calling a method; OUTPUT: «Þor is mighty␤»
+say Foo::Bar::zape;     # compound identifiers separated by ::; OUTPUT: «zipi␤»
 my $bar = 'Bar';
 say $Foo::($bar)::quux; # compound identifiers with interpolations; OUTPUT: «42␤»
 $42;                    # numeric names
@@ -43,6 +44,21 @@ $!;                     # certain punctuation variables
 
 X<|::,package>
 C<::> is used to separate nested package names.
+
+Packages do not really have an identity; they can be simply part of a module or
+class name, for instance. They are more similar to namespaces than to modules;
+with a module of the same name I<capturing> the identity of a package if it
+exists.
+
+=begin code
+package Foo:ver<0> {};
+module Foo:ver<1> {};
+say Foo.^ver; # OUTPUT: «1␤»
+=end code
+
+The syntax allows the declared package to use a version, but as a matter of
+fact, it's dismissed; only modules and classes have an identity that might
+include C<auth> and C<ver>.
 
 =head2 Package-qualified names
 
@@ -56,16 +72,17 @@ alternate way to write this is:
 
     Foo::Bar::<$quux>
 
-(This does not work with the C<&zape> variable) The name is resolved at
-compile time because the variable name is a constant.
+This does not work with the C<Foo«&zape»> variable, since C<sub>s, by default,
+have lexical scope. The name is resolved at compile time because the variable
+name is a constant. We can access the rest of the variables in C<Bar> (as shown
+in the example above) since classes, by default, have package scope.
 
-If the name part before C<::> is null, it means the package is
-unspecified and must be searched for. Generally this means that an
-initial C<::> following the main sigil is a no-op on names that are
-known at compile time, though C<::()> can also be used to introduce an
-interpolation. Also, in the absence of another sigil, C<::> can serve as
-its own sigil indicating intentional use of a not-yet-declared package
-name.
+If the name part before C<::> is null, it means the package is unspecified and
+must be searched for. Generally this means that an initial C<::> following the
+main sigil is a no-op on names that are known at compile time, though C<::()>
+can also be used to introduce an interpolation. Also, in the absence of another
+sigil, C<::> can serve as its own sigil indicating intentional use of a
+not-yet-declared package name.
 
 =head1 Pseudo-packages
 
@@ -73,26 +90,27 @@ X«|MY (package)»X«|OUR (package)»X«|CORE (package)»X«|GLOBAL (package)»X
 The following pseudo-package names are reserved at the front of a name:
 
 =begin table
-    MY          Symbols in the current lexical scope (aka $?SCOPE)
-    OUR         Symbols in the current package (aka $?PACKAGE)
-    CORE        Outermost lexical scope, definition of standard Perl
-    GLOBAL      Interpreter-wide package symbols, really UNIT::GLOBAL
-    PROCESS     Process-related globals (superglobals). The last place dynamic variable
-                lookup will look.
-    COMPILING   Lexical symbols in the scope being compiled
+MY          Symbols in the current lexical scope (aka $?SCOPE)
+OUR         Symbols in the current package (aka $?PACKAGE)
+CORE        Outermost lexical scope, definition of standard Perl
+GLOBAL      Interpreter-wide package symbols, really UNIT::GLOBAL
+PROCESS     Process-related globals (superglobals). The last place dynamic variable lookup will look.
+COMPILING   Lexical symbols in the scope being compiled
 =end table
 
-X«|CALLER (package)»X«|CALLERS (package)»X«|DYNAMIC (package)»X«|OUTER (package)»X«|OUTERS (package)»X«|LEXICAL (package)»X«|UNIT (package)»X«|SETTING (package)»X«|PARENT (package)»X«|CLIENT (package)»
+X«|CALLER (package)»X«|CALLERS (package)»X«|DYNAMIC (package)»
+X«|OUTER (package)»X«|OUTERS (package)»X«|LEXICAL (package)»
+X«|UNIT (package)»X«|SETTING (package)»X«|PARENT (package)»X«|CLIENT (package)»
 The following relative names are also reserved but may be used
 anywhere in a name:
 
 =begin table
-    CALLER      Contextual symbols in the immediate caller's lexical scope
-    CALLERS     Contextual symbols in any caller's lexical scope
-    DYNAMIC     Contextual symbols in my or any caller's lexical scope
+    CALLER      Dynamic symbols in the immediate caller's lexical scope
+    CALLERS     Dynamic symbols in any caller's lexical scope
+    DYNAMIC     Dynamic symbols in my or any caller's lexical scope
     OUTER       Symbols in the next outer lexical scope
     OUTERS      Symbols in any outer lexical scope
-    LEXICAL     Contextual symbols in my or any outer's lexical scope
+    LEXICAL     Dynamic symbols in my or any outer's lexical scope
     UNIT        Symbols in the outermost lexical scope of compilation unit
     SETTING     Lexical symbols in the unit's DSL (usually CORE)
     PARENT      Symbols in this package's parent package (or lexical scope)
@@ -102,7 +120,7 @@ anywhere in a name:
 The file's scope is known as C<UNIT>, but there are one or more lexical
 scopes outside of that corresponding to the linguistic setting (often
 known as the prelude in other cultures). Hence, the C<SETTING> scope is
-equivalent to C<UNIT::OUTERS>. For a standard Perl 6 program C<SETTING>
+equivalent to C<UNIT::OUTERS>. For a standard Raku program C<SETTING>
 is the same as C<CORE>, but various startup options (such as C<-n> or
 C<-p>) can put you into a domain specific language, in which case
 C<CORE> remains the scope of the standard language, while C<SETTING>
@@ -114,30 +132,33 @@ the setting's outermost scope, use C<UNIT::OUTER> instead.
 =head1 Looking up names
 
 =head2 Interpolating into names
+X<|interpolating into names>
 
-X<|::()> You may interpolate a string into a package or variable name
-using C<::($expr)> where you'd ordinarily put a package or variable
-name. The string is allowed to contain additional instances of C<::>,
-which will be interpreted as package nesting. You may only interpolate
-entire names, since the construct starts with C<::>, and either ends
-immediately or is continued with another C<::> outside the parentheses.
-Most symbolic references are done with this notation:
+X<|::()> You may L<interpolate|/language/packages#Interpolating> a string into a
+package or variable name using C<::($expr)> where you'd ordinarily put a package
+or variable name. The string is allowed to contain additional instances of
+C<::>, which will be interpreted as package nesting. You may only interpolate
+entire names, since the construct starts with C<::>, and either ends immediately
+or is continued with another C<::> outside the parentheses. Most symbolic
+references are done with this notation:
 
-=for code :skip-test
-$foo = "Bar";
-$foobar = "Foo::Bar";
-$::($foo)           # lexically-scoped $Bar
-$::("MY::$foo")     # lexically-scoped $Bar
-$::("OUR::$foo")    # package-scoped $Bar
-$::("GLOBAL::$foo") # global $Bar
-$::("PROCESS::$foo")# process $Bar
-$::("PARENT::$foo") # current package's parent's $Bar
-$::($foobar)        # $Foo::Bar
-$::($foobar)::baz   # $Foo::Bar::baz
-$::($foo)::Bar::baz # $Bar::Bar::baz
-$::($foobar)baz     # ILLEGAL at compile time (no operator baz)
+=for code :skip-test<showcasing syntaxes>
+my $foo = "Foo";
+my $bar = "Bar";
+my $foobar = "Foo::Bar";
+$::($bar)              # lexically-scoped $Bar
+$::("MY::$bar")        # lexically-scoped $Bar
+$::("OUR::$bar")       # package-scoped $Bar
+$::("GLOBAL::$bar")    # global $Bar
+$::("PROCESS::$bar")   # process $Bar
+$::("PARENT::$bar")    # current package's parent's $Bar
+$::($foobar)           # $Foo::Bar
+@::($foobar)::baz      # @Foo::Bar::baz
+@::($foo)::Bar::baz    # @Bar::Bar::baz
+@::($foobar)baz        # ILLEGAL at compile time (no operator baz)
+@::($foo)::($bar)::baz # @Foo::Bar::baz
 
-An initial C<::> doesn't imply global. Here as part of the interpolation
+An initial C<::> doesn't imply global; here as part of the interpolation
 syntax it doesn't even imply package. After the interpolation of the
 C<::()> component, the indirect name is looked up exactly as if it had
 been there in the original source code, with priority given first to
@@ -148,10 +169,10 @@ searched last.
 Use the C<MY> pseudopackage to limit the lookup to the current lexical scope,
 and C<OUR> to limit the scopes to the current package scope.
 
-In the same vein, class and method names can be interpolated too.
+In the same vein, class and method names can be interpolated too:
 
     role with-method {
-        method a-method { return "in-a-method of " ~ $?CLASS.^name  };
+        method a-method { return 'in-a-method of ' ~ $?CLASS.^name  };
     }
 
     class a-class does with-method {
@@ -160,16 +181,16 @@ In the same vein, class and method names can be interpolated too.
 
     class b-class does with-method {};
 
-    my $what-class='a-class';
+    my $what-class = 'a-class';
 
-    say ::($what-class).a-method;
+    say ::($what-class).a-method; # OUTPUT: «in-a-method of a-class␤»
     $what-class = 'b-class';
-    say ::($what-class).a-method;
+    say ::($what-class).a-method; # OUTPUT: «in-a-method of b-class␤»
 
-    my $what-method='a-method';
-    say a-class."$what-method"();
-    $what-method='another-method';
-    say a-class."$what-method"();
+    my $what-method = 'a-method';
+    say a-class."$what-method"(); # OUTPUT: «in-a-method of a-class␤»
+    $what-method = 'another-method';
+    say a-class."$what-method"(); # OUTPUT: «in-another-method␤»
 
 X<|::($c).m>
 X<|A."$m"()>
@@ -180,9 +201,9 @@ X<|A."$m"()>
 To do direct lookup in a package's symbol table without scanning, treat the
 package name as a hash:
 
-=for code :skip-test
+=for code :skip-test<showcasing syntaxes>
 Foo::Bar::{'&baz'}  # same as &Foo::Bar::baz
-PROCESS::<$IN>      # Same as $*IN
+PROCESS::<$IN>      # same as $*IN
 Foo::<::Bar><::Baz> # same as Foo::Bar::Baz
 
 Unlike C<::()> symbolic references, this does not parse the argument for
@@ -193,26 +214,14 @@ compile time.
 The null pseudo-package is the same search list as an ordinary name search.
 That is, the following are all identical in meaning:
 
-=for code :skip-test
+=for code :skip-test<showcasing syntaxes>
 $foo
-$::{'foo'}
 ::{'$foo'}
-$::<foo>
 ::<$foo>
 
-Each of them scans lexical scopes outward, and then the current
+Each of them scans the lexical scopes outward, and then the current
 package scope (though the package scope is then disallowed when "strict" is
 in effect).
-
-As a result of these rules, you can write any arbitrary variable name as
-either of:
-
-=for code :skip-test
-$::{'!@#$#@'}
-::{'$!@#$#@'}
-
-You can also use the C<< ::<> >> form as long as there are no spaces in the
-name.
 
 =head2 Package lookup
 
@@ -220,15 +229,16 @@ Subscript the package object itself as a hash object, the key of which is
 the variable name, including any sigil. The package object can be derived
 from a type name by use of the C<::> postfix:
 
-=for code :skip-test
+=for code :skip-test<showcasing syntax>
 MyType::<$foo>
 
 =head2 Class member lookup
 
-Methods—including auto-generated methods, such as public attributes' accessors—are stored
-in the class meta object and can be looked up through by the L<lookup|/routine/lookup> method.
+Methods—including auto-generated methods, such as public attributes'
+accessors—are stored in the class metaobject and can be looked up through by
+the L<lookup|/routine/lookup> method.
 
-=for code :skip-test
+=for code
 Str.^lookup('chars')
 
 =head1 Globals
@@ -238,13 +248,6 @@ starts in the C<GLOBAL> package, so "our" declarations in the mainline code
 go into that package by default. Process-wide variables live in the
 C<PROCESS> package. Most predefined globals such as C<$*UID> and C<$*PID>
 are actually process globals.
-
-=head1 Version
-
-X<|.^ver,package>
-Any package may have a L<Version|/type/Version> object attached to it. This
-object can be accessed via C<$?PACKAGE.^ver> or from outside the package
-C<Fully::Qualified::Name.^ver>.
 
 =end pod
 

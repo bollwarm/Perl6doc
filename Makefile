@@ -7,41 +7,31 @@ COLON_Z              := :Z
 SELINUX_OPT          := $(shell [ $(DOCKER_SELINUX_LABEL) -eq 1 ] && echo "$(COLON_Z)" || echo '' )
 # dependencies for a new doc/Language build:
 LANG_POD6_SOURCE     := $(wildcard doc/Language/*.pod6)
+# Managing of the language index page
+USE_CATEGORIES := True
 
 .PHONY: html init-highlights html-nohighlight sparse assets webdev-build \
 	bigpage test xtest ctest help run clean-html clean-images \
 	clean-search clean test-links push \
         gen-pod6-source clean-build \
-	docker-image docker-htmlify docker-test docker-xtest docker-ctest docker-testall docker-run
+	docker-image docker-test docker-xtest docker-ctest docker-testall docker-run
 
-html: gen-pod6-source bigpage htmlify
-
-htmlify: gen-pod6-source init-highlights assets
-	perl6 htmlify.p6
-
-gen-pod6-source: $(LANG_POD6_SOURCE) doc/Language/00-POD6-CONTROL
-	perl6 util/manage-page-order.p6 update
+html: gen-pod6-source bigpage
 
 init-highlights:
 	ATOMDIR="./highlights/atom-language-perl6";  \
 	if [ -d "$$ATOMDIR" ]; then (cd "$$ATOMDIR" && git pull); \
 	else git clone https://github.com/perl6/atom-language-perl6 "$$ATOMDIR"; \
-	fi; cd highlights; npm install .
-
-html-nohighlight:
-	perl6 htmlify.p6 --no-highlight
-
-sparse:
-	perl6 htmlify.p6 --no-highlight --sparse=10
+	fi; cd highlights; npm install .; npm rebuild
 
 assets:
 	./app.pl assets
 
-webdev-build:
-	perl6 htmlify.p6 --no-highlight --sparse=200
-
 bigpage: gen-pod6-source
 	pod2onepage --html -v --source-path=./build --exclude=404.pod6 > html/perl6.html
+
+epub: bigpage
+	pandoc html/perl6.html -o perl6.epub
 
 # Common tests that are run by travis with every commit
 test:
@@ -71,7 +61,7 @@ help:
 	@echo "  ctest:             run the test suite, content tests only"
 	@echo "    run:             run the development webserver"
 	@echo "docker-image:        build Docker image from Dockerfile"
-	@echo "docker-htmlify:      generate the HTML documentation (in container)"
+
 	@echo "docker-test:         run the test suite (in container)"
 	@echo "docker-xtest:        run the test suite, including extra tests (in container)"
 	@echo "docker-ctest:        run the test suite, content tests only (in container)"
@@ -86,10 +76,6 @@ run:
 
 docker-image:
 	docker build -t $(DOCKER_IMAGE_NAME) .
-
-docker-htmlify: docker-image docker-test
-	docker run --rm -it -v $(REPO_PATH):/perl6/doc/$(SELINUX_OPT) $(DOCKER_IMAGE_NAME) \
-		/bin/bash -c 'make html'
 
 docker-test: docker-image
 	docker run --rm -it -v $(REPO_PATH):/perl6/doc/$(SELINUX_OPT) $(DOCKER_IMAGE_NAME) \

@@ -1,8 +1,9 @@
-=begin pod
+=begin pod :kind("Type") :subkind("enum") :category("domain-specific")
 
 =TITLE enum Order
 
 =SUBTITLE Human readable form for comparison operators.
+X<|Less>X<|Same>X<|More>
 
     enum Order (:Less(-1), :Same(0), :More(1));
 
@@ -12,7 +13,7 @@
 
     multi sub infix:<cmp>(\a, \b --> Order:D)
 
-C<cmp> will first try to compare operands as strings (via coercion to L<Stringy>), and, failing that, will try to compare numerically via the C«<=>» operator or any other type-appropriate comparison operator. See also L<the documentation for the C<cmp> operator|https://docs.perl6.org/routine/cmp#(Operators)_infix_cmp>.
+C<cmp> will first try to compare operands as strings (via coercion to L<Stringy|/type/Stringy>), and, failing that, will try to compare numerically via the C«<=>» operator or any other type-appropriate comparison operator. See also L<the documentation for the C<cmp> operator|/routine/cmp#(Operators)_infix_cmp>.
 
 =head2 infix <=>
 

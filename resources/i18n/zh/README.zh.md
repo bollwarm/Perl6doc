@@ -1,14 +1,22 @@
-# Perl 6 官方文档
+# Raku 官方文档
 
-[![Build Status](https://travis-ci.org/perl6/doc.svg?branch=master)](https://travis-ci.org/perl6/doc) [![artistic](https://img.shields.io/badge/license-Artistic%202.0-blue.svg?style=flat)](https://opensource.org/licenses/Artistic-2.0)
-
-[![Run Status](https://api.shippable.com/projects/591e99923f2f790700098a30/badge?branch=master)](https://app.shippable.com/github/perl6/doc)
+[![Build Status](https://travis-ci.org/perl6/doc.svg?branch=master)](https://travis-ci.org/perl6/doc) [![artistic](https://img.shields.io/badge/license-Artistic%202.0-blue.svg?style=flat)](https://opensource.org/licenses/Artistic-2.0) [![Run Status](https://api.shippable.com/projects/591e99923f2f790700098a30/badge?branch=master)](https://app.shippable.com/github/perl6/doc)
 
 网站 [https://docs.perl6.org/](https://docs.perl6.org/)提供 HTML 版本的文档。目前我们推荐通过网站阅读文档。
 
 本仓库还提供命令行工具 p6doc 用于阅读文档（详见下文）。
 
-（如果你通过 GitHub 浏览本仓库，那么大部分文件都不能正确显示，这是因为 GitHub 把 Perl 6 Pod 识别成 Perl 5 Pod）
+## Docker 镜像
+
+官方文档的 Docker 镜像地址为 [`jjmerelo/perl6-doc`](https://hub.docker.com/r/jjmerelo/perl6-doc)。这个镜像包含了一份 Web 版本的文档，对应的端口为 3000。你可以这样运行这个镜像：
+
+    docker run --rm -it -p 3000:3000 jjmerelo/perl6-doc
+
+或者，如果你想发布到其他端口：
+
+    docker run --rm -it -p 31415:3000 jjmerelo/perl6-doc
+
+现在，可以通过浏览器访问 http://localhost:3000 （或者 31415 端口，取决于你使用了哪一个命令）。
 
 ## 其他语言版本的 README
 
@@ -23,7 +31,7 @@
 
 ## 安装 p6doc
 
-本模块可通过 Perl 6 模块生态系统获得。使用命令
+本模块可通过 Raku 模块生态系统获得。使用命令
 
     $ zef install p6doc
 
@@ -59,13 +67,15 @@
 
     $ rakudobrew rehash
 
-此外为了满足本仓库 Perl 6 代码的依赖，还需要安装 `graphviz`，在 Debian 可执行下面命令
+此外为了满足本仓库 Raku 代码的依赖，还需要安装 `graphviz`，在 Debian 可执行下面命令
 
     $ sudo apt-get install graphviz
 
 一切就绪，运行下面的命令构建 Web 页面
 
     $ make html
+
+> 为了生成最准确的结果，我们推荐使用最新的发行版。准确的说，比 2018.11 更新的任何版本。
 
 请注意，为了通过上面的命令生成 HTML 文本，必须安装 [nodejs](https://nodejs.org)，特别地，可执行的 `node` 命令路径被添加到 `PATH` 里。
 
@@ -79,11 +89,15 @@
 
     $ cpanm --installdeps .
 
+如果你已经安装了 `pandoc`，那么你可以通过以下命令生成一个 epub 版本的文档
+
+    $ make epub
+
 ---------
 
 ## 我们需要帮助！
 
-Perl 6 不是小语言，为它做文档需要付出很大的努力。我们会感激任何形式帮助。
+Raku 不是小语言，为它做文档需要付出很大的努力。我们会感激任何形式帮助。
 
 以下是一些帮助我们的方式：
 
@@ -103,8 +117,8 @@ Perl 6 不是小语言，为它做文档需要付出很大的努力。我们会
 
 **A:** 起码有以下几点：
 
-  1. 这份文档与 Perl 6 的一份特定的语言标准相关联，
-     而不是跟某个 Perl 6 的具体实现相绑定。
+  1. 这份文档与 Raku 的一份特定的语言标准相关联，
+     而不是跟某个 Raku 的具体实现相绑定。
   2. 处理内嵌的 Pod 的功能还不太稳定，使用单独的文档仓库
      有利于避免运行时错误。
   3. 一个 perl6 GitHub 账号下的单独的仓库能吸引更多
@@ -119,9 +133,9 @@ Perl 6 不是小语言，为它做文档需要付出很大的努力。我们会
 ## 愿景
 
 > I want p6doc and docs.perl6.org to become the No. 1 resource to consult
-> when you want to know something about a Perl 6 feature, be it from the
+> when you want to know something about a Raku feature, be it from the
 > language, or built-in types and routines. I want it to be useful to every
-> Perl 6 programmer.
+> Raku programmer.
 >
 >    -- moritz
 

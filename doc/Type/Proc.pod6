@@ -1,4 +1,4 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("domain-specific")
 
 =TITLE class Proc
 
@@ -13,10 +13,10 @@ the exit code. It is typically created through the C<run> subroutine:
 =for code
 my $proc = run 'echo', 'Hallo world', :out;
 my $captured-output = $proc.out.slurp: :close;
-say "Output was $captured-output.perl()";       # OUTPUT: «Output was "Hallo world\n"␤»
+say "Output was $captured-output.perl()";# OUTPUT: «Output was "Hallo world\n"␤»
 
 Piping several commands is easy too. To achieve the equivalent of the
-pipe C<echo "Hello, world" | cat -n> in Perl 6, and capture the output
+pipe C<echo "Hello, world" | cat -n> in Raku, and capture the output
 from the second command, you can do
 
 =for code
@@ -24,8 +24,9 @@ my $p1 = run 'echo', 'Hello, world', :out;
 my $p2 = run 'cat', '-n', :in($p1.out), :out;
 say $p2.out.get;
 
-You can also feed the C<:in> pipe directly from your program, by setting it
-to C<True>, which will make the pipe available via C<.in> method on the C<Proc>:
+You can also feed the C<:in> (standard input) pipe directly from your program,
+by setting it to C<True>, which will make the pipe available via C<.in> method
+on the C<Proc>:
 
 =for code
 my $p = run "cat", "-n", :in, :out;
@@ -35,7 +36,7 @@ say $p.out.slurp: :close;
 # OUTPUT: «1  Hello,␤
 #          2  world!␤»
 
-In order to capture the standard error C<:err> can be supplied:
+In order to capture the standard error, C<:err> can be supplied:
 
 =for code
 my $p = run "ls", "-l", ".", "qqrq", :out, :err;
@@ -43,7 +44,15 @@ my $captured-output = $p.out.slurp: :close;
 my $captured-error  = $p.err.slurp: :close;
 my $exit-code       = $p.exitcode;
 
-B<Note:> Versions of L<Rakudo|/language/glossary#Rakudo> older than 2017.04 do not have C<.slurp> available on L<IO::Pipe> objects; use
+In sink context, a C<Proc> will call its C<sink> method, throwing an exception
+if the process has exited with an exit code different from zero:
+
+=for code :skip-test<Illustrates failure>
+shell 'exit 1'
+# OUTPUT: «(exit code 1) The spawned command 'exit 1' exited unsuccessfully (exit code: 1)␤»
+
+B<Note:> Versions of L<Rakudo|/language/glossary#Rakudo> older than 2017.04 do
+not have C<.slurp> available on L<IO::Pipe|/type/IO::Pipe> objects; use
 L«C<.slurp-rest>|/routine/slurp-rest» instead.
 
 Use L<Proc::Async|/type/Proc::Async> for non-blocking operations.
@@ -52,7 +61,7 @@ Use L<Proc::Async|/type/Proc::Async> for non-blocking operations.
 
 =head2 method new
 
-=begin code :skip-test
+=begin code :skip-test<compile time error>
 method new(Proc:U:
         :$in = '-',
         :$out = '-',
@@ -83,13 +92,13 @@ C<new> creates a new C<Proc> object, whereas C<run> or C<shell> create one and
 spawn it with the command and arguments provided in C<@args> or C<$cmd>,
 respectively.
 
-C<$in>, C<$out> and C<$err> are the three standard streams of the
-to-be-launched program, and default to C<"-"> meaning they inherit the
-stream from the parent process. Setting one (or more) of them to C<True>
-makes the stream available as an L<IO::Pipe> object of the same name,
-like for example C<$proc.out>. You can set them to C<False> to discard
-them. Or you can pass an existing L<IO::Handle> object (for example
-C<IO::Pipe>) in, in which case this handle is used for the stream.
+C<$in>, C<$out> and C<$err> are the three standard streams of the to-be-launched
+program, and default to C<"-"> meaning they inherit the stream from the parent
+process. Setting one (or more) of them to C<True> makes the stream available as
+an L<IO::Pipe|/type/IO::Pipe> object of the same name, like for example
+C<$proc.out>. You can set them to C<False> to discard them. Or you can pass an
+existing L<IO::Handle|/type/IO::Handle> object (for example C<IO::Pipe>) in, in
+which case this handle is used for the stream.
 
 Please bear in mind that the process streams reside in process
 variables, not in the dynamic variables that make them available to our
@@ -144,86 +153,20 @@ your idea of a newline is.
 If C<$merge> is set to True, the standard output and error stream end up
 merged in C<$proc.out>.
 
-=head2 sub run
-
-Defined as:
-
-=for code :method
-    sub run(
-        *@args ($, *@),
-        :$in = '-',
-        :$out = '-',
-        :$err = '-',
-        Bool :$bin = False,
-        Bool :$chomp = True,
-        Bool :$merge = False,
-        Str:D :$enc = 'UTF-8',
-        Str:D :$nl = "\n",
-        :$cwd = $*CWD,
-        Hash() :$env = %*ENV
-    --> Proc:D)
-
-Runs an external command I<without involving a shell> and returns a
-L<Proc> object. By default, the external command will print to standard
-output and error, and read from standard input.
-
-    run 'touch', '>foo.txt'; # Create a file named >foo.txt
-
-    run <<rm >foo.txt>>; # Another way to use run, using word quoting for the
-                         # arguments
-
-If you want to pass some variables you can still use C«< >», but try
-to avoid using C<« »> as it will do word splitting if you forget to
-quote variables:
-
-    my $file = ‘--my arbitrary filename’;
-    run ‘touch’, ‘--’, $file;  # RIGHT
-    run <touch -->, $file;     # RIGHT
-
-    run «touch -- "$file"»;    # RIGHT but WRONG if you forget quotes
-    run «touch -- $file»;      # WRONG; touches ‘--my’, ‘arbitrary’ and ‘filename’
-    run ‘touch’, $file;        # WRONG; error from `touch`
-    run «touch "$file"»;       # WRONG; error from `touch`
-
-Note that C<--> is required for many programs to disambiguate between
-command-line arguments and
-L<filenames that begin with hyphens|https://mywiki.wooledge.org/BashPitfalls#Filenames_with_leading_dashes>.
-
-A sunk L<Proc> object for a process that L<exited|/routine/exitcode>
-unsuccessfully will throw. If you wish to ignore such failures, simply
-use L<run> in non-sink context:
-
-    run 'false';     # SUNK! Will throw
-    run('false').so; # OK. Evaluates Proc in Bool context; no sinking
-
-If you want to capture standard output or error instead of having it
-printed directly you can use the C<:out> or C<:err> arguments
-respectively, which will make them available using the
-L<C<Proc.out>|/type/Proc> method:
-
-    my $proc = run 'echo', 'Perl 6 is Great!', :out, :err;
-    $proc.out.slurp(:close).say; # OUTPUT: «Perl 6 is Great!␤»
-    $proc.err.slurp(:close).say; # OUTPUT: «␤»
-
-You can use these arguments to redirect them to a filehandle, thus
-creating a kind of I<pipe>:
-
-    my $ls-alt-handle = open :w, '/tmp/cur-dir-ls-alt.txt';
-    my $proc = run "ls", "-alt", :out($ls-alt-handle);
-    # (The file will contain the output of the ls -alt command)
-
-These argument are quite flexible and admit, for instance, handles to
-redirect them. See L<Proc|/type/Proc> and
-L<Proc::Async|/type/Proc::Async> for more details.
-
-See also L<C<new>|/type/Proc#method_new> for more examples.
 
 =head2 method sink
 
+Defined as:
+
     method sink(--> Nil)
 
-When sunk, the C<Proc> object will throw L<X::Proc::Unsuccessful>
+When sunk, the C<Proc> object will throw L<X::Proc::Unsuccessful|/type/X::Proc::Unsuccessful>
 if the process it ran exited unsuccessfully.
+
+=for code :skip-test<illustrates exception>
+shell 'ls /qqq';
+# OUTPUT: «(exit code 1) ls: cannot access '/qqq': No such file or directory␤The spawned command 'ls /qqq' exited unsuccessfully (exit code: 2)␤
+n block <unit> at /tmp/3169qXElwq line 1␤␤»
 
 =head2 method spawn
 
@@ -238,7 +181,7 @@ and environment.
 
 Runs the C<Proc> object with the given command and environment which are
 passed through to the shell for parsing and execution. See
-L<C<IO::shell>|/type/IO#sub_shell> for an explanation of which shells
+L<C<shell>|/type/independent-routines#sub_shell> for an explanation of which shells
 are used by default in the most common operating systems.
 
 =head2 method command
@@ -251,9 +194,9 @@ C<shell> or C<run>.
 
 =head2 method pid
 
-    method pid(Proc:D:)
+    method pid()
 
-Returns the C<$*PID> value of the process if available, or C<Nil>.
+Returns the C<PID> value of the process if available, or C<Nil>.
 
 =head2 method exitcode
 

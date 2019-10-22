@@ -1,4 +1,4 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("exception")
 
 =TITLE class X::Attribute::NoPackage
 
@@ -16,8 +16,7 @@ has $.x;
 
 Dies with
 
-=for code :skip-test
-===SORRY!===
+=for code :lang<text>
 You cannot declare attribute '$.x' here; maybe you'd like a class or a role?
 
 =head1 Methods

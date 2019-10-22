@@ -1,102 +1,130 @@
-=begin pod :tag<perl6>
+=begin pod :kind("Language") :subkind("Language") :category("tutorial")
 
 =TITLE Modules
 
-=SUBTITLE How to create, use and distribute Perl 6 modules
+=SUBTITLE How to create, use, and distribute Raku modules
 
 =head1 Creating and using modules
 
-A module is usually a source file or set of source files
-N<Technically a module is a set of I<compunits> which are usually files but could come from anywhere as long as there is a I<compunit repository> that can provide it. See L<S11|https://design.perl6.org/S11.html>.>
-that
-expose Perl 6 constructs. These are typically packages
-(L<classes|/language/objects#Classes>,
-L<roles|/language/objects#Roles>, L<grammars|Grammar>),
+A module is usually a source file or set of source files that expose
+Raku constructs.
+
+N<Technically a module is a set of I<compunits> which are usually files
+but could come from anywhere as long as there is a I<compunit
+repository> that can provide it. See
+L<S11|https://design.perl6.org/S11.html>.>
+
+Modules are typically packages (L<classes|/language/objects#Classes>,
+L<roles|/language/objects#Roles>, L<grammars|/type/Grammar>),
 L<subroutines|/language/functions>, and sometimes
-L<variables|/language/variables>. In Perl 6 I<module> can also refer
-to a type of package declared with the C<module> keyword (see
-L<Module Packages|/language/module-packages> and the examples
-below) but here we mostly mean "module" as a set of source
-files in a namespace.
+L<variables|/language/variables>. In Raku I<module> can also refer to a type
+of package declared with the C<module> keyword (see L<Module
+Packages|/language/module-packages> and the examples below) but here we mostly
+mean "module" as a set of source files in a namespace.
 
 =head2 Looking for and installing modules.
 
-L<C<zef>|https://github.com/ugexe/zef> is the application using for installing modules in Perl 6. Modules are listed in L<the Perl 6 ecosystem|https://modules.perl6.org> and can be searched there or from the command line using C<zef search>
+L<C<zef>|https://github.com/ugexe/zef> is the application used for installing
+modules in Raku. Modules are listed in
+L<the Raku ecosystem|https://modules.perl6.org> and can be searched there or
+from the command line using C<zef search>:
 
 =for code :lang<shell>
-    zef search WWW
+zef search WWW
 
-will return a list of modules that includes WWW in their name, for instance. Then,
+will return a list of modules that includes WWW in their name, for
+instance. Then,
 
 =for code :lang<shell>
-    zef install WWW
+zef install WWW
 
-will install the module with that particular name, if it is not already installed.
+will install the module with that particular name, if it is not already
+installed. N<If it's installed, it will reinstall only if the version of
+the module is newer than the one installed>
 
 
 =head2 Basic structure
 
-Module distributions (in the I<set of related source files> sense) in Perl 6
+Module distributions (in the I<set of related source files> sense) in Raku
 have the same structure as any distribution in the Perl family of languages:
 there is a main project directory containing a C<README> and a C<LICENSE> file,
-a C<lib> directory for the source files, which may be individually
-referred to as modules and/or may themselves define modules with the C<module>
-keyword
-N<As L<synopsis S11|https://design.perl6.org/S11.html#Units> says: Confusing? Yes it is.>
-, a C<t> directory for tests, and possibly a C<bin>
-directory for executable programs and scripts.
+a C<lib> directory for the source files, which may be individually referred to
+as modules and/or may themselves define modules with the C<module> keyword N<As
+L<synopsis S11|https://design.perl6.org/S11.html#Units> says: Confusing? Yes it
+is.> , a C<t> directory for tests, and possibly a C<bin> directory for
+executable programs and scripts.
 
 Source files generally use the C<.pm6> extension, and scripts or
-executables use the C<.p6>. Test files use the C<.t> extension. Files which contain documentation use the C<.pod6> extension.
+executables use the C<.p6>. Test files use the C<.t> extension. Files which
+contain documentation use the C<.pod6> extension.
 
 X<|compunit>
-=head2 Loading and basic importing
+=head1 Loading and basic importing
 
 Loading a module makes the packages in the same namespace declared
 within available in the file scope of the loader. Importing from a
 module makes the symbols exported available in the lexical scope of
 the importing statement.
 
-=head3 C<need>X<|need>
+=head2 X<C<need>>
 
 C<need> loads a C<compunit> at compile time.
 
-=for code :skip-test
+=for code :skip-test<needs dummy module>
 need MyModule;
 
 Any packages in the namespace defined within will also be available.
 
-=begin code :skip-test
+=begin code :solo
 # MyModule.pm6
 unit module MyModule;
 
-class MyModule::Class {}
+class Class {}
 =end code
 
-C<MyModule::Class> will be defined when C<MyModule> is loaded.
+C<MyModule::Class> will be defined when C<MyModule> is loaded, and you can use
+it directly employing its fully qualified name (FQN). Classes and other types
+defined that way are not automatically exported; you will need to explicitly
+export it if you want to use it by its short name:
 
-=comment class Class { ... } won't get exported automatically on loading...not sure if bug or..
+=begin code :solo
+# MyModule.pm6
+unit module MyModule;
 
-=head3 C<use> X<|use>
+class Class is export {}
+=end code
 
-C<use> loads and then imports from a compunit at compile time. It will look for
-files that end in C<.pm6> (C<.pm> is also supported). See
-L<here|/language/modules#Finding_modules>
-for where the runtime will look for modules.
+And then
 
-=for code :skip-test
+=begin code :skip-test<needs dummy module>
 use MyModule;
 
-It is equivalent to:
+my $class = Class.new();
+say $class.perl;
+=end code
 
-=begin code :allow<L> :skip-test
+=head2 X<C<use>>
+
+C<use> loads and then imports from a compunit at compile time. It will look for
+files that end in C<.pm6> (C<.pm> is also supported, but discouraged). See
+L<here|/language/modules#Finding_installed_modules>
+for where the runtime will look for modules.
+
+=for code :skip-test<needs dummy module>
+use MyModule;
+
+This is equivalent to:
+
+=begin code :allow<L> :skip-test<needs dummy module>
 L<need|/language/modules#need> MyModule;
 import MyModule;
 =end code
 
-See also L<Selective Importing|/language/modules#Exporting_and_selective_importing> to restrict what you import.
+See also
+L<selective importing|/language/modules#Exporting_and_selective_importing>
+to restrict what you import.
 
-=head3 C<require>X<|require>
+=head2 X<C<require>>
 
 C<require> loads a compunit and imports definite symbols at runtime.
 
@@ -109,19 +137,22 @@ indirect lookup.
     my $name = 'MyModule';
     require ::($name);
 
-The symbols provided by the loaded module will not be imported into the current
-scope. You may use L<dynamic lookup|/language/packages#index-entry-::()> or
-L<dynamic subsets|/language/typesystem#subset> to use them by providing the
-fully qualified name of a symbol, for instance:
+The symbols provided by the loaded module will not be imported into the
+current scope. You may use
+L<dynamic lookup|/language/packages#index-entry-::()> or
+L<dynamic subsets|/language/typesystem#subset> to use them by providing
+the fully qualified name of a symbol, for instance:
 
     require ::("Test");
     my &mmk = ::("Test::EXPORT::DEFAULT::&ok");
     mmk('oi‽'); # OUTPUT: «ok 1 - ␤»
 
-The FQN of C<ok> is C<Test::EXPORT::DEFAULT::&ok>. We are aliasing it to C<mmk> so that we can use that symbol provided by C<Test> in the current scope.
+The FQN of C<ok> is C<Test::EXPORT::DEFAULT::&ok>. We are aliasing it to
+C<mmk> so that we can use that symbol provided by C<Test> in the current
+scope.
 
-To import symbols you must define them at compile time. B<NOTE:> C<require>
-is lexically scoped:
+To import symbols you must define them at compile time. B<NOTE:>
+C<require> is lexically scoped:
 
     sub do-something {
        require MyModule <&something>;
@@ -134,10 +165,11 @@ is lexically scoped:
 
 If C<MyModule> doesn't export C<&something> then C<require> will fail.
 
-A C<require> with compile-time symbol will install a placeholder C<package>
-that will be updated to the loaded module, class, or package. Note that the
-placeholder will be kept, B<even if require failed to load the module.>
-This means that checking if a module loaded like this is wrong:
+A C<require> with compile-time symbol will install a placeholder
+C<package> that will be updated to the loaded module, class, or package.
+Note that the placeholder will be kept, B<even if require failed to load
+the module.> This means that checking if a module loaded like this is
+wrong:
 
     # *** WRONG: ***
     try require Foo;
@@ -159,76 +191,50 @@ a C<Failure>. The correct way is:
 
 =head2 Lexical module loading
 
-Perl 6 takes great care to avoid global state, i.e. whatever you do in your
-module, it should not affect other code. That's why e.g. subroutine definitions
-are lexically (C<my>) scoped by default. If you want others to see them, you
-need to explicitly make them our scoped or export them.
+Raku takes great care to avoid global state, i.e. whatever you do in
+your module, it should not affect other code. For instance, that's why
+subroutine definitions are lexically (C<my>) scoped by default. If you want
+others to see them, you need to explicitly make them C«our» scoped or export
+them.
 
 Classes are exported by default on the assumption that loading a module will not
-be of much use when you cannot access the classes it contains. This works as
-advertised with a small but important caveat: those classes are not only visible
-in the computation unit that loads the module, but globally. This means that as
-soon as some code loads a module, those classes are immediately visible
-everywhere.
+be of much use when you cannot access the classes it contains. Loaded classes
+are thus registered only in the scope which loaded them in the first place
+N<This change was introduced in late 2016. If you are using versions older than
+this, behavior will be different>. This means that we will have to C<use> a
+class in every scope in which we actually employ it.
 
-For example, given a module C<Foo>:
-
-=for code :skip-test
-unit class Foo;
+=for code :skip-test<needs dummy module>
+use Foo;           # Foo has "use Bar" somewhere.
 use Bar;
-
-And your own program:
-
-=for code :skip-test
-use Foo;
-my $foo = Foo.new; # works as expected
-my $bar = Bar.new; # huh!? Where is Bar coming from?
-
-This doesn't sound so bad (it at least saves you some typing), except for that
-it makes another feature of Perl 6 impossible to have: the ability to load
-multiple versions of a module at the same time in different parts of your
-program:
-
-=for code :skip-test
-{
-    use Baz:ver(v1);
-    my $old-baz = Baz.new;
-}
-{
-    use Baz:ver(v2);
-    my $shiny-new-baz = Baz.new;
-}
-
-This will explode as on loading Baz:ver(v2), Rakudo will complain about "Baz"
-already being defined.
-
-To fix this, we no longer register loaded classes globally but only in the scope
-which loaded them in the first place. Coming back to our first example, we would
-need to explicitly load Bar in the main program:
-
-=for code :skip-test
-use Foo;
-use Bar;
-my $foo = Foo.new; # still works of course
-my $bar = Bar.new; # now it's clear where Bar is coming from
-
-So if you suddenly get an "Undeclared name: Bar" error message after upgrading
-to a newer Perl 6 compiler, you will most probably just need to add a: "use
-Bar;" to your code.
+my $foo = Foo.new;
+my $bar = Bar.new;
 
 =head2 Exporting and selective importing
 
 =head3 is export
 
-Packages, subroutines, variables, constants and enums are exported by marking
-them with the L<is export> trait (also note the tags available for indicating authors and versions).
+Packages, subroutines, variables, constants, and enums are exported by marking
+them with the L<is export|/routine/is export> trait (also note the tags available for indicating
+authors and versions).
 
-    =begin code :skip-test
+    =begin code :solo
     unit module MyModule:ver<1.0.3>:auth<John Hancock (jhancock@example.com)>;
     our $var is export = 3;
     sub foo is export { ... };
     constant FOO is export = "foobar";
     enum FooBar is export <one two three>;
+
+    # for multi methods, if you declare a proto you
+    # only need to mark the proto with is export
+    proto sub quux(Str $x, |) is export { * };
+    multi sub quux(Str $x) { ... };
+    multi sub quux(Str $x, $y) { ... };
+
+    # for multi methods, you only need to mark one with is export
+    # but the code is most consistent if all are marked
+    multi sub quux(Str $x) is export { ... };
+    multi sub quux(Str $x, $y) is export { ... };
 
     # Packages like classes can be exported too
     class MyClass is export {};
@@ -238,10 +244,10 @@ them with the L<is export> trait (also note the tags available for indicating au
     class MyModule::MyClass {};
     =end code
 
-As with all traits, if applied to a routine, "is export" should appear after
+As with all traits, if applied to a routine, C«is export» should appear after
 any argument list.
 
-    =begin code :skip-test
+    =begin code :solo
     sub foo(Str $string) is export { ... }
     =end code
 
@@ -249,17 +255,18 @@ You can pass named parameters to C<is export> to group symbols for exporting
 so that the importer can pick and choose. There are three predefined
 tags: C<ALL>, C<DEFAULT> and C<MANDATORY>.
 
-    =begin code :skip-test
+    =begin code :solo
     # lib/MyModule.pm6
     unit module MyModule;
     sub bag        is export             { ... }
-    sub pants      is export(:MANDATORY) { ... } # objects with tag ':MANDATORY' are always exported
+    # objects with tag ':MANDATORY' are always exported
+    sub pants      is export(:MANDATORY) { ... }
     sub sunglasses is export(:day)       { ... }
     sub torch      is export(:night)     { ... }
     sub underpants is export(:ALL)       { ... }
     =end code
 
-    =begin code :skip-test
+    =begin code :skip-test<needs dummy module>
     # main.p6
     use lib 'lib';
     use MyModule;          # bag, pants
@@ -269,19 +276,22 @@ tags: C<ALL>, C<DEFAULT> and C<MANDATORY>.
     use MyModule :ALL;     # bag, pants, sunglasses, torch, underpants
     =end code
 
-Note there currently is no way for the user to import a single object if
-the module author hasn't made provision for that, and it is not an easy
-task at the moment (see RT #127305). One way the author can provide
-such access is to give each C<export> trait its own unique tag. (And the tag
-can be the object name!) Then the user can either (1) import all objects:
+B<Note>: there currently is no way for the user to import a single
+object if the module author hasn't made provision for that, and it is
+not an easy task at the moment (see
+L<RT #127305|https://rt.perl.org/Public/Bug/Display.html?id=127305>).
+One way
+the author can provide such access is to give each C<export> trait its
+own unique tag. (And the tag can be the object name!). Then the user can
+either (1) import all objects:
 
-    =begin code :skip-test
-    use Foo :ALL;
-    =end code
+=begin code :skip-test<needs dummy module>
+use Foo :ALL;
+=end code
 
 or (2) import one or more objects selectively:
 
-    =begin code :skip-test
+    =begin code :skip-test<needs dummy module>
     use Foo :bar, :s5;
     =end code
 
@@ -296,7 +306,7 @@ no matter whether the using program adds any tag or not.
 
 4. Multiple import tags may be used (separated by commas).  For example:
 
-    =begin code :skip-test
+    =begin code :skip-test<needs dummy module>
     # main.p6
     use lib 'lib';
     use MyModule :day, :night; # pants, sunglasses, torch
@@ -305,7 +315,7 @@ no matter whether the using program adds any tag or not.
 5. Multiple tags may be used in the C<export> trait, but they must
    all be separated by either commas, or whitespace, but not both.
 
-   =begin code
+   =begin code :solo
    sub foo() is export(:foo :s2 :net) {}
    sub bar() is export(:bar, :s3, :some) {}
    =end code
@@ -315,9 +325,9 @@ no matter whether the using program adds any tag or not.
 Beneath the surface, C<is export> is adding the symbols to a C<UNIT>
 scoped package in the C<EXPORT> namespace. For example, C<is
 export(:FOO)> will add the target to the C<UNIT::EXPORT::FOO>
-package. This is what Perl 6 is really using to decide what to import.
+package. This is what Raku is really using to decide what to import.
 
-    =begin code :skip-test
+    =begin code :solo
     unit module MyModule;
 
     sub foo is export { ... }
@@ -326,7 +336,7 @@ package. This is what Perl 6 is really using to decide what to import.
 
 Is the same as:
 
-    =begin code :skip-test
+    =begin code :solo
     unit module MyModule;
 
     my package EXPORT::DEFAULT {
@@ -338,11 +348,11 @@ Is the same as:
     }
     =end code
 
-For most purposes C<is export> is sufficient but the C<EXPORT>
+For most purposes, C<is export> is sufficient but the C<EXPORT>
 packages are useful when you want to produce the exported symbols
 dynamically. For example:
 
-    =begin code :skip-test
+    =begin code :solo
     # lib/MyModule.pm6
     unit module MyModule;
 
@@ -356,7 +366,7 @@ dynamically. For example:
 
     =end code
 
-    =begin code :skip-test
+    =begin code :skip-test<needs dummy module>
     # main.p6
     use MyModule;
     say sqrt-of-four; # OUTPUT: «2␤»
@@ -367,11 +377,11 @@ dynamically. For example:
 X<|sub EXPORT>
 
 You can export arbitrary symbols with an C<EXPORT> sub. C<EXPORT>
-must return a L<Map>, where the keys are the symbol names and
+must return a L<Map|/type/Map>, where the keys are the symbol names and
 the values are the desired values. The names should include the sigil
 (if any) for the associated type.
 
-    =begin code :skip-test
+    =begin code
     # lib/MyModule.pm6
 
     class MyModule::Class { }
@@ -387,7 +397,7 @@ the values are the desired values. The names should include the sigil
     }
     =end code
 
-    =begin code :skip-test
+    =begin code :skip-test<needs dummy module>
     # main.p6
     use lib 'lib';
     use MyModule;
@@ -403,8 +413,8 @@ it is part of the compunit rather than the package.
 
 Whereas C<UNIT::EXPORT> packages deal with the named parameters passed
 to C<use>, the C<EXPORT> sub handles positional parameters. If you
-pass positional parameters to C<use> they will be passed to
-C<EXPORT>. If a positional is passed the module no longer exports
+pass positional parameters to C<use>, they will be passed to
+C<EXPORT>. If a positional is passed, the module no longer exports
 default symbols. You may still import them explicitly by
 passing C<:DEFAULT> to C<use> along with your positional parameters.
 
@@ -425,7 +435,7 @@ passing C<:DEFAULT> to C<use> along with your positional parameters.
     sub shy is export { say "you found me!" }
     =end code
 
-    =begin code :skip-test
+    =begin code :skip-test<needs dummy module>
     # main.p6
     use lib 'lib';
     use MyModule 'foo';
@@ -437,9 +447,9 @@ passing C<:DEFAULT> to C<use> along with your positional parameters.
 
 You can combine C<EXPORT> with type captures for interesting
 effect. This example creates a C<?> postfix which will only work on
-L<Cool>s.
+L<Cool|/type/Cool>s.
 
-    =begin code :skip-test
+    =begin code
     # lib/MakeQuestionable.pm6
     sub EXPORT(::Questionable) {
         my multi postfix:<?>(Questionable $_) { .so };
@@ -449,7 +459,7 @@ L<Cool>s.
     }
     =end code
 
-    =begin code :skip-test
+    =begin code :skip-test<needs dummy module>
     use MakeQuestionable Cool;
     say ( 0?, 1?, {}?, %( a => "b" )? ).join(' '); # OUTPUT: «False True False True␤»
     =end code
@@ -470,30 +480,28 @@ Then use the tag you like and pick the symbol by its name.
     my &escape-uri = URI::Escape::EXPORT::DEFAULT::<&uri_escape>;
 
 Be careful I<not> to put C<sub EXPORT> after L«C<unit> declarator|/syntax/unit».
-If you do so, it'll become just a sub inside your package, rather than the special
-export sub:
+If you do so, it'll become just a sub inside your package, rather than the
+special export sub:
 
-=begin code :skip-test<unit module can't work here>
-    unit module Bar;
-    sub EXPORT { %(Foo => &say) } # WRONG!!! Sub is scoped wrong
+=for code :solo
+unit module Bar;
+sub EXPORT { %(Foo => &say) } # WRONG!!! Sub is scoped wrong
 
-    # ---------
+=for code :solo
+sub EXPORT { %(Foo => &say) } # RIGHT!!! Sub is outside the module
+unit module Bar;
 
-    sub EXPORT { %(Foo => &say) } # RIGHT!!! Sub is outside the module
-    unit module Bar;
+=head2 Finding installed modules
+
+It is up to the module installer to know where C<compunit> expects modules to be
+placed. There will be a location provided by the
+L<distribution|/routine/distribution> and in the current home directory. In
+any case, letting the module installer deal with your modules is a safe bet.
+
+=begin code :lang<shell>
+cd your-module-dir
+zef --force install .
 =end code
-
-=head2 Finding modules
-
-It is up to the module installer to know where C<compunit> expects modules to
-be placed. There will be a location provided by the distribution and in the
-current home directory. In any case, letting the module installer deal with
-your modules is a safe bet.
-
-    =begin code :skip-test<io>
-    cd your-module-dir
-    zef --force install .
-    =end code
 
 X<|use lib>
 A user may have a collection of modules not found in the normal ecosystem,
@@ -512,8 +520,9 @@ followed.
 
 =head1 Distributing modules
 
-If you've written a Perl 6 module and would like to share it with the
-community, we'd be delighted to have it listed in the L<Perl 6 modules directory|https://modules.perl6.org>. C<:)>
+If you've written a Raku module and would like to share it with the
+community, we'd be delighted to have it listed in the
+L<Raku modules directory|https://modules.perl6.org>. C<:)>
 
 Currently there are two different module ecosystems (module distribution
 networks) available:
@@ -552,11 +561,10 @@ Vortex-TotalPerspective/
 ├── README.md
 └── t
     └── basic.t
-
 =end code
 
-    If your project contains other modules that help the main module do
-    its job, they should go in your lib directory like so:
+If your project contains other modules that help the main module do
+its job, they should go in your lib directory like so:
 
 =begin code :lang<text>
 lib
@@ -568,128 +576,250 @@ lib
 =end code
 =end item
 
-=item If you have any additional files (such as templates or a dynamic
-    library) that you wish to have installed so you can access them at
-    runtime, they should be placed in a C<resources> sub-directory of your project.
+=begin item
+
+If you have any additional files (such as templates or a dynamic
+library) that you wish to have installed so you can access them at
+runtime, they should be placed in a C<resources> sub-directory of your project, e.g.:
+
+=begin code :lang<text>
+resources
+└── templates
+        └── default-template.mustache
+=end code
+
+The file must then be referenced in C<META6.json> (see below for more on
+C<META6.json>) so that the distribution path can be provided to the program.
+
+=begin code :lang<javascript>
+{
+    "name" : "Vortex::TotalPerspective",
+    "provides" : {
+        "Vortex::TotalPerspective" : "lib/Vortex/TotalPerspective.pm6"
+    },
+    "resources": [ "templates/default-template.mustache"]
+}
+=end code
+
+The additional file can then be accessed inside module code:
+=begin code
+my $template-text = %?RESOURCES<templates/default-template.mustache>.slurp;
+# Note that %?RESOURCES provides a C<IO> path object
+=end code
+
+=end item
 
 =item The C<README.md> file is a L<markdown-formatted|https://help.github.com/articles/markdown-basics/>
-    text file, which will later be automatically rendered as HTML by GitHub.
+text file, which will later be automatically rendered as HTML by GitHub/GitLab for modules kept
+in those ecosystems or by L<modules.perl6.org|https://modules.perl6.org> website for modules
+kept on L<CPAN|/language/faq#index-entry-CPAN_(FAQ)>.
 
 =item Regarding the C<LICENSE> file, if you have no other preference,
-you might just use the same one that Rakudo Perl 6 uses. Just
+you might just use the same one that Rakudo Raku uses. Just
 copy/paste the raw form of L<its license|https://github.com/rakudo/rakudo/blob/master/LICENSE>
 into your own C<LICENSE> file.
 
 =item The license field in META6.json
-The license field should be one of the standardized names listed here:
-L<https://spdx.org/licenses/>, in the case of the B<Artistic 2.0> license which
+should be one of the standardized names listed here:
+L<https://spdx.org/licenses/>. In the case of the B<Artistic 2.0> license, which
     is what many of our ecosystem modules use, its identifier is
     C<Artistic-2.0>. Having standardized identifiers make it easy for humans
     and computers alike to know which license was actually used by looking at
     the metadata!
 
-=item I<Your license is not on spdx.org or you have your own license>:
-If you can't find your license on C<spdx.org> or you use your own license,
-you should put the licenses name in the license field, and under
-more details here L<https://design.perl6.org/S22.html#license>.
+=item If you can't find your license on C<spdx.org> or you use your own license,
+you should put the license's name in the license field. For more details see
+L<https://design.perl6.org/S22.html#license>.
 
 =item If you don't yet have any tests, you can leave out the C<t>
-directory and C<basic.t> file for now. For more info on how to write
+directory and C<basic.t> file for now. For more information on how to write
 tests (for now), you might have a look at how other modules use
 C<Test>.
 
 =begin item
 
-To document your modules, use L<Perl 6 Pod |https://design.perl6.org/S26.html> markup inside your modules. Module documentation is most appreciated and will be especially important once  the Perl 6 module directory (or some other site) begins rendering Pod docs as HTML for easy browsing. If you have extra docs (in addition to the  Pod docs in your module(s)), create a C<doc> directory for them. Follow  the same folder structure as the C<lib> directory like so:
+To document your modules, use L<Raku Pod |/language/pod> markup inside them.
+Module documentation is most appreciated and will be especially important once
+the Raku module directory (or some other site) begins rendering Pod docs as
+HTML for easy browsing. If you have extra docs (in addition to the Pod docs in
+your module(s)), create a C<doc> directory for them. Follow the same folder
+structure as the C<lib> directory like so:
 
 =begin code :lang<text>
 doc
 └── Vortex
     └── TotalPerspective.pod6
 =end code
-
-=end item
-
-=item
-Note, described above is a minimal project directory. If your project
+N<Note, described above is a minimal project directory. If your project
 contains scripts that you'd like distributed along with your module(s),
 put them in a C<bin> directory. If you'd like a graphical logo to
 appear next to your module at the module directory, create a
 C<logotype> directory and put into it a C<logo_32x32.png> file. At some
 point, you might also consider adding C<CONTRIBUTORS>, C<NEWS>,
-C<TODO>, or other files.
+C<TODO>, or other files.>
+
+If your module requires extra processing during installation to fully
+integrate with and use non-Perl operating system resources, you may
+need to add a X<C<Build.pm6>|Build.pm6> file (a "build hook") to the top-level directory. It will
+be used by the C<zef> installer as the first step in the installation process.
+See the README for C<zef> for a brief example. Also see various usage scenarios in existing
+ecosystem modules such as C<zef> itself.
+=end item
 
 =begin item
 
 Make your X<C<META6.json>|META6.json> file look something like this:
 
 =begin code :allow<R> :lang<javascript>
-    {
-        "perl" : "6.c",
-        "name" : "Vortex::TotalPerspective",
-        "auth" : "github:SomeAuthor",
-        "api" : "1",
-        "version" : "0.0.1",
-        "description" : "Wonderful simulation to get some perspective.",
-        "authors" : [ "R<Your Name>" ],
-        "license" : "Artistic-2.0",
-        "provides" : {
-            "Vortex::TotalPerspective" : "lib/Vortex/TotalPerspective.pm6"
-        },
-        "depends" : [ ],
-        "build-depends" : [ ],
-        "test-depends" : [ ],
-        "resources" : [ ],
-        "tags": [
-          "Vortex", "Total", "Perspective"
-        ]
-        "source-url" : "git://github.com/R<you>/Vortex-TotalPerspective.git"
-    }
+{
+    "perl" : "6.c",
+    "name" : "Vortex::TotalPerspective",
+    "api"  : "1",
+    "auth" : "github:SomeAuthor",
+    "version" : "0.0.1",
+    "description" : "Wonderful simulation to get some perspective.",
+    "authors" : [ "R<Your Name>" ],
+    "license" : "Artistic-2.0",
+    "provides" : {
+        "Vortex::TotalPerspective" : "lib/Vortex/TotalPerspective.pm6"
+    },
+    "depends" : [ ],
+    "build-depends" : [ ],
+    "test-depends" : [ ],
+    "resources" : [ ],
+    "tags": [
+      "Vortex", "Total", "Perspective"
+    ],
+    "source-url" : "git://github.com/R<you>/Vortex-TotalPerspective.git"
+}
 =end code
 
-For choosing a version numbering scheme, try and use
-"major.minor.patch" (see L<the spec on versioning | https://design.perl6.org/S11.html#Versioning> for further
-details). This will go into the C<version> key of C<META6.json>.
+The attributes in this file are analyzed by the
+L<C<META6>|https://github.com/jonathanstowe/META6> class. They are divided into
+optional, mandatory and I<customary>. Mandatory are the ones you need to insert
+into your file, and customary are those used by the current Raku ecosystem and
+possibly displayed on the module page if it's published, but you have no
+obligation to use it.
 
-The C<name> key is compulsory, and C<zef> will fail if you do not include it. Even if you have created a META6.json file just to express the dependencies for a series of scripts, this section must be included.
+For choosing a version numbering scheme, try and use "major.minor.patch" (see
+L<the spec on versioning|https://design.perl6.org/S11.html#Versioning> for
+further details). This will go into the C<version> key of C<META6.json>. This
+field is optional, but used by installation to match against installed version,
+if one exists. The C<description> field is also mandatory, and includes a short
+description of the module.
 
-The C<auth> section identifies the author in GitHub or other repository hosting site, such as Bitbucket.
+The C<name> key is compulsory, and C<zef> will fail if you do not include it.
+Even if you have created a META6.json file just to express the dependencies
+for a series of scripts, this section must be included.
+
+Optionally, you can set an C<api> field. Incrementing this indicates
+that the interface provided by your module is not backwards compatible
+with a previous version. You can use it if you want to adhere to
+L<Semantic Versioning|https://semver.org>. A best practice is to simply
+keep the C<api> field to the same value as your major version number. A
+dependency can then depend on your module by including a C<:api> part,
+which will ensure backwards incompatible releases will not be pulled in.
+
+The C<auth> section identifies the author in GitHub or other repository
+hosting site, such as Bitbucket or GitLab. This field is I<customary>,
+since it's used to identify the author in the ecosystem, and opens the
+possibility of having modules with the same name and different authors.
 
 The C<authors> section includes a list of all the module authors. In
 the case there is only one author, a single element list must be
-supplied.
+supplied. This field is optional.
 
-In the C<provides> section, include all the namespaces provided by
-your distribution and that you wish to be installed, only module
-files that are explicitly included here will be installed and
-available with C<use> or C<require> in other programs.
+In the C<provides> section, include all the namespaces provided by your
+distribution and that you wish to be installed; only module files that are
+explicitly included here will be installed and available with C<use> or
+C<require> in other programs. This field is mandatory.
 
-Set C<perl> version to the minimum perl version your module works with.
+Set C<perl> version to the minimum perl version your module works with. This
+field is mandatory. Use C<6.c> if your module is valid for Christmas release and
+newer ones, use C<6.d> if it requires, at least, the Diwali version.
 
-Optionally, you can set an C<api> field. Incrementing this indicates that
-the interface provided by your module is not backwards compatible with a
-previous version. You can use it if you want to adhere to L<Semantic Versioning | https://semver.org>. Simply keep the C<api> field to the same value as
-your major version number. A dependency can then depend on your module by
-including a C<:api> part, which will ensure backwards incompatible releases
-will not be pulled in.
+The C<resources> section is optional, but, if present, should contain a list
+of the files in your C<resources> directory that you wish to be installed.
+These will be installed with hashed names alongside your library files.
+Their installed location can be determined through the C<%?RESOURCES> C<Hash>
+indexed on the name provided. The C<tags> section is also optional. It is used to describe
+the module in the Raku ecosystem.
 
-The C<resources> section is optional, but, if present, should contain a
-list of the files in your C<resources> directory that you wish to be
-installed. These will be installed with hashed names alongside your
-library files and their installed location can be determined through the
-C<%?RESOURCES> C<Hash> indexed on the name provided. C<tags> is also optional, but is used to describe the module in the Perl 6 ecosystem.
+The C<depends>, C<build-depends>, and C<test-depends> sections include different modules that
+are used in those phases of the of installation. All are optional, but
+they must obviously contain the modules that are going to be needed in those
+particular phases. These dependencies might optionally use
+L<C<Version>|/type/Version> specification strings; C<zef> will check for the
+presence and versions of these modules and install or upgrade them if needed.
 
-C<depends>, C<build-depends> and C<test-depends> include different modules that are used in those phases of the of installation. The last two are optional, but convenient.
+=for code :lang<JSON>
+//...
+"depends": [
+       "URI",
+       "File::Temp",
+       "JSON::Fast",
+       "Pod::To::BigPage:ver<0.5.0+>",
+       "Pod::To::HTML:ver<0.6.1+>",
+       "OO::Monitors",
+       "File::Find",
+       "Test::META"
+],
+//...
 
-Finally, C<source-url> indicates the URL of the repository where the module is developed.
+Additionally, C<depends> can be either an array as above or a hash that uses two
+keys, C<runtime> and C<build>, whose function should be self-descriptive, and
+which are used, for instance,
+L<in C<Inline::Python>|https://github.com/niner/Inline-Python/blob/master/META6.json>:
 
-The L<Test::META module | https://github.com/jonathanstowe/Test-META/>
-can help you check the correctness of the META6.json file.
+=for code :lang<JSON>
+//...
+"depends" : {
+        "build": {
+            "requires": [
+                "Distribution::Builder::MakeFromJSON",
+                {
+                    "from" : "bin",
+                    "name" : {
+                        "by-distro.name" : {
+                            "macosx" : "python2.7-config",
+                            "debian" : "python2.7-config",
+                            "" : "python2-config"
+                        }
+                    }
+                }
+            ]
+        },
+        "runtime": {
+            "requires": [
+                "python2.7:from<native>"
+            ]
+        }
+}, // ...
 
-There are more fields described in the L<META design documents |https://design.perl6.org/S22.html#META6.json>, but not all of these are
-implemented by existing package managers. Hence you should stick to the
-fields described in the above example block to ensure compatibility with
-existing package managers. You can also check L<Moritz Lenz's repository of all modules for examples|https://github.com/moritz/perl6-all-modules/search?l=JSON&q=META6.json&type=>.
+In general, the array form will be more than enough for most cases.
+
+Finally, C<source-url> indicates the URL of the repository where the module is
+developed; this is one of the customary modules if you are going to publish it
+in the module ecosystem. The current module ecosystem will link this URL from
+the project description. N<Some old modules also provide a C<source-type> field,
+which was used to indicate the kind of source control system, generally C<git>,
+which can be used to download the module. However, this field is nowadays
+ignored by C<zef> and the rest of the tools.>
+
+The L<C<Test::META>> module | https://github.com/jonathanstowe/Test-META/> can
+help
+you check the correctness of the META6.json file; this module will check for all
+the mandatory fields and that the type used for all of them is correct.
+
+There are more fields described in the
+L<C<META> design documents |https://design.perl6.org/S22.html#META6.json>,
+but not all of these are
+implemented by existing package managers. Hence you should stick to the fields
+described in the above example block to ensure compatibility with existing
+package managers such as C<zef>. You can also check
+L<Moritz Lenz's repository of all modules for examples|https://github.com/moritz/perl6-all-modules/search?l=JSON&q=META6.json&type=>,
+but bear in mind that some of them might use fields, such as C<source-type>
+above, which are currently ignored.
 
 =end item
 
@@ -702,52 +832,59 @@ zef install ./your-module-folder
 =end code
 
 Note that doing so precompiles and installs your module. If you make changes to
-the source, you'll need to re-install the module. (see C<use lib> pragma,
-C<-I> command line switch, or C<PERL6LIB> env variable, to include a path
-to your module source while developing it, so you don't have to install it at all).
+the source, you'll need to re-install the module. (See C<use lib> pragma, C<-I>
+command line switch, or C<PERL6LIB> env variable, to include a path to your
+module source while developing it, so you don't have to install it at all).
 
 =end item
 
 =head2 Upload your module to CPAN
 
-Uploading a module to CPAN is the preferred way of distributing Perl 6 modules.
+Uploading a module to CPAN is the preferred way of distributing Raku modules.
 
-it requires having a L<PAUSE|https://pause.perl.org/>
-user account. If you don't have an account already go there and apply for an
-account. The process takes about 5 minutes and some e-mail back and forth.
+A prerequisite for this is a L<PAUSE|https://pause.perl.org/>
+user account. If you don't have an account already, you can create one
+L<here|https://pause.perl.org/pause/query?ACTION=request_id>
+The process takes about 5 minutes and some e-mail back and forth.
 
-    =begin item
-    Create a package of your module:
+=begin item
+Create a package of your module:
 
-    =begin code :lang<shell>
-    cd your-module-folder
-    tar czf Vortex-TotalPerspective-0.0.1.tar.gz --transform s/^\./Vortex-TotalPerspective-0.0.1/ --exclude-vcs --exclude=.[^/]*
-    =end code
+=begin code :lang<shell>
+cd your-module-folder
+tar czf Vortex-TotalPerspective-0.0.1.tar.gz \
+  --transform s/^\./Vortex-TotalPerspective-0.0.1/ --exclude-vcs\
+  --exclude=.[^/]*
+=end code
 
-    If you use git you can also use the following command to create a package directly for a given commit.
+If you use git you can also use the following command to create a package
+directly for a given commit.
 
-    =begin code :lang<shell>
-    git archive --prefix=Vortex-TotalPerspective-0.0.1/ -o ../Vortex-TotalPerspective-0.0.1.tar.gz HEAD
-    =end code
+=begin code :lang<shell>
+git archive --prefix=Vortex-TotalPerspective-0.0.1/ \
+  -o ../Vortex-TotalPerspective-0.0.1.tar.gz HEAD
+=end code
 
-    =end item
+=end item
 
-=item Go to L<PAUSE|https://pause.perl.org/>, log in and click on
-L<Upload a file to CPAN|https://pause.perl.org/pause/authenquery?ACTION=add_uri>.
+=item Go to L<PAUSE|https://pause.perl.org/>, log in and navigate to
+C<Upload a file to CPAN>.
 
-    =item Make sure you select C<Perl6> as the I<Target Directory>. For
+=item Make sure you select C<Perl6> as the I<Target Directory>. For
     your first upload, you have to enter the string C<Perl6> in the text field.
-    On subsequent uploads, you can select the C<Perl6> directory from select
-    box above the input field.
+    On subsequent uploads, you can select the C<Perl6> directory from the
+    selection box right below the input field.
 
-    =begin item
-    Select your file and click I<Upload>!
+=begin item
+Select your file and click I<Upload>! If everything was fine with your
+dist, you should see your module tar file in your C<Perl6> directory along
+with both a C<META> and a C<README> file named after your module filename.
 
-    I<Make sure you have a META6.json file in your dist and that the dist
-    version you're uploading is higher than the currently uploaded version.
-    Those are the most common upload errors.>
+I<Make sure you have a META6.json file in your dist and that the dist
+version you're uploading is higher than the currently uploaded version.
+Those are the most common upload errors.>
 
-    =end item
+=end item
 
 =head2 Upload your module to p6c
 
@@ -778,22 +915,23 @@ get help having it added.
 =item After the pull request has been accepted, wait for an hour. If
 your module doesn't show up on L<https://modules.perl6.org/>, please
 view the log file at L<https://modules.perl6.org/update.log> to see
-if it identifies an error with your module or meta file.
+if it identifies an error with your module or C<meta> file.
 
-B<That's it! Thanks for contributing to the Perl 6 community!>
+B<That's it! Thanks for contributing to the Raku community!>
 
 If you'd like to try out installing your module, use the X<zef> module
-installer tool which is included with Rakudo Star Perl 6:
+installer tool which is included with Rakudo Star Raku:
 
 =begin code :lang<shell>
 zef install Vortex::TotalPerspective
 =end code
 
 This will download your module to its own working directory (C<~/.zef>),
-build it there, and install the module into your local Perl 6 installation directory.
+build it there, and install the module into your local Raku installation
+directory.
 
 To use C<Vortex::TotalPerspective> from your scripts, just write
-C<use Vortex::TotalPerspective>, and your Perl 6 implementation will
+C<use Vortex::TotalPerspective>, and your Raku implementation will
 know where to look for the module file(s).
 
 =head1 Modules and tools related to module authoring

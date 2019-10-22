@@ -17,7 +17,7 @@ Allow a few well known duplicates, like 'long long'
 
 =end overview
 
-my $safe-dupes = Set.new(<method long default that>); # Allow these dupes
+my $safe-dupes = Set.new(<method long default that yada,>); # Allow these dupes
 
 my @files = Test-Files.documents \
     .grep({$_ ne "doc/HomePage.pod6"}) \  # mostly HTML
@@ -40,9 +40,11 @@ sub test-it(Str $output, Str $file) {
         }
         next unless $line.chars;
 
-        my @words = |$last-word, $line.words.grep: *.chars;
+        my @words = flat $last-word, $line.words;
+        @words .= grep(*.chars);
 
-        if $line.ends-with('.') {
+        # End of a sentence resets word check, as do short lines (typically headings)
+        if $line.ends-with('.') or @words.elems <= 2 {
             $last-word = '';
         } elsif @words {
             $last-word = @words[*-1];

@@ -1,29 +1,30 @@
-=begin pod :tag<index>
+=begin pod :kind("Language") :subkind("Language") :category("reference")
 
 =TITLE FAQ
 
-=SUBTITLE Frequently asked questions about Perl 6
+=SUBTITLE Frequently asked questions about Raku
 
 =head1 General
 
-X<|Rakudo and Perl 6 (FAQ)>
-=head2 What's the difference between Rakudo and Perl 6?
+X<|Rakudo, Raku and Raku (FAQ)>
+=head2 What's the difference between Raku, Rakudo and Raku?
 
-Properly speaking, L<Rakudo|https://rakudo.org/> is an implementation of
-Perl 6. It's currently the most developed, but there have been other
-implementations in the past and there will likely be others in the
-future. Perl 6 is the definition of the language. Often, Rakudo and
-Perl 6 will be used interchangeably.
+Properly speaking, L<Rakudo|https://rakudo.org/> is an implementation of Raku.
+It's currently the one that's being developed, but there have been other
+implementations in the past and there will likely be others in the future.
+Raku (which can also be called "Raku") is the definition of the language. When
+talking about the current interpreter, Rakudo and Raku can be used
+interchangeably.
 
-=head2 Has Perl 6 been released?
+=head2 When was Raku released?
 
-Yes with the Rakudo 2015.12 implementation version on December 25th 2015.
+The Rakudo 2015.12 implementation version was released on December 25th 2015.
 
-=head2 Is there a Perl 6 version 6.0.0?
+=head2 Is there a Raku version 6.0.0?
 
 No. The first stable language specification version is v6.c
 ("Christmas"). Future versions of the spec may have point releases (e.g.
-v6.c.2) or major releases (e.g., v6.d).
+v6.d.2) or major releases (e.g., v6.e).
 
 Running C<perl6 -v> will display the language version your compiler
 implements:
@@ -31,25 +32,32 @@ implements:
 =for code :lang<shell>
 $ perl6 -v
 This is Rakudo version 2017.07 built on MoarVM version 2017.07
-implementing Perl 6.c.
+implementing Raku.c.
 
 X<|v6.d (FAQ)>
-=head2 When is v6.d going to be released?
+=head2 When was v6.d released?
 
-There is no planned date, although L<Diwali 2018|https://en.wikipedia.org/wiki/Diwali>
-looks to be an attractive date for a release codenamed C<Diwali>.
+The v6.d Specification was released on
+L<Diwali 2018|https://en.wikipedia.org/wiki/Diwali>,
+which was November 6–7 2018, in a
+convenient time zone. 6.d was enabled by default in the Rakudo compiler
+release of 2018.11.
 
-The vast majority of 6.d features are already implemented and available
-in in the Rakudo compiler without requiring any special pragmas, as they
+The vast majority of 6.d features were already implemented and available
+in the Rakudo compiler without requiring any special pragmas, as they
 did not conflict with the 6.c specification. A smaller set of features
-and behaviours is available automatically if you have the C<use
-v6.d.PREVIEW> pragma at the top of the file. The rest of about 3100 new
+and behaviors is available automatically if you have the C<use
+v6.d> pragma at the top of the file. The rest of about 3100 new
 commits to the language specification simply clarify previously
-undefined behaviour.
+undefined behavior.
 
-X<|Rakudo Star DMG binary installer (FAQ)> X<|Rakudo Star MSI binary installer (FAQ)> X<|Rakudo Star docker image (FAQ)>
-X<|Rakudo Star for Linux (FAQ)> X<|Rakudo Star for Windows (FAQ)> X<|Rakudo Star for Mac (FAQ)>
-=head2 As a Perl 6 user, what should I install?
+X<|Rakudo Star DMG binary installer (FAQ)>
+X<|Rakudo Star MSI binary installer (FAQ)>
+X<|Rakudo Star docker image (FAQ)>
+X<|Rakudo Star for Linux (FAQ)>
+X<|Rakudo Star for Windows (FAQ)>
+X<|Rakudo Star for Mac (FAQ)>
+=head2 As a Raku user, what should I install?
 
 Mac users can use the latest Rakudo Star DMG binary installer at
 L<https://rakudo.org/downloads/star>
@@ -74,10 +82,10 @@ X<|rakudobrew (FAQ)>
 An option is to clone L<the repository|https://github.com/rakudo/rakudo> and
 build it. This will install work in progress which is minimally-tested and
 may contain severe bugs. If you're interested in contributing to Rakudo
-Perl 6 compiler, you may find
+Raku compiler, you may find
 L<Z-Script helper tool|https://github.com/zoffixznet/z> useful.
 
-To install the last official monthly release check out the tag visible
+To install the last official monthly release, check out the tag visible
 at L<https://raw.githubusercontent.com/rakudo/rakudo/master/VERSION> or
 set up L<a helper command|https://github.com/zoffixznet/r#table-of-contents>.
 
@@ -91,10 +99,10 @@ L«C<zef>|https://modules.perl6.org/dist/zef:github» and
 L«C<p6doc>|https://modules.perl6.org/dist/p6doc:github» from the
 L<ecosystem|https://modules.perl6.org/>.
 
-=head2 Where can I find good documentation on Perl 6?
+=head2 Where can I find good documentation on Raku?
 
-See L<the official documentation website|https://docs.perl6.org/>
-(especially its L<"Language" section|https://docs.perl6.org/language.html>) as well as the
+See L<the official documentation website|/>
+(especially its L<"Language" section|/language>) as well as the
 L<Resources page|https://perl6.org/resources/>. You can also consult
 this L<great cheatsheet|https://htmlpreview.github.io/?https://github.com/perl6/mu/blob/master/docs/Perl6/Cheatsheet/cheatsheet.html>.
 
@@ -102,46 +110,49 @@ L<perl6book.com|https://perl6book.com/> contains a list of dead tree and
 electronic books.
 
 Be mindful of publication dates when reading third-party articles.
-Anything published before December, 2015 likely describes pre-release
-version of Perl 6.
+Anything published before December, 2015 likely describes a pre-release
+version of Raku.
 
-You can always L<get help from a live human in our help chat|https://webchat.freenode.net/?channels=#perl6> or L<search the chat logs|https://www.google.com/search?q=site:irclog.perlgeek.de+inurl:perl6>.
+You can always
+L<get help from a live human in our help chat|https://webchat.freenode.net/?channels=#perl6>
+or L<search the chat logs|https://colabti.org/irclogger/irclogger_log_search/perl6>
+to find previous conversations and discussions.
 
 X<|Books>
-=head2 Can I get some books about Perl 6?
+=head2 Can I get some books about Raku?
 
-Here are some available books, in no particular order:
+Here are some available books, in alphabetical order:
 
-=item L<Perl 6 at a Glance|https://deeptext.media/perl6-at-a-glance/>, by Andrew
-Shitov
 
-=item L<Think Perl 6: How to Think Like a Computer Scientist|https://greenteapress.com/wp/think-perl-6/>, by Laurent Rosenfeld.
+=item L<Learning Raku|https://www.learningperl6.com/>, by brian d foy
 
-=item L<Perl 6 Fundamentals|https://www.apress.com/us/book/9781484228982>, by
-Moritz Lenz
+=item L<Learning to program with Raku: First Steps|https://www.amazon.com/gp/product/B07221XCVL>, by JJ Merelo
 
-=item L<Parsing with Perl 6 Regexes and Grammars|https://smile.amazon.com/dp/1484232275/>, by Moritz Lenz
+=item L<Metagenomics|https://www.gitbook.com/book/kyclark/metagenomics/details>,
+by Ken Youens-Clark
 
-=item L<Learning Perl 6|https://www.learningperl6.com/>, by Brian D. Foy (To be
-published in September 2018)
+=item L<Parsing with Raku Regexes and Grammars|https://smile.amazon.com/dp/1484232275/>, by Moritz Lenz
 
-=item L<Metagenomics|https://www.gitbook.com/book/kyclark/metagenomics/details>, by Ken Youens-Clark
+=item L<Raku at a Glance|https://deeptext.media/perl6-at-a-glance/>,
+by Andrew Shitov
 
-=item L<Learning to program with Perl 6: First Steps|https://www.amazon.com/gp/product/B07221XCVL>, by JJ Merelo
+=item L<Raku Fundamentals|https://www.apress.com/us/book/9781484228982>,
+by Moritz Lenz
 
-=item L<Perl 6 Deep Dive|https://www.packtpub.com/application-development/perl-6-deep-dive">, by
-Andrew Shitov
+=item L<Raku Deep Dive|https://www.packtpub.com/application-development/perl-6-deep-dive">, by Andrew Shitov
+
+=item L<Think Raku: How to Think Like a Computer Scientist|https://greenteapress.com/wp/think-perl-6/>, by Laurent Rosenfeld.
 
 A list of books published or in progress is maintained in
 L<C<perl6.org>|https://perl6.org/resources/>.
 
 X<|Specification (FAQ)>
-=head2 What is the Perl 6 specification?
+=head2 What is the Raku specification?
 
-The specification refers to the official test suite for Perl 6. It's called
-L<C<roast>|https://github.com/perl6/roast> and is hosted on github. Any compiler
-that passes the tests is deemed to implement that version of the Perl 6
-specification.
+The specification refers to the official test suite for Raku. It's called
+L<C<roast>|https://github.com/perl6/roast> and is hosted on github. Any
+compiler that passes the tests is deemed to implement that version of the
+Raku specification.
 
 Roast's C<master> branch corresponds to the latest development that isn't
 necessarily part of any specification yet. Other branches
@@ -149,33 +160,34 @@ correspond to specific versions; for example, "6.c-errata".
 
 So C<6.c-errata> is a released language version we don't change other than to
 fix errors in tests (the "errata") whereas master is the unreleased
-work-in-progress that may become the next language version. Its current state is
-not necessarily prescriptive of the next language version's behavior since new
-additions will be reviewed for inclusion into the release.
+work-in-progress that may become the next language version. Its current state
+is not necessarily prescriptive of the next language version's behavior since
+new additions will be reviewed for inclusion into the release.
 
-=head2 Is there a glossary of Perl 6 related terms?
+=head2 Is there a glossary of Raku related terms?
 
 Yes, see L<glossary|/language/glossary>.
 
 =head2 I'm a Perl 5 programmer. Where is a list of differences between Perl 5
-and Perl 6?
+and Raku?
 
-There are several I<Perl 5 to Perl 6> guides in the L<Language section of the documentation|https://docs.perl6.org/language.html>, most notable of which
+There are several I<Perl 5 to Raku> guides in the
+L<Language section of the documentation|/language>, most notable of which
 is the L<Overview|/language/5to6-nutshell>.
 
 X<|Ruby Quickstart (FAQ)>
 =head2 I'm a Ruby programmer looking for quickstart type docs?
 
-See the L<rb-nutshell|https://docs.perl6.org/language/rb-nutshell> guide.
+See the L<rb-nutshell|/language/rb-nutshell> guide.
 
 =head1 Modules
 
 X<|CPAN (FAQ)>X<|ecosystem>
-=head2 Is there a CPAN (repository of third party library modules) for Perl 6?
+=head2 Is there a CPAN (repository of third party library modules) for Raku?
 
 Yes, it's the same L<CPAN|https://cpan.org/> as for Perl 5! The only difference
 is when using L<PAUSE|https://pause.perl.org/> to upload the module, you'd select
-C<Perl 6> as the target directory and the uploaded modules show up on
+C<Raku> as the target directory and the uploaded modules show up on
 L<modules.perl6.org|https://modules.perl6.org/> instead
 of L<MetaCPAN|https://metacpan.org/>. The
 L«C<App::Mi6> tool|https://modules.perl6.org/l/App::Mi6» can simplify the
@@ -185,28 +197,28 @@ automatically check for latest versions of a module on CPAN as well as our
 L<GitHub-based ecosystem|https://github.com/perl6/ecosystem/>.
 
 X<|p6doc (FAQ)> X<|perldoc (FAQ)>
-=head2 Is there a perldoc (command line documentation viewer) for Perl 6?
+=head2 Is there a perldoc (command line documentation viewer) for Raku?
 
 Yes, it's called C<p6doc> and is present in the ecosystem under that name. It
 comes bundled in with Rakudo Star but needs to be manually installed with C<zef>
 if you are using a Rakudo monthly release.
 
 X<|Perl 5 modules (FAQ)>
-=head2 Can I use Perl 5 modules from Perl 6?
+=head2 Can I use Perl 5 modules from Raku?
 
 Yes, with L<Inline::Perl5|https://github.com/niner/Inline-Perl5/>, which works
 well with most Perl 5 modules. It can even run Perl 5 Catalyst and DBI.
 
 X<|C and C++ (FAQ)>
-=head2 Can I use C and C++ from Perl 6?
+=head2 Can I use C and C++ from Raku?
 
-L<Nativecall|https://docs.perl6.org/language/nativecall> makes this
+L<Nativecall|/language/nativecall> makes this
 particularly easy.
 
 =head2 Nativecall can't find libfoo.so and I only have libfoo.so.1.2!
 
 This is commonly seen on Debian-like systems. You need to install C<libfoo-dev>
-package, to set a sym link for the missing file.
+package, to set a symlink for the missing file.
 
 X<|UNIX library functions (FAQ)>
 X<|POSIX (FAQ)>
@@ -217,13 +229,15 @@ It's fairly easy to use L<NativeCall|/language/nativecall> to access them.
 An ecosystem module L<POSIX|https://github.com/cspencer/perl6-posix> is
 also available.
 
-X<|Core standard library (FAQ)> X<|Rakudo Star distribution and compiler-only release (FAQ)>
+X<|Core standard library (FAQ)>
+X<|Rakudo Star distribution and compiler-only release (FAQ)>
 =head2 Does Rakudo have a core standard library?
 
 L<Rakudo Star distribution|https://rakudo.perl6.org/downloads/star/> does come
 with L<many useful modules|https://github.com/rakudo/star/tree/master/modules>.
 
-Rakudo compiler-only release includes L<only a couple of the most basic modules|https://docs.perl6.org/language/modules-core>.
+Rakudo compiler-only release includes
+L<only a couple of the most basic modules|/language/modules-core>.
 
 Many more modules can be found in the L<ecosystem|https://modules.perl6.org/>.
 
@@ -232,37 +246,37 @@ Many more modules can be found in the L<ecosystem|https://modules.perl6.org/>.
 Use C<--target=optimize> command line option to view the AST of your program,
 e.g., C<perl6 --target=optimize -e 'say "hi"'>
 
-The target C<optimize> gives the AST after the static optimizer did its job,
+The target C<optimize> gives the AST after the static optimizer does its job,
 while target C<ast> gives the AST before that step. To get the full list of
 available targets, run C<perl6 --stagestats -e "">
 
 X<|Precompile (FAQ)>
 =head2 What is precompilation?
 
-When you load a module for the first time, Rakudo compiles it into bytecode,
-and both stores it on disk, and uses the compiled bytecode. On subsequent
-loads, Rakudo prefers to load the bytecode, because that tends to be
-significantly faster.
+When you load a module for the first time, Rakudo compiles it into bytecode.
+Then, Rakudo both stores the compiled bytecode on disk and uses it, because
+that tends to be significantly faster.
 
 X<|Circular dependencies (FAQ)>
 =head2 Can I have circular dependencies between modules?
 
 No, you can't have circular dependencies, and you should
-get C<Circular module loading detected> error if you try it.
+get a C<Circular module loading detected> error if you have them between your
+modules.
 
 Very likely you can accomplish what you are trying to do using
 L<roles|/language/objects#Roles>. Instead of C<A.pm6> depending on
 C<B.pm6> and C<B.pm6> depending on C<A.pm6>, you can have C<A-Role.pm6>
-and C<B-Role.pm6> and classes in C<A.pm6> and C<B.pm6> implement these
+and C<B-Role.pm6> and classes in C<A.pm6> and C<B.pm6> implementing these
 roles respectively. Then you can depend on C<A-Role.pm6> and
 C<B-Role.pm6> without the need for the circular dependency.
 
-One of the reasons why circular dependencies do not work in Perl 6 is
+One of the reasons why circular dependencies do not work in Raku is
 one pass parsing. We have to know what A means when we parse B, and we
 have to know what B means when we parse A, which is clearly an
 infinite loop.
 
-Note that Perl 6 has no “1 file = 1 class” limitation, and circular
+Note that Raku has no “1 file = 1 class” limitation, and circular
 dependencies within a single compilation unit (e.g. file) are possible
 through stubbing. Therefore another possible solution is to move
 classes into the same compilation unit.
@@ -270,17 +284,19 @@ classes into the same compilation unit.
 =head1 Language features
 
 X<|Data::Dumper (FAQ)>
-=head2 How can I dump Perl 6 data structures
+=head2 How can I dump Raku data structures
 (like Perl 5 Data::Dumper and similar)?
 
-Typical options are to use L<say> routine that uses L<gist> method that
-gives the "gist" of the object being dumped. More detailed output can be
-obtained by calling L<perl> method that typically returns representation
+Typical options are to use the L<say|/routine/say> routine that uses
+the L<gist|/routine/gist> method which gives the "gist" of the object being
+dumped. More detailed output can be obtained by calling the
+L<perl|/routine/perl> method that typically returns an object's representation
 in L<EVAL|/routine/EVAL>-able code.
 
 If you're using the L<rakudo|https://rakudo.org> implementation, you can use
 the L«rakudo-specific C<dd> routine|/programs/01-debugging#Dumper_function_dd»
-for dumping, whose output is similar to L<perl>, but with more information.
+for dumping, whose output is similar to L<perl|/routine/perl>, but
+with more information.
 
 Examples:
 
@@ -294,12 +310,12 @@ dd $foo;         # OUTPUT: «Hash $foo = ${:foo("bar")}␤»
 =end code
 
 There are also L<several ecosystem modules|https://modules.perl6.org/s/dump>
-that provide more control over how data structures are dumped, including support
-for colored output in.
+that provide more control over how data structures are dumped, including
+support for colored output.
 
-=head2 How can I get command line history in the Perl 6 prompt (REPL)?
+=head2 How can I get command line history in the Raku prompt (REPL)?
 
-Install  L<Linenoise|https://github.com/hoelzro/p6-linenoise/> from the
+Install L<Linenoise|https://github.com/hoelzro/p6-linenoise/> from the
 ecosystem.
 
 An alternative for UNIX-like systems is to install C<rlwrap>. This can
@@ -310,27 +326,28 @@ sudo apt-get install rlwrap
 
 =head2 Why is the Rakudo compiler so apologetic?
 
-If SORRY! is present in the output the error is a compile time error
-otherwise it's runtime.
+If SORRY! is present in the output, the error is a compile time error.
+Otherwise, it's a runtime error.
 
 Example:
-
-=for code
-say 1/0;   # Attempt to divide 1 by zero using div
 
 =begin code :skip-test<compile time error>
 sub foo( Int $a, Int $b ) {...}
 foo(1)     # ===SORRY!=== Error while compiling ...
 =end code
 
+=for code
+say 1/0;   # Attempt to divide 1 by zero using div
+
 =head2 What is C<(Any)>?
 
 L«C<Any>|/type/Any» is a top level class most objects inherit from.
 The C<Any> type object is
-L<the default value|/type/Attribute.html#Trait_is_default> on variables and
+L<the default value|/type/Attribute#Trait_is_default> on variables and
 parameters without an explicit type constraint, which means you'll
 likely see C<(Any)> printed when you output a L<gist|/routine/gist> of
-a variable without any value, such as using L«C<say> routine|/routine/say»:
+a variable without any value by using, for instance, the
+L«C<say> routine|/routine/say»:
 
 =begin code
 my $foo;
@@ -344,11 +361,13 @@ say $bar; # OUTPUT: «70␤»
 =end code
 
 To test whether a variable has any defined values, see
-L<DEFINITE|/language/classtut#index-entry-.DEFINITE> and L<defined>
+L<DEFINITE|/language/classtut#index-entry-.DEFINITE> and L<defined|/routine/defined>
 routines. Several other constructs exist that test for definiteness, such as
-L«C<with>, C<orwith>, and C<without>|/syntax/with%20orwith%20without»
-statements, L«C<//>|/routine/$SOLIDUS$SOLIDUS», L<andthen>, L<notandthen>, and
-L<orelse> operators, as well as L<type constraint smileys|/type/Signature#Constraining_defined_and_undefined_values>.
+L«C<with>, C<orwith>, and C<without>|/syntax/with orwith without»
+statements, L«C<//>|/routine/$SOLIDUS$SOLIDUS», L<andthen|/routine/andthen>,
+L<notandthen|/routine/notandthen>, and
+L<orelse|/routine/orelse> operators, as well as
+L<type constraint smileys|/type/Signature#Constraining_defined_and_undefined_values>.
 
 =head2 What is C<so>?
 
@@ -357,40 +376,42 @@ C<so> is a loose precedence operator that coerces to L<Bool|/type/Bool>.
 It has the same semantics as the C<?> prefix operator, just like
 C<and> is the low-precedence version of C<&&>.
 
-Example usage:
+Example:
 
-    say so 1|2 == 2;    # OUTPUT: «True␤»
+=for code
+say so 1|2 == 2;    # OUTPUT: «True␤»
 
 In this example, the result of the comparison (which is a
 L<Junction|/type/Junction>), is converted to Bool before being printed.
 
 =head2 What are those C<:D> and C<:U> things in signatures?
 
-In Perl 6, classes and other types are objects and pass type checks
+In Raku, classes and other types are objects and pass type checks
 of their own type.
 
 For example, if you declare a variable
 
-    my Int $x = 42;
+=for code
+my Int $x = 42;
 
 then not only can you assign integers (that is, instances of class Int) to it,
 but the C<Int> type object itself:
 
-    =begin code :preamble<my Int $x>
-    $x = Int
-    =end code
+=begin code :preamble<my Int $x>
+$x = Int
+=end code
 
 If you want to exclude type objects, you can append the C<:D> type smiley,
 which stands for "definite":
 
-    =begin code
-    my Int:D $x = 42;
-    $x = Int;
+=begin code
+my Int:D $x = 42;
+$x = Int;
 
-    # dies with:
-    # Type check failed in assignment to $x;
-    # expected Int:D but got Int
-    =end code
+# dies with:
+# Type check failed in assignment to $x;
+# expected Int:D but got Int
+=end code
 
 Likewise, C<:U> constrains to undefined values, that is, type objects.
 
@@ -403,20 +424,25 @@ a type or a definite value.
 
 Example of a type constraint:
 
-    sub divide-to-int( Int $a, Int $b --> Int ) {
-            return ($a / $b).narrow;
-    }
+=begin code
+sub divide-to-int( Int $a, Int $b --> Int ) {
+        return ($a / $b).narrow;
+}
 
-    divide-to-int(3, 2)
-    # Type check failed for return value; expected Int but got Rat
+divide-to-int(3, 2)
+# Type check failed for return value; expected Int but got Rat
+=end code
 
 Example of a definite return value:
 
-    sub discard-random-number( --> 42 ) { rand }
-    say discard-random-number;
-    # OUTPUT: «42␤»
+=begin code
+sub discard-random-number( --> 42 ) { rand }
+say discard-random-number;
+# OUTPUT: «42␤»
+=end code
 
-In this case, the final value is thrown away because the return value is already specified.
+In this case, the final value is thrown away because the return value is
+already specified in the signature.
 
 X<|Junction (FAQ)>
 =head2 How can I extract the values from a Junction?
@@ -429,19 +455,21 @@ Junctions are meant as matchers, not for doing algebra with them.
 
 If you want to do it anyway, you can abuse autothreading for that:
 
-    sub eigenstates(Mu $j) {
-        my @states;
-        -> Any $s { @states.push: $s }.($j);
-        @states;
-    }
+=begin code
+sub eigenstates(Mu $j) {
+    my @states;
+    -> Any $s { @states.push: $s }.($j);
+    @states;
+}
 
-    say eigenstates(1|2|3).join(', ');
-    # prints 1, 2, 3 or a permutation thereof
+say eigenstates(1|2|3).join(', ');
+# prints 1, 2, 3 or a permutation thereof
+=end code
 
 =head2 If Str is immutable, how does C<s///> work? If Int is immutable,
 how does C<$i++> work?
 
-In Perl 6, values of many basic types are immutable, but the variables holding
+In Raku, values of many basic types are immutable, but the variables holding
 them are not. The C<s///> operator works on a variable, into which it puts a
 newly created string object. Likewise, C<$i++> works on the C<$i> variable, not
 just on the value in it.
@@ -450,23 +478,27 @@ Knowing this, you would not try to change a literal string (e.g. like
 C<'hello' ~~ s/h/H/;>), but you might accidentally do something equivalent
 using C<map> as follows.
 
-    my @foo = <hello world>.map: { s/h/H/ };
+=begin code
+my @foo = <hello world>.map: { s/h/H/ };
 
-    # dies with
-    # Cannot modify an immutable Str (hello)
+# dies with
+# Cannot modify an immutable Str (hello)
 
-    my @bar = <hello world>».subst-mutate: 'h', 'H';
+my @bar = <hello world>».subst-mutate: 'h', 'H';
 
-    # dies with
-    # Cannot resolve caller subst-mutate(Str: Str, Str);
-    # the following candidates match the type but require
-    # mutable arguments: ...
+# dies with
+# Cannot resolve caller subst-mutate(Str: Str, Str);
+# the following candidates match the type but require
+# mutable arguments: ...
+=end code
 
 Instead of modifying the original value in place, use a routine or operator
 that returns a new value:
 
-    my @foo = <hello world>.map: { S/h/H/ };  # ['Hello','world']
-    my @bar = <hello world>».subst: 'h', 'H'; # ['Hello','world']
+=begin code
+my @foo = <hello world>.map: { S/h/H/ };  # ['Hello','world']
+my @bar = <hello world>».subst: 'h', 'H'; # ['Hello','world']
+=end code
 
 See the documentation on L<containers|/language/containers> for more
 information.
@@ -474,39 +506,42 @@ information.
 =head2 What's up with array references and automatic dereferencing?
 Do I need the C<@> sigil?
 
-In Perl 6, nearly everything is a reference, so talking about taking
+In Raku, nearly everything is a reference, so talking about taking
 references doesn't make much sense. Scalar variables can also contain
 arrays directly:
 
-    my @a = 1, 2, 3;
-    say @a;                 # OUTPUT: «[1 2 3]␤»
-    say @a.^name;           # OUTPUT: «Array␤»
+=begin code
+my @a = 1, 2, 3;
+say @a;                 # OUTPUT: «[1 2 3]␤»
+say @a.^name;           # OUTPUT: «Array␤»
 
-    my $scalar = @a;
-    say $scalar;            # OUTPUT: «[1 2 3]␤»
-    say $scalar.^name;      # OUTPUT: «Array␤»
+my $scalar = @a;
+say $scalar;            # OUTPUT: «[1 2 3]␤»
+say $scalar.^name;      # OUTPUT: «Array␤»
+=end code
 
 The big difference is that arrays inside a scalar act as one value in list
 context, whereas arrays will be happily iterated over.
 
-    my @a = 1, 2, 3;
-    my $s = @a;
+=begin code
+my @a = 1, 2, 3;
+my $s = @a;
 
-    for @a { ... }          # loop body executed 3 times
-    for $s { ... }          # loop body executed only once
+for @a { ... }          # loop body executed 3 times
+for $s { ... }          # loop body executed only once
 
-    my @flat = flat @a, @a;
-    say @flat.elems;            # OUTPUT: «6␤»
+my @flat = flat @a, @a;
+say @flat.elems;            # OUTPUT: «6␤»
 
-    my @nested = flat $s, $s;
-    say @nested.elems;          # OUTPUT: «2␤»
+my @nested = flat $s, $s;
+say @nested.elems;          # OUTPUT: «2␤»
+=end code
 
 You can force list context with C<@( ... )> or by calling the
 C<.list> method on an expression, and item context with
 C<$( ... )> or by calling the C<.item> method on an expression.
 
-See the L«I<Perl 6: Sigils, Variables, and Containers> article|https://perl6advent.wordpress.com/2017/12/02/»
-to learn more.
+See the L«I<Raku: Sigils, Variables, and Containers>|https://perl6advent.wordpress.com/2017/12/02/» article to learn more.
 
 X<|Sigils (FAQ)>
 =head2 Why sigils? Couldn't you do without them?
@@ -515,75 +550,88 @@ There are several reasons:
 
 =item they make it easy to interpolate variables into strings
 
-=item they form micro-namespaces for different variables and twigils, thus avoiding name clashes
+=item they form micro-namespaces for different variables and twigils, thus
+avoiding name clashes
 
 =item they allow easy single/plural distinction
 
-=item they work like natural languages that use mandatory noun markers, so our brains are built to handle it
+=item they work like natural languages that use mandatory noun markers, so
+our brains are built to handle it
 
-=item they aren't mandatory, since you can declare sigilless names (if you don't mind the ambiguity)
+=item they aren't mandatory, since you can declare sigilless names
+(if you don't mind the ambiguity)
 
 =head2 "Type Str does not support associative indexing."
 
 You likely tried to mix string interpolation and key characters, like HTML tags:
 
-    my $foo = "abc";
-    say "$foo<html-tag>";
+=begin code
+my $foo = "abc";
+say "$foo<html-tag>";
+=end code
 
-Perl 6 thinks C<$foo> to be a Hash and C«<html-tag>» to be a string literal
+Raku thinks C<$foo> to be a Hash and C«<html-tag>» to be a string literal
 hash key. Use a closure to help it to understand you.
 
-    my $foo = "abc";
-    say "{$foo}<html-tag>";
+=begin code
+my $foo = "abc";
+say "{$foo}<html-tag>";
+=end code
 
 X<|Coroutine (FAQ)>
-=head2 Does Perl 6 have coroutines? What about C<yield>?
+=head2 Does Raku have coroutines? What about C<yield>?
 
-Perl 6 has no C<yield> statement like Python does, but it does offer similar
+Raku has no C<yield> statement like Python does, but it does offer similar
 functionality through lazy lists. There are two popular ways to write
 routines that return lazy lists:
 
-    =begin code :preamble<sub have_data {};sub some_data {};>
-    # first method, gather/take
-    my @values = gather while have_data() {
-        # do some computations
-        take some_data();
-        # do more computations
-    }
+=begin code :preamble<sub have_data {};sub some_data {};>
+# first method, gather/take
+my @values = gather while have_data() {
+    # do some computations
+    take some_data();
+    # do more computations
+}
 
-    # second method, use .map or similar method
-    # on a lazy list
-    my @squares = (1..*).map(-> \x { x² });
-    =end code
+# second method, use .map or similar method
+# on a lazy list
+my @squares = (1..*).map(-> \x { x² });
+=end code
 
 =head2 Why can't I initialize private attributes from the new method,
 and how can I fix this?
 
-Code like
+The C<say> statement in the following code sample
 
-    class A {
-        has $!x;
-        method show-x {
-            say $!x;
-        }
+=begin code
+class A {
+    has $!x;
+    method show-x {
+        return $!x;
     }
-    A.new(x => 5).show-x;
+}
+say A.new(x => 5).show-x;
+=end code
 
 does not print 5. Private attributes are I<private>, which means invisible to
-the outside. If the default constructor could initialize them, they would leak
-into the public API.
+the outside world. If the default constructor could initialize them, they would
+leak into the public API. Thus, in this particular code sample the attribute
+C<$!x> isn't initialized during object construction by the default
+constructor.
 
-If you still want it to work, you can add a C<submethod BUILD> that
-initializes them:
+If you still want to initialize private attributes with the default constructor,
+you can add a C<submethod BUILD> to achieve such task:
 
-    class B {
-        has $!x;
-        submethod BUILD(:$!x) { }
-        method show-x {
-            say $!x;
-        }
+=begin code
+class B {
+    has $!x;
+    submethod BUILD(:$!x) { }
+    method show-x {
+        return $!x;
     }
-    B.new(x => 5).show-x;
+}
+say B.new(x => 5).show-x;
+=end code
 
 C<BUILD> is called by the default constructor (indirectly, see
 L<Object Construction|/language/objects#Object_construction>
@@ -591,47 +639,52 @@ for more details) with all the named arguments that the user passes to the
 constructor. C<:$!x> is a named parameter with name C<x>, and when called
 with a named argument of name C<x>, its value is bound to the attribute C<$!x>.
 
-But don't do that. If the name is public, there is no downside to
-declaring it that way with C<$.x> since the external view is readonly
-by default, and you can still access it internally with C<$!x>.
+However, you shouldn't do that. If the attribute is declared as private,
+then it shouldn't be exposed to the environment outside the class (e.g.,
+during object construction). On the other hand, if the attribute is public,
+there is no downside to declaring it that way with C<$.x> since the external
+view is read-only by default, and you can still access it internally with C<$!x>.
 
 =head2 How and why do C<say>, C<put> and C<print> differ?
 
 The most obvious difference is that C<say> and C<put> append
 a newline at the end of the output, and C<print> does not.
 
-But there's another difference: C<print> and C<put> converts its
+But there's another difference: C<print> and C<put> convert its
 arguments to a string by calling the C<Str> method on each item
-passed to, C<say> uses the C<gist> method instead.  The C<gist> method,
+passed to them while C<say> uses the C<gist> method. The C<gist> method,
 which you can also create for your own classes, is intended to create a
-C<Str> for human interpretation.  So it is free to leave out information
-about the object deemed unimportant to understand the essence of the object.
+C<Str> for human interpretation. So it is free to leave out information
+about the object deemed unimportant to understanding the essence of the object.
 
 Or phrased differently, C<$obj.Str> gives a string representation,
-C<$obj.gist> a short summary of that object suitable for fast recognition
-by a human, and C<$obj.perl> gives a Perlish representation from which the
-object could be re-created.
+C<$obj.gist> provides a short summary of that object suitable for
+fast recognition by a human, and C<$obj.perl> gives a Perlish representation
+from which the object could be re-created.
 
-Example: type objects, also known as "undefined values", stringify
-to an empty string and warn, whereas the C<gist> method returns the name
-of the type between parentheses (to indicate there's nothing in that value
-except the type).
+For example, when the C<Str> method is invoked on a type object, also known
+as an "undefined value", the type is stringified to an empty string
+and a C<warn>ing is thrown. On the other hand, the C<gist> method returns the
+name of the type between parentheses (to indicate there's nothing in that
+value except the type).
 
-    my Date $x;     # $x now contains the Date type object
-    print $x;       # empty string plus warning
-    say $x;         # OUTPUT: «(Date)␤»
+=begin code
+my Date $x;     # $x now contains the Date type object
+print $x;       # empty string plus warning
+say $x;         # OUTPUT: «(Date)␤»
+=end code
 
-If you like to show a debugging version of an object, it is probably better
+If you'd like to show a debugging version of an object, it is probably better
 to use the L«rakudo-specific C<dd> routine|/programs/01-debugging#Dumper_function_dd».
 It essentially does a C<$obj.perl> and shows that on STDERR rather than STDOUT,
 so it won't interfere with any "normal" output of your program.
 
-So, C<say> is optimized for casual human interpretation, C<dd> is optimized
+In short, C<say> is optimized for casual human interpretation, C<dd> is optimized
 for casual debugging output and C<print> and C<put> are more generally suitable
 for producing output.
 
 C<put> is thus a hybrid of C<print> and C<say>; like C<print>, it calls the
-C<Str> method on the object.  And like C<say>, it adds a newline at the end
+C<Str> method on the object. And like C<say>, it adds a newline at the end
 of the output.
 
 =head2 What's the difference between C<token> and C<rule> ?
@@ -655,16 +708,16 @@ C<regex> declares a plain regex without any implied modifiers.
 
 C<die> throws an exception.
 
-C<fail> returns a C<Failure> object.  (If the caller has declared C<use fatal;>
-in the calling lexical scope, C<fail> throws an exception instead of returning.)
+C<fail> returns a C<Failure> object. (If the caller has declared C<use fatal;>
+in the calling lexical scope, C<fail> throws an exception instead of
+returning it.)
 
 A C<Failure> is an "unthrown" or "lazy" exception. It's an object that contains
 the exception, and throws the exception if you try to use the C<Failure>
-as an ordinary object, or ignore it in sink context.
+as an ordinary object or ignore it in sink context.
 
 A C<Failure> returns C<False> from a C<defined> check, and you can extract
 the exception with the C<exception> method.
-
 
 =head2 What's the difference between C<Pointer> and C<OpaquePointer>?
 
@@ -672,28 +725,37 @@ C<OpaquePointer> is deprecated and has been replaced with C<Pointer>.
 
 =head2 You can have colonpairs in identifiers. What's the justification?
 
-L<Identifiers can include colon pairs, which become part of their name|https://docs.perl6.org/language/syntax#Identifiers>. According to L<Larry Wall's answer to the issue|https://github.com/perl6/doc/issues/1753#issuecomment-362875676>, I<We already had the colon pair mechanism available, so it was a no-brainer to use that to extend any name that needs to be able to quote uniquefying but non-standard characters (or other information with a unique stringification to such characters)>.
+L<Identifiers can include colon pairs, which become part of their name|/language/syntax#Identifiers>.
+According to
+L<Larry Wall's answer to the issue|https://github.com/perl6/doc/issues/1753#issuecomment-362875676>,
+I<We
+already had the colon pair mechanism available, so it was a no-brainer to use
+that to extend any name that needs to be able to quote uniquefying but
+non-standard characters (or other information with a unique stringification to
+such characters)>.
 
 =head2 How do most people enter unicode characters?
 
-It depends on the operating system, windowing environment and/or editors. L<This page on entering Unicode characters|/language/unicode_entry> specifies how it is done in the most popular operating systems and editors.
+It depends on the operating system, windowing environment and/or editors. L<This
+page on entering Unicode characters|/language/unicode_entry> specifies how it is
+done in the most popular operating systems and editors.
 
-X<|Perl 6 Implementation (FAQ)>
-=head1 Perl 6 implementation
+X<|Raku Implementation (FAQ)>
+=head1 Raku implementation
 
-=head2 What Perl 6 implementations are available?
+=head2 What Raku implementations are available?
 
 Currently the best developed is Rakudo (using multiple Virtual Machine
 backends). Historic implementations include Niecza (.NET) and Pugs (Haskell).
-Others are listed at  L<Perl 6 Compilers|https://www.perl6.org/compilers/>
+Others are listed at L<Raku Compilers|https://www.perl6.org/compilers/>
 
 =head2 What language is Rakudo written in?
 
-A short answer is that Rakudo is written almost entirely in Perl 6. A more
-detailed answer is that Rakudo is written in a mixture of Perl 6 and NQP ("Not
-Quite Perl"). NQP is a lightweight Perl 6-like environment for virtual
+A short answer is that Rakudo is written almost entirely in Raku. A more
+detailed answer is that Rakudo is written in a mixture of Raku and NQP ("Not
+Quite Perl"). NQP is a lightweight Raku-like environment for virtual
 machines; it's designed to be a high-level way to create compilers and
-libraries for virtual machines (such as MoarVM and JVM) using Perl 6 syntax.
+libraries for virtual machines (such as MoarVM and JVM) using Raku syntax.
 
 X<|NQP (FAQ)>
 =head2 What language is NQP written in?
@@ -702,21 +764,25 @@ NQP is a mixture of (1) NQP code, (2) whatever language the underlying virtual
 machine is using, (3) some third-party C and Java libraries, and (4) some
 bootstrapping files created by earlier runs of the build process.
 
-=head2 Is Perl 6 Lisp?
+=head2 Is Raku Lisp?
 
-    (not (not Nil))
+=for code
+(not (not Nil))
 
 =head2 Can I compile my script to a standalone executable?
 
-Tools like L«C<App::InstallerMaker::WiX>|https://modules.perl6.org/dist/App::InstallerMaker::WiX»
-allow you to create an installer that will package the compiler and your script. However,
-the currently available compilers do not support creating a standalone executable yet.
+Tools like
+L«C<App::InstallerMaker::WiX>|https://modules.perl6.org/dist/App::InstallerMaker::WiX»
+allow you to create an installer that will package the compiler and your script.
+However, the currently available compilers do not support creating a standalone
+executable yet.
 
 If you wish to help out, the I<Rakudo> compiler on I<MoarVM> backend has
-L<https://github.com/MoarVM/MoarVM/issues/875> Issue opened as a place to discuss this problem.
+L<https://github.com/MoarVM/MoarVM/issues/875> Issue opened as a place to
+discuss this problem.
 
-X<|Perl 6 Distribution (FAQ)>
-=head1 Perl 6 distribution
+X<|Raku Distribution (FAQ)>
+=head1 Raku distribution
 
 X<|Rakudo Star release cycle (FAQ)>
 =head2 When will the next version of Rakudo Star be released?
@@ -724,9 +790,9 @@ X<|Rakudo Star release cycle (FAQ)>
 A Rakudo Star release is typically produced quarterly, with release
 announcements L<posted on rakudo.org|https://rakudo.org/posts>.
 
-=head1 Meta questions and advocacy
+=head1 Metaquestions and advocacy
 
-=head2 Why is Perl 6 called Perl?
+=head2 Why is Raku called Perl?
 
 … As opposed to some other name that didn't imply all the things
 that the higher number might indicate on other languages.
@@ -734,76 +800,90 @@ that the higher number might indicate on other languages.
 The short answer is that it was Larry's choice under
 L<Rule 1|https://perldoc.perl.org/5.12.4/perlhack.html#DESCRIPTION>.
 
-The community considers Perl 5 and Perl 6 sister languages - they have
-a lot in common, address many of the same problem spaces, but Perl 6 is not
+The community considers Perl 5 and Raku sister languages - they have
+a lot in common, address many of the same problem spaces, but Raku is not
 intended to replace Perl 5. In fact, both languages interoperate with
 each other.
 
-=head2 When will Perl 6 be ready? Is it ready now?
+=head2 When will Raku be ready? Is it ready now?
 
 Readiness of programming languages and their compilers is not a binary
 decision. As the language and the implementations evolve, they
 grow steadily more usable. Depending on your needs,
-Perl 6 and its compilers may or may not be ready for you.
+Raku and its compilers may or may not be ready for you.
 
-That said, version 6.c (Christmas 2015) is the first official release of Perl 6
+That said, version 6.c (Christmas 2015) is the first official release of Raku
 as a language, along with a validation suite and a compiler that passes it.
 
-=head2 Why should I learn Perl 6? What's so great about it?
+=head2 Why should I learn Raku? What's so great about it?
 
-Perl 6 unifies many great ideas that aren't usually found in other programming
+Raku unifies many great ideas that aren't usually found in other programming
 languages. While several other languages offer some of these features, none of
-them offer all.
+them offer all of them.
 
-=item Perl 6 offers procedural, object-oriented AND functional programming methodologies.
+=item Raku offers procedural, object-oriented AND functional programming
+methodologies.
 
 =item Easy to use consistent syntax, using invariable sigils for data-structures.
 
 =item Full grapheme based Unicode support, including Annex #29.
 
-=item Clean, more readable regular expressions; taken to the next level of usability, with a lot more functionality. Named regular expressions improve ease of use.
+=item Clean, more readable regular expressions; taken to the next level of
+usability, with a lot more functionality. Named regular expressions improve
+ease of use.
 
-=item Junctions allowing easy checking of multiple possibilities; e.g., $a == 1|3|42 ( is $a equal to 1 or 3 or 42).
+=item Junctions allowing easy checking of multiple possibilities;
+e.g., C<$a == 1|3|42> (Is C<$a> equal to 1 or 3 or 42?).
 
-=item Dynamic variables provide a lexically scoped alternative to global variables.
+=item Dynamic variables provide a lexically scoped alternative to global
+variables.
 
-=item Emphasis on composability and lexical scoping to prevent “action at a distance”; e.g., imports are always lexically scoped.
+=item Emphasis on composability and lexical scoping to prevent
+“action at a distance”; e.g., imports are always lexically scoped.
 
 =item Easy to understand consistent scoping rules and closures.
 
-=item Powerful object orientation, with classes and roles (everything can be seen as an object). Inheritance. Subtyping. Code-reuse.
+=item Powerful object orientation, with classes and roles (everything can be
+seen as an object). Inheritance. Subtyping. Code-reuse.
 
-=item Introspection into objects and meta-objects (turtles all the way down).
+=item Introspection into objects and metaobjects (turtles all the way down).
 
-=item Meta Object Protocol allowing for meta-programming without needing to generate / parse code.
+=item MetaObject Protocol allowing for metaprogramming without needing to
+generate / parse code.
 
-=item Subroutine and method signatures for easy unpacking of positional and named parameters.
+=item Subroutine and method signatures for easy unpacking of positional and
+named parameters.
 
-=item Multi dispatch for identically named subroutines/methods with different signatures, based on arity, types and optional additional code.
+=item Multi dispatch for identically named subroutines/methods with different
+signatures, based on arity, types and optional additional code.
 
 =item Compile time error reporting on unknown subroutines / impossible dispatch.
 
-=item Optional gradual type-checking at no additional runtime cost. With optional type annotations.
+=item Optional gradual type-checking at no additional runtime cost. With
+optional type annotations.
 
-=item Advanced error reporting based on introspection of the compiler/runtime state. This means more useful, more precise error messages.
+=item Advanced error reporting based on introspection of the compiler/runtime
+state. This means more useful, more precise error messages.
 
-=item Phasers (like BEGIN / END) allow code to be executed at scope entry / exit, loop first / last / next and many more special contexts.
+=item Phasers (like C<BEGIN> / C<END>) allow code to be executed at scope
+entry / exit, loop first / last / next and many more special contexts.
 
 =item High level concurrency model, both for implicit as well as explicit
-multi-processing, which goes way beyond primitive threads and locks. Perl 6's
+multi-processing, which goes way beyond primitive threads and locks. Raku's
 concurrency offers a rich set of (composable) tools.
 
-=item Multiple-core computers are getting used more and more, and with Perl 6
+=item Multiple-core computers are getting used more and more, and with Raku
 these can be used thanks to parallelism, both implicit (e.g., with the C«>>».
 method) and explicit ( C<start { code }> ). This is important, because Moore's
 Law is ending.
 
-=item Structured language support is provided to enable programming for asynchronous execution of code.
+=item Structured language support is provided to enable programming for
+asynchronous execution of code.
 
 =item Supplies allow code to be executed when something happens (like a timer,
 or a signal, or a filesystem event).
 
-=item react / whenever / supply keywords allows easy construction of
+=item C<react> / C<whenever> / C<supply> keywords allows easy construction of
 interactive, event driven applications.
 
 =item Lazy evaluation when possible, eager evaluation when wanted or necessary.
@@ -824,34 +904,43 @@ simultaneously.
 
 =item System administration simplified due to simpler update/upgrade policies.
 
-=item Simple numeric computation without precision loss because of Rats (rational numbers).
+=item Simple numeric computation without precision loss because of
+L<Rat|https://docs.perl6.org/type/Rat>s (rational numbers).
 
-=item Extensible grammars for parsing data or code (which Perl 6 uses to parse itself).
+=item Extensible grammars for parsing data or code (which Raku uses to parse
+itself).
 
-=item Perl 6 is a very mutable language (define your own functions, operators, traits and data-types, which modify the parser for you).
+=item Raku is a very mutable language (define your own functions, operators,
+traits and data-types, which modify the parser for you).
 
-=item Large selection of data-types, plus the possibility to create your own types.
+=item Large selection of data-types, plus the possibility to create your own
+types.
 
 =item Multi-dimensional shaped and/or native arrays with proper bounds checking.
 
-=item Execute code at any time during parsing of a grammar, or when a certain match occurred.
+=item Execute code at any time during parsing of a grammar, or when a certain
+match occurred.
 
-=item Adding a custom operator or adding a trait is as simple as writing a subroutine.
+=item Adding a custom operator or adding a trait is as simple as writing a
+subroutine.
 
-=item Automatic generation of hyper-operators on any operator (system or custom added).
+=item Automatic generation of hyper-operators on any operator (system or custom
+added).
 
-=item Runs on a variety of back-ends. Currently MoarVM & JVM, JavaScript in development, more may follow.
+=item Runs on a variety of back-ends. Currently MoarVM & JVM, JavaScript in
+development, more may follow.
 
 =item Runtime optimization of hot code paths during execution (JIT).
 
 =item Runs on small (e.g., Raspberry Pi) and large multi-processor hardware.
 
-=item Garbage collection based: no timely destruction, so no ref-counting necessary. Use phasers for timely actions.
+=item Garbage collection based: no timely destruction, so no ref-counting
+necessary. Use phasers for timely actions.
 
 =item Methods can be mixed into any instantiated object at runtime; e.g., to
 allow adding out-of-band data.
 
-=item Easy command-line interface accessible by MAIN subroutine with multiple
+=item Easy command-line interface accessible by C<MAIN> subroutine with multiple
 dispatch and automated usage message generation.
 
 =item Fewer lines of code allow for more compact program creation.
@@ -860,7 +949,7 @@ Huffman-coding of names allows for better readability.
 =item Lazy lists defined with a simple iterator interface, which any class can
 supply by minimally supplying a single method.
 
-=item Perl 6's mottos remain the same as they have been for Perl all along:
+=item Raku's mottos remain the same as they have been for Perl all along:
 “Perl is different. In a nutshell, Perl is designed to make the easy jobs easy,
 without making the hard jobs impossible.” and “There Is More Than One Way To Do
 It”. Now with even more -Ofun added.
@@ -869,67 +958,67 @@ Please see the
 L<feature comparison matrix|https://perl6.org/compilers/features>
 for an overview of implemented features.
 
-=head2 Is Perl 6 fast enough for me?
+=head2 Is Raku fast enough for me?
 
 That depends on what you are doing. Rakudo has been developed with the
-philosophy of "make it work right then make it work fast". It's fast for some
-things already but needs work for others. Since Perl 6 provides lots of clues
+philosophy of "make it work right then make it work fast." It's fast for some
+things already but needs work for others. Since Raku provides lots of clues
 to the JIT that other dynamic languages don't, we think we'll have a lot of
 headroom for performance improvements.
 
 The following crude benchmarks, with all the usual caveats about such things,
-show that Perl 6 can be faster than Perl 5 for similar tasks if the big weaponry
-is included, that is, if Perl 6 features are used to its full extent; at the
+show that Raku can be faster than Perl 5 for similar tasks if the big weaponry
+is included, that is, if Raku features are used to its full extent; at the
 same time, Perl 5 can be faster if only the bare bones are included. Similar
-situation can be observed when comparing Perl 6 to other languages.
+situation can be observed when comparing Raku to other languages.
 
 Try it on your system. You may be pleasantly surprised!
 
 Examples:
 
-    =begin code
-    # Perl 6 version
-    use v6.c;
+=begin code :solo
+# Raku version
+use v6.c;
 
-    class Foo { has $.i is rw };
+class Foo { has $.i is rw };
 
-    for 1..1_000_000 -> $i {
-        my $obj = Foo.new;
-        $obj.i = $i;
-    }
-    =end code
+for 1..1_000_000 -> $i {
+    my $obj = Foo.new;
+    $obj.i = $i;
+}
+=end code
 
-    =begin code :lang<perl5>
-    # Perl 5 version
-    package Foo;
-    use Moose;
+=begin code :lang<perl5>
+# Perl 5 version
+package Foo;
+use Moose;
 
-    has i => (is => 'rw');
+has i => (is => 'rw');
 
-    __PACKAGE__->meta->make_immutable;
+__PACKAGE__->meta->make_immutable;
 
-    for my $i (1..1_000_000) {
-        my $obj = Foo->new;
-        $obj->i($i);
-    }
+for my $i (1..1_000_000) {
+    my $obj = Foo->new;
+    $obj->i($i);
+}
 
-    1;
+1;
 
-    # Another Perl 5 version that offers bare-bones set of features
-    # compared to Moose/Perl 6's version but those are not needed in this
-    # specific, simple program anyway.
-    package Foo;
-    use Mojo::Base -base;
+# Another Perl 5 version that offers bare-bones set of features
+# compared to Moose/Raku's version but those are not needed in this
+# specific, simple program anyway.
+package Foo;
+use Mojo::Base -base;
 
-    has 'i';
+has 'i';
 
-    for my $i (1..1_000_000) {
-        my $obj = Foo->new;
-        $obj->i($i);
-    }
+for my $i (1..1_000_000) {
+    my $obj = Foo->new;
+    $obj->i($i);
+}
 
-    1;
-    =end code
+1;
+=end code
 
 You might want to use this program for comparing performance, too. It works
 under both languages, as long as C<perl -Mbigint> is used for invocation for

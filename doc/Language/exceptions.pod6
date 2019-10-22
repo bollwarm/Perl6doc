@@ -1,18 +1,19 @@
-=begin pod :tag<perl6>
+=begin pod :kind("Language") :subkind("Language") :category("fundamental")
 
 =TITLE Exceptions
 
-=SUBTITLE Using exceptions in Perl 6
+=SUBTITLE Using exceptions in Raku
 
-Exceptions in Perl 6 are objects that hold information about errors. An error
-can be, for example, the unexpected receiving of data or a network connection no
-longer available, or a missing file. The information that an exception objects
-store is, for instance, a human-readable message about the error condition, the
-backtrace of the raising of the error, and so on.
+Exceptions in Raku are objects that hold information about errors. An
+error can be, for example, the unexpected receiving of data or a network
+connection no longer available, or a missing file. The information that
+an exception object stores is, for instance, a human-readable message
+about the error condition, the backtrace of the raising of the error,
+and so on.
 
-All built-in exceptions inherit from L<Exception>, which provides some basic
-behavior, including the storage of a backtrace and an interface for the
-backtrace printer.
+All built-in exceptions inherit from L<Exception|/type/Exception>, which
+provides some basic behavior, including the storage of a backtrace and an
+interface for the backtrace printer.
 
 =head1 I<Ad hoc> exceptions
 
@@ -32,8 +33,8 @@ Typed exceptions provide more information about the error stored
 within an exception object.
 
 For example, if while executing C<.zombie copy> on an object, a needed path
-C<foo/bar> becomes unavailable, then an L<X::IO::DoesNotExist> exception can be
-raised:
+C<foo/bar> becomes unavailable, then an
+L<X::IO::DoesNotExist|/type/X::IO::DoesNotExist> exception can be raised:
 
     die X::IO::DoesNotExist.new(:path("foo/bar"), :trying("zombie copy"))
 
@@ -71,7 +72,7 @@ almost the same information as the normal backtrace printer.
 
     CATCH {
          default {
-             $*ERR.say: .payload;
+             $*ERR.say: .message;
              for .backtrace.reverse {
                  next if .file.starts-with('SETTING::');
                  next unless .subname;
@@ -123,27 +124,37 @@ how to return control back to where the exception originated.
 X<|try blocks>
 =head1 C<try> blocks
 
-A C<try> block is a normal block with the
-L<C<use fatal> pragma|/language/pragmas#index-entry-fatal-fatal>
-turned on and an implicit C<CATCH> block that drops the exception, which
-means you can use it to contain them.
+A C<try> block is a normal block which implicitly turns on the
+L<C<use fatal> pragma|/language/pragmas#index-entry-fatal-fatal> and
+includes an implicit C<CATCH> block that drops the exception, which
+means you can use it to contain them. Caught exceptions are stored
+inside the C<$!> variable, which holds a value of type C<Exception>.
 
-=begin code
+A normal block like this one will simply fail:
+
+=for code
 {
     my $x = +"a";
     say $x.^name;
 } # OUTPUT: «Failure␤»
 
+However, a C<try> block will contain the exception and put it into the
+C<$!> variable:
+
+=begin code
 try {
     my $x = +"a";
     say $x.^name;
 }
+
+if $! { say "Something failed!" } # OUTPUT: «Something failed!␤»
+say $!.^name;                     # OUTPUT: «X::Str::Numeric␤»
 =end code
 
-Any exception that is thrown in such a block will be caught by the implicit
-C<CATCH> block or a C<CATCH> block provided by the user. In the latter case, any
-unhandled exception will be rethrown. If you choose not to handle the exception,
-they will be contained by the block.
+Any exception that is thrown in such a block will be caught by a
+C<CATCH> block, either implicit or provided by the user. In the latter
+case, any unhandled exception will be rethrown. If you choose not to
+handle the exception, they will be contained by the block.
 
 =begin code
 try {
@@ -157,8 +168,9 @@ try {
 =end code
 
 X<|resume (Exceptions)>
-In both C<try> blocks above, exceptions will be contained within the block, but
-the C<say> statement will not be run. We can handle them, though:
+In both C<try> blocks above, exceptions will be contained within the
+block, but the C<say> statement will not be run. We can handle them,
+though:
 
     class E is Exception { method message() { "Just stop already!" } }
 
@@ -194,24 +206,26 @@ Which would output:
       in block <unit> at exception.p6 line 21
     =end code
 
-Since the C<CATCH> block is handling just the C<X::AdHoc> exception thrown by
-the C<die> statement, but not the C<E> exception. In the absence of a C<CATCH>
-block, all exceptions will be contained and dropped, as indicated above.
-C<resume> will resume execution right after the exception has been thrown; in
-this case, in the C<die> statement. Please consult the section on
+Since the C<CATCH> block is handling just the C<X::AdHoc> exception
+thrown by the C<die> statement, but not the C<E> exception. In the
+absence of a C<CATCH> block, all exceptions will be contained and
+dropped, as indicated above. C<resume> will resume execution right after
+the exception has been thrown; in this case, in the C<die> statement.
+Please consult the section on
 L<resuming of exceptions|/language/exceptions#Resuming_of_exceptions>
 for more information on this.
 
-A C<try>-block is a normal block and as such treats its last statement as the
-return value of itself. We can therefore use it as a right-hand side.
+A C<try>-block is a normal block and as such treats its last statement
+as the return value of itself. We can therefore use it as a right-hand
+side.
 
 =begin code
 say try { +"99999" } // "oh no"; # OUTPUT: «99999␤»
 say try { +"hello" } // "oh no"; # OUTPUT: «oh no␤»
 =end code
 
-Try blocks support C<else> blocks indirectly by returning the return value of
-the expression or L<Nil|/type/Nil> if an exception was thrown.
+Try blocks support C<else> blocks indirectly by returning the return
+value of the expression or L<Nil|/type/Nil> if an exception was thrown.
 
     with try +"♥" {
         say "this is my number: $_"
@@ -220,7 +234,8 @@ the expression or L<Nil|/type/Nil> if an exception was thrown.
     }
     # OUTPUT: «not my number!␤»
 
-C<try> can also be used with a statement instead of a block:
+C<try> can also be used with a statement instead of a block, that is, as a
+L<statement prefix|/language/statement-prefixes#try>:
 
 =begin code
 say try "some-filename.txt".IO.slurp // "sane default";
@@ -361,7 +376,7 @@ printing a backtrace along with the message:
 
     class X::WithoutLineNumber is X::AdHoc {
         multi method gist(X::WithoutLineNumber:D:) {
-                $.payload
+            $.payload
         }
     }
     die X::WithoutLineNumber.new(payload => "message")
@@ -370,15 +385,17 @@ printing a backtrace along with the message:
 
 =head1 Control exceptions
 
-Control exceptions are thrown by certain L<keywords|/language/phasers#CONTROL>
-and are handled either automatically or by the appropriate
-L<phaser|/language/phasers#Loop_phasers>. Any unhandled control exception is
-converted to a normal exception.
+Control exceptions are raised when throwing an Exception which does the
+L<X::Control|/type/X::Control> role (since Rakudo 2019.03). They are
+usually thrown by certain L<keywords|/language/phasers#CONTROL> and are
+handled either automatically or by the appropriate L<phaser|/language/phasers#Loop_phasers>.
+Any unhandled control exception is converted to a normal exception.
 
-    { return; CATCH { default { $*ERR.say: .^name, ': ',.Str } } }
-
-    # OUTPUT: «X::ControlFlow::Return: Attempt to return outside of any Routine␤»
-    # was CX::Return
+=begin code
+{ return; CATCH { default { $*ERR.say: .^name, ': ', .Str } } }
+# OUTPUT: «X::ControlFlow::Return: Attempt to return outside of any Routine␤»
+# was CX::Return
+=end code
 
 =end pod
 

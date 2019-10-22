@@ -1,0 +1,22 @@
+=begin pod :kind("Type") :subkind("class") :category("exception")
+
+=TITLE role CX::Proceed
+
+=SUBTITLE Proceed control exception
+
+    role CX::Proceed does X::Control { }
+
+A L<control exception|/language/exceptions#Control_exceptions> to be used when
+C<proceed> is used within C<when> or C<default> blocks.
+
+=head1 Methods
+
+=head2 method message
+
+Defined as:
+
+    method message()
+
+Returns "<proceed control exception>"
+
+=end pod

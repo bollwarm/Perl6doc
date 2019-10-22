@@ -1,4 +1,4 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("composite")
 
 =TITLE class SetHash
 
@@ -7,11 +7,11 @@
     class SetHash does Setty { }
 
 A C<SetHash> is a mutable set, meaning a collection of distinct elements in no
-particular order. (For I<immutable> sets, see L<Set> instead.)
+particular order. (For I<immutable> sets, see L<Set|/type/Set> instead.)
 
 Objects/values of any type are allowed as set elements. Within a C<Set>, every
 element is guaranteed to be unique (in the sense that no two elements would
-compare positively with the L<===> operator):
+compare positively with the L<===|/routine/===> operator):
 
 =begin code
 my $fruits = <peach apple orange apple apple>.SetHash;
@@ -35,15 +35,19 @@ $fruits<apple kiwi> = False, True;
 say $fruits.keys.sort;  # OUTPUT: «kiwi orange peach␤»
 =end code
 
-Here is a convenient shorthand idiom for adding an element to a SetHash:
+Here is a convenient shorthand idiom for adding and removing SetHash elements:
 
 =begin code
 my SetHash $fruits .= new;
 say $fruits<cherry>;      # OUTPUT: «False␤»
 $fruits<cherry>++;
 say $fruits<cherry>;      # OUTPUT: «True␤»
-
 $fruits<apple banana kiwi>»++; # Add multiple elements
+
+$fruits<cherry>--;
+say $fruits<cherry>;      # OUTPUT: «False␤»
+$fruits<banana kiwi>»--; # Remove multiple elements
+
 =end code
 
 =head1 Creating C<SetHash> objects
@@ -75,15 +79,40 @@ It is also possible to initialize a single key with the use of C<{}>:
     say $sh;            # OUTPUT: «SetHash(key1 key2)␤»
     say $sh.keys.perl;  # OUTPUT: «("key1", "key2").Seq␤»
 
-or, in order to initialize more than one key at the same time, use a list assignment:
+or, in order to initialize more than one key at the same time, use a list
+assignment:
 
    my $sh = SetHash.new;
    $sh{ 'a', 'b', 'c' } = True, False, True;
    say $sh.keys.perl;  # OUTPUT: «("a", "c").Seq␤»
 
+You can also create C<SetHash> masquerading as a hash by using the C<is> trait:
+
+    my %sh is SetHash = <a b c>;
+    say %sh<a>;  # True
+    say %sh<d>;  # False
+
+Since 6.d (2019.03 and later) it is also possible to specify the type of values
+you would like to allow in a C<SetHash>.  This can either be done when calling
+C<.new>:
+
+    # only allow Pairs
+    my $n = SetHash[Pair].new: "zero" => 0, "one" => 1, "two" => 2;
+
+or using the masquerading syntax:
+
+    # only allow strings
+    my %sh is SetHash[Str] = <a b c>;
+    say %sh<a>;  # True
+    say %sh<d>;  # False
+
+    # only allow whole numbers
+    my %sh is SetHash[Int] = <a b c>;
+    # Type check failed in binding; expected Int but got Str ("a")
+
 =head1 Operators
 
-Perl 6 provides common set operators, which can take C<SetHash>es (or any other
+Raku provides common set operators, which can take C<SetHash>es (or any other
 collections) as input, although result sets are returned as immutable C<Set>s.
 For example:
 

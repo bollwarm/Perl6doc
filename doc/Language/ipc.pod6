@@ -1,4 +1,4 @@
-=begin pod :tag<perl6>
+=begin pod :kind("Language") :subkind("Language") :category("tutorial")
 
 =TITLE Inter-process communication
 
@@ -9,7 +9,7 @@ X<|IPC>
 
 Many programs need to be able to run other programs, and we need to pass
 information to them and receive their output and exit status. Running a program
-in Perl 6 is as easy as:
+in Raku is as easy as:
 
     run 'git', 'status';
 
@@ -17,7 +17,7 @@ This line runs the program named "git" and passes "git" and "status" to its
 command-line. It will find the program using the C<< %*ENV<PATH> >> setting.
 
 If you would like to run a program by sending a command-line to the shell,
-there's a tool for that as well. All shell meta characters are interpreted by
+there's a tool for that as well. All shell metacharacters are interpreted by
 the shell, including pipes, redirects, environment variable substitutions and so
 on.
 
@@ -39,7 +39,7 @@ close all output pipes, the program will usually not terminate.
     $git.out.close();
 
 If the program fails (exits with a non-zero exit code), it will throw
-an exception when the returned L<Proc> object is sunk. You can save it into
+an exception when the returned L<Proc|/type/Proc> object is sunk. You can save it into
 a variable, even anonymous one, to prevent the sinking:
 
     $ = run '/bin/false'; # does not sink the Proc and so does not throw
@@ -70,7 +70,7 @@ you will want to make use of L<Proc::Async|/type/Proc::Async>. This class
 provides support for asynchronous communication with a program, as well as the
 ability to send signals to that program.
 
-    =begin code :skip-test
+    =begin code
     # Get ready to run the program
     my $log = Proc::Async.new('tail', '-f',  '/var/log/system.log');
     $log.stdout.tap(-> $buf { print $buf });

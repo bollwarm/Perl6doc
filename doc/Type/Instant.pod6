@@ -1,4 +1,4 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("basic")
 
 =TITLE class Instant
 
@@ -9,11 +9,11 @@
 An C<Instant> is a particular moment in time measured in atomic seconds, with
 fractions. It is not tied to or aware of any epoch.
 
-An C<Instant> can be used to create a L<DateTime> object set to that
+An C<Instant> can be used to create a L<DateTime|/type/DateTime> object set to that
 C<Instant>. The pseudo-constant C<now> returns the current time as an
 C<Instant>.
 
-Basic math is defined for C<Instant>s (as well as L<Duration>s). Adding an
+Basic math is defined for C<Instant>s (as well as L<Duration|/type/Duration>s). Adding an
 C<Instant> to a C<Duration> returns another Instant. Subtracting two C<Instant>s
 will yield a C<Duration>. Adding two C<Instant>s is explicitly disallowed. All
 other operations with Instants are undefined.
@@ -29,7 +29,7 @@ compiler version you're using. For example, the December 31, 2016 leap second
 was announced in July and shipped with Rakudo 2016.07, so 2016.06 and earlier
 releases won't know about it:
 
-=begin code :skip-test
+=begin code :lang<text>
 $ perl6-2016.06 -e 'say Instant.from-posix: 1485726595'
 Instant:1485726631
 
@@ -42,7 +42,7 @@ know about, you can patch your old code when new leap seconds are announced,
 so it will give correct results, regardless of what version of the compiler
 it runs on:
 
-=begin code :skip-test
+=begin code :lang<text>
 $ perl6-2016.06 -e 'say ($*VM.version before v2016.07 ?? 1 !! 0) + Instant.from-posix: 1485726595'
 Instant:1485726632
 
@@ -82,7 +82,7 @@ Defined as:
 
     method Date(Instant:D: --> Date:D)
 
-Coerces the invocant to L<Date>.
+Coerces the invocant to L<Date|/type/Date>.
 
     my $i = "/etc/passwd".IO.modified;
     say $i;             # OUTPUT: «Instant:1451489025.878018␤»
@@ -94,7 +94,7 @@ Defined as:
 
     method DateTime(Instant:D: --> DateTime:D)
 
-Coerces the invocant to L<DateTime>.
+Coerces the invocant to L<DateTime|/type/DateTime>.
 
     say now.DateTime;  # OUTPUT: «2017-05-09T14:02:58.147165Z␤»
 

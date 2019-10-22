@@ -1,4 +1,4 @@
-=begin pod
+=begin pod :kind("Type") :subkind("role") :category("basic")
 
 =TITLE role Callable
 
@@ -6,8 +6,8 @@
 
     role Callable { ... }
 
-Role for objects which support calling them. It's used in L<Block>,
-L<Routine>, L<Sub>, L<Method>, L<Submethod> and L<Macro> types.
+Role for objects which support calling them. It's used in L<Block|/type/Block>,
+L<Routine|/type/Routine>, L<Sub|/type/Sub>, L<Method|/type/Method>, L<Submethod|/type/Submethod> and L<Macro|/type/Macro> types.
 
 Callables can be stored in C<&>-sigiled containers, the default type constraint
 of such a container is C<Callable>.
@@ -40,6 +40,19 @@ container, is has to implement Callable.
     }
     my &a = A;
     say a(); # OUTPUT: «called␤»
+
+Applying the C<Callable> role is not a requirement to make an object callable;
+if a class simply wants to add subroutine-like semantics in a regular scalar
+container, the submethod C<CALL-ME> can be used for that.
+
+    class A {
+        has @.values;
+        submethod CALL-ME(Int $x where 0 <= * < @!values.elems) {
+            @!values[$x]
+        }
+    }
+    my $a = A.new: values => [4,5,6,7]
+    say $a(2); # OUTPUT: «6␤»
 
 =head2 method Capture
 

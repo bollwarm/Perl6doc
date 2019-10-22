@@ -20,11 +20,18 @@ my %variants = %( filehandle => 'file [\s+|\-] handle',
                   lookahead  => 'look \- ahead',
                   lookbehind => 'look [\s+|\-] behind',
                   smartmatch => 'smart  [\s+|\-] match',
-                  zero-width => 'zero \s+ width<!before \' joiner\'>',
+                  zero-width => 'zero \s+ width<!before \' joiner\'><!before \' no-break space\'>',
                   NYI        => 'niy',
-                  metaoperator => 'meta [\s+|\-] operator',
+                  meta      => '<!after [ method || \$ || \-] \s*> meta
+[\s+|\-]
+<<',
+                  precompil => 'pre \- compil',
                   semicolon => 'semi [\s+|\-] colon',
+                  metadata  => 'meta [\s+|\+] data',
+                  sigiled => 'sigilled',
                );
+# zero-width in particular has several unicode documentation variants we allow
+
 plan +@files;
 
 for @files.sort -> $file {

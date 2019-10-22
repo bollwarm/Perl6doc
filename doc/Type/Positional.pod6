@@ -1,4 +1,4 @@
-=begin pod
+=begin pod :kind("Type") :subkind("role") :category("composite")
 
 =TITLE role Positional
 
@@ -8,7 +8,7 @@
 
 Role for objects which support indexing them using C<postcircumfix:«[ ]»>
 (usually list-like objects).  Example types with Positional role
-include L<List>, L<Array>, L<Range>, and L<Buf>.
+include L<List|/type/List>, L<Array|/type/Array>, L<Range|/type/Range>, and L<Buf|/type/Buf>.
 
 =head1 Methods
 
@@ -17,7 +17,47 @@ include L<List>, L<Array>, L<Range>, and L<Buf>.
     method of()
 
 Returns the type constraint for elements of the positional container. Defaults
-to L<Mu>.
+to L<Mu|/type/Mu>.
+
+=head1 Methods that should be provided
+
+=head2 method elems
+
+    method elems()
+
+Should return the number of available elements in the instantiated object.
+
+=head2 method AT-POS
+
+    method AT-POS(\position)
+
+Should return the value / container at the given position.
+
+=head2 method EXISTS-POS
+
+    method EXISTS-POS(\position)
+
+Should return a C<Bool> indicating whether the given position actually has a
+value.
+
+=head2 method STORE
+
+    method STORE(\values, :$initialize)
+
+This method should only be supplied if you want to support the:
+
+=for code :preamble<role Foo {}>
+my @a is Foo = 1,2,3;
+
+syntax for binding your implementation of the C<Positional> role.
+
+Should accept the values to (re-)initialize the object with.  The optional
+named parameter will contain a C<True> value when the method is called on
+the object for the first time.  Should return the invocant.
+
+=head1 See also
+
+See L<Methods to implement for positional subscripting|/language/subscripts#Methods_to_implement_for_positional_subscripting> for information about additional methods that can be implemented for the C<Positional> role.
 
 =end pod
 

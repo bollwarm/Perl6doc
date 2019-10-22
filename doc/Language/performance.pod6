@@ -1,31 +1,31 @@
-=begin pod :tag<tutorial>
+=begin pod :kind("Language") :subkind("Language") :category("fundamental")
 
 =TITLE Performance
 
 =SUBTITLE Measuring and improving runtime or compile-time performance
 
 This page is about L<computer performance|https://en.wikipedia.org/wiki/Computer_performance> in the context
-of Perl 6.
+of Raku.
 
 =head1 First, profile your code
 
 B<Make sure you're not wasting time on the wrong code>: start by identifying
-your L<"critical 3%"|https://en.wikiquote.org/wiki/Donald_Knuth> by "profiling"
+your L<"critical 3%"|https://en.wikiquote.org/wiki/Donald_Knuth> by profiling
 your code's performance. The rest of this document shows you how to do that.
 
 =head2 Time with C<now - INIT now>
 
 Expressions of the form C<now - INIT now>, where C<INIT> is a L<phase in the
-running of a Perl 6 program|/language/phasers>, provide a great idiom for timing
+running of a Raku program|/language/phasers>, provide a great idiom for timing
 code snippets.
 
 Use the C<m: your code goes here> L<#perl6 channel
 evalbot|/language/glossary#camelia> to write lines like:
 
-    =begin code :skip-test
-    m: say now - INIT now
-    rakudo-moar abc1234: OUTPUT«0.0018558␤»
-    =end code
+=begin code :lang<irc command>
+m: say now - INIT now
+rakudo-moar abc1234: OUTPUT«0.0018558␤»
+=end code
 
 The C<now> to the left of C<INIT> runs 0.0018558 seconds I<later> than the
 C<now> to the right of the C<INIT> because the latter occurs during L<the INIT
@@ -44,42 +44,43 @@ the total call frames (i.e., blocks) that were interpreted (slowest, in red),
 L<speshed|/language/glossary#index-entry-Spesh> (faster, in orange), and jitted
 (fastest, in green).
 
-The next section, "Routines", is probably where you'll spend the most time. It has
-a sortable and filterable table of routine (or block) name+file+line, the number of
-times it ran, the inclusive time (time spent in that routine + time spent in all
-routines called from it), exclusive time (just the time spent in that routine), and
-whether it was interpreted, speshed, or jitted (same color code as the "Overview"
-page). Sorting by exclusive time is a good way to know where to start optimizing.
-Routines with a filename that starts like C<SETTING::src/core/> or C<gen/moar/> are
-from the compiler, a good way to just see the stuff from your own code is to put
-the filename of the script you profiled in the "Name" search box.
+The next section, "Routines", is probably where you'll spend the most time. It
+has a sortable and filterable table of routine (or block) name+file+line, the
+number of times it ran, the inclusive time (time spent in that routine + time
+spent in all routines called from it), exclusive time (just the time spent in
+that routine), and whether it was interpreted, speshed, or jitted (same color
+code as the "Overview" page). Sorting by exclusive time is a good way to know
+where to start optimizing. Routines with a filename that starts like
+C<SETTING::src/core/> or C<gen/moar/> are from the compiler, a good way to just
+see the stuff from your own code is to put the filename of the script you
+profiled in the "Name" search box.
 
 The "Call Graph" section gives a flame graph representation of much of the same
 information as the "Routines" section.
 
-The "Allocations" section gives you information about the amount of different types
-that were allocated, as well as which routines did the allocating.
+The "Allocations" section gives you information about the amount of different
+types that were allocated, as well as which routines did the allocating.
 
-The "GC" section gives you detailed information about all the garbage collections
-that occurred.
+The "GC" section gives you detailed information about all the garbage
+collections that occurred.
 
-The "OSR / Deopt" section gives you information about On Stack Replacements (OSRs),
-which is when routines are "upgraded" from interpreted to speshed or jitted. Deopts
-are the opposite, when speshed or jitted code has to be "downgraded" to being
-interpreted.
+The "OSR / Deopt" section gives you information about On Stack Replacements
+(OSRs), which is when routines are "upgraded" from interpreted to speshed or
+jitted. Deopts are the opposite, when speshed or jitted code has to be
+"downgraded" to being interpreted.
 
 If the profile data is too big, it could take a long time for a browser to open
 the file. In that case, output to a file with a C<.json> extension using the
-C<--profile-filename> option, then open the file with the
+C<--profile=filename> option, then open the file with the
 L<Qt viewer|https://github.com/tadzik/p6profiler-qt>.
 
 To deal with even larger profiles, output to a file with a C<.sql> extension.
-This will write the profile data as a series
-of SQL statements, suitable for opening in SQLite.
+This will write the profile data as a series of SQL statements, suitable for
+opening in SQLite.
 
-    =begin code :skip-test
+    =begin code :lang<shell>
     # create a profile
-    perl6 --profile --profile-filename=demo.sql -e 'say (^20).combinations(3).elems'
+    perl6 --profile=demo.sql -e 'say (^20).combinations(3).elems'
 
     # create a SQLite database
     sqlite3 demo.sqlite
@@ -107,6 +108,11 @@ of SQL statements, suitable for opening in SQLite.
         limit 30;
     =end code
 
+The in-progress, next-gen profiler is L<moarperf|https://github.com/timo/moarperf>, which
+can accept .sql or SQLite files and has a bunch of new functionality compared to the original
+profiler. However, it has more dependencies than the relatively stand-alone original profiler,
+so you'll have to install some modules before using it.
+
 To learn how to interpret the profile info, use the C<prof-m: your code goes
 here> evalbot (explained above) and ask questions on the IRC channel.
 
@@ -120,7 +126,7 @@ Rakudo's C<--profile-compile> or C<--profile-stage> options.
 Use L<perl6-bench|https://github.com/japhb/perl6-bench>.
 
 If you run perl6-bench for multiple compilers (typically, versions of Perl 5,
-Perl 6, or NQP), results for each are visually overlaid on the same graphs,
+Raku, or NQP), results for each are visually overlaid on the same graphs,
 to provide for quick and easy comparison.
 
 =head2 Share problems
@@ -136,7 +142,7 @@ that it can be profiled using C<prof-m: your code or gist URL goes here>.
 need/want, and think about the cost associated with achieving that goal. What's
 the improvement worth in terms of people's time and energy?
 
-=item Let others know if your Perl 6 use-case is in a production setting or just for fun.
+=item Let others know if your Raku use-case is in a production setting or just for fun.
 
 =head1 Solve problems
 
@@ -152,8 +158,8 @@ L<camelia|/language/glossary#camelia>.
 
 =head2 Routine by routine
 
-With multidispatch, you can drop in new variants of routines "alongside" existing
-ones:
+With multi-dispatch, you can drop in new variants of routines "alongside"
+existing ones:
 
     # existing code generically matches a two arg foo call:
     multi sub foo(Any $a, Any $b) { ... }
@@ -194,7 +200,7 @@ string. For most strings, the Boyer-Moore algorithm is close to N times faster
 algorithmically, where N is the length of the small string.
 
 The next couple sections discuss two broad categories for algorithmic
-improvement that are especially easy to accomplish in Perl 6. For more on this
+improvement that are especially easy to accomplish in Raku. For more on this
 general topic, read the wikipedia page on L<algorithmic efficiency|https://en.wikipedia.org/wiki/Algorithmic_efficiency>, especially the
 'See also' section near the end.
 
@@ -203,19 +209,19 @@ general topic, read the wikipedia page on L<algorithmic efficiency|https://en.wi
 This is another very important class of algorithmic improvement.
 
 See the slides for
-L<Parallelism, Concurrency, and Asynchrony in Perl 6|https://jnthn.net/papers/2015-yapcasia-concurrency.pdf#page=17>
+L<Parallelism, Concurrency, and Asynchrony in Raku|https://jnthn.net/papers/2015-yapcasia-concurrency.pdf#page=17>
 and/or L<the matching video|https://www.youtube.com/watch?v=JpqnNCx7wVY&list=PLRuESFRW2Fa77XObvk7-BYVFwobZHdXdK&index=8>.
 
 =head2 Use existing high performance code
 
-There are plenty of high performance C libraries that you can use within Perl 6 and
+There are plenty of high performance C libraries that you can use within Raku and
 L<NativeCall|/language/nativecall> makes it easy to create wrappers for them. There's
 experimental support for C++ libraries, too.
 
-If you want to L<use Perl 5 modules in Perl 6|https://stackoverflow.com/a/27206428/1077672>,
-mix in Perl 6 types and the L<Meta-Object Protocol|/language/mop>.
+If you want to L<use Perl 5 modules in Raku|https://stackoverflow.com/a/27206428/1077672>,
+mix in Raku types and the L<Metaobject Protocol|/language/mop>.
 
-More generally, Perl 6 is designed to smoothly interoperate with other languages and
+More generally, Raku is designed to smoothly interoperate with other languages and
 there are a number of L<modules aimed at facilitating the use of libs from other langs|https://modules.perl6.org/#q=inline>.
 
 =head2 Make the Rakudo compiler generate faster code
@@ -226,25 +232,25 @@ generates runs. But that's expected to change, eventually... You
 can talk to compiler devs on the freenode IRC channels #perl6 and #moarvm about
 what to expect. Better still, you can contribute yourself:
 
-=item Rakudo is largely written in Perl 6. So if you can write Perl 6, then you
+=item Rakudo is largely written in Raku. So if you can write Raku, then you
 can hack on the compiler, including optimizing any of the large body of existing
 high-level code that impacts the speed of your code (and everyone else's).
 
 =item Most of the rest of the compiler is written in a small language called
-L<NQP|https://github.com/perl6/nqp> that's basically a subset of Perl 6. If you
-can write Perl 6, you can fairly easily learn to use and improve the mid-level
+L<NQP|https://github.com/perl6/nqp> that's basically a subset of Raku. If you
+can write Raku, you can fairly easily learn to use and improve the mid-level
 NQP code too, at least from a pure language point of view. To dig into NQP and
 Rakudo's guts, start with
 L<NQP and internals course|https://edumentab.github.io/rakudo-and-nqp-internals-course/>.
 
 =item If low-level C hacking is your idea of fun, checkout
 L<MoarVM|https://moarvm.org> and visit the freenode IRC channel #moarvm
-(L<logs|https://irclog.perlgeek.de/moarvm/>).
+(L<logs|https://colabti.org/irclogger/irclogger_logs/moarvm>).
 
 =head2 Still need more ideas?
 
 Some known current Rakudo performance weaknesses not yet covered in this page
-include the use of gather/take, junctions, regexes and string handling in
+include the use of gather/take, junctions, regexes, and string handling in
 general.
 
 If you think some topic needs more coverage on this page, please submit a PR or

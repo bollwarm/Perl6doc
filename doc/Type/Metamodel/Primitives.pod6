@@ -1,21 +1,18 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("metamodel")
 
 =TITLE class Metamodel::Primitives
 
 =SUBTITLE Metaobject that supports low-level type operations
 
-=begin code :skip-test
-class Metamodel::Primitives is SuperClass {}
-=end code
+    class Metamodel::Primitives {}
 
 C<Metamodel::Primitives> provides low-level operations for working with types,
-which are otherwise only available as implementation-dependent directives.
+which are otherwise only available as implementation-dependent directives. These
+primitives are available as class methods.
 
-These primitives are available as class methods.
-
-Here is an example that steals the meta model instance from the
+Here is an example that steals the metamodel instance from the
 L<Int|/type/Int> class to create a custom type (usually you would create your
-own meta class if you mess with something as low-level), which allows calling
+own metaclass if you mess with something as low-level), which allows calling
 of just one method called C<why>:
 
     my Mu $type := Metamodel::Primitives.create_type(Int.HOW, 'P6opaque');
@@ -33,7 +30,7 @@ of just one method called C<why>:
 
     method create_type(Mu $how, $repr = 'P6opaque')
 
-Creates and returns a new type from a meta object C<$how> and a representation
+Creates and returns a new type from a metaobject C<$how> and a representation
 name.
 
 =head2 method set_package
@@ -54,19 +51,13 @@ to C<False>, the usual fallback mechanism are tried.
 
 =head2 method configure_type_checking
 
-=for code :skip-test
-method configure_type_checking(
-    Mu $type,
-    @cache,
-    :$authoritative = True,
-    :$call_accepts = False
-)
+    method configure_type_checking( Mu $type, @cache, :$authoritative = True,   :$call_accepts = False )
 
 Configures the type checking for C<$type>. C<@cache> is a list of known types
-against which C<$type> checks positively (so in a classical class-based
-system, the type itself and all recursive superclasses). If C<:authoritative>
-is missing or C<True>, this type will fail checks against all types not in
-C<@cache>. If C<:call_accepts> is True, the method L<ACCEPTS|/routine/ACCEPTS> will be called
+against which C<$type> checks positively (so in a classical class-based system,
+the type itself and all recursive superclasses). If C<:authoritative> is missing
+or C<True>, this type will fail checks against all types not in C<@cache>. If
+C<:call_accepts> is True, the method L<ACCEPTS|/routine/ACCEPTS> will be called
 for type checks against this type.
 
 =head2 method configure_destroy

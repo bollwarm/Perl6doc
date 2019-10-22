@@ -1,10 +1,10 @@
-=begin pod :tag<perl6>
+=begin pod :kind("Language") :subkind("Language") :category("reference")
 
 =TITLE Terms
 
-=SUBTITLE Perl 6 terms
+=SUBTITLE Raku terms
 
-Most syntactic constructs in Perl 6 can be categorized in I<terms> and
+Most syntactic constructs in Raku can be categorized in I<terms> and
 L<operators|/language/operators>.
 
 Here you can find an overview of different kinds of terms.
@@ -13,66 +13,68 @@ Here you can find an overview of different kinds of terms.
 
 =head2 Int
 
-=begin code :skip-test
+=begin code :skip-test<literals only>
 42
 12_300_00
 :16<DEAD_BEEF>
 =end code
 
-L<Int> literals consist of digits and can contain underscores
+L<Int|/type/Int> literals consist of digits and can contain underscores
 between any two digits.
 
 To specify a base other than ten, use the colonpair form C<< :radix<number> >>.
 
 =head2 Rat
 
-    =begin code :skip-test
+    =begin code :skip-test<literals only>
     12.34
     1_200.345_678
     =end code
 
-L<Rat> literals (rational numbers) contain two integer parts joined by a dot.
+L<Rat|/type/Rat> literals (rational numbers) contain two integer parts joined by
+a dot.
 
 Note that trailing dots are not allowed, so you have to write C<1.0> instead
 of C<1.> (this rule is important because there are infix operators starting
-with a dot, for example the C<..> L<Range> operator).
+with a dot, for example the C<..> L<Range|/type/Range> operator).
 
 =head2 Num
 
-=begin code :skip-test
+=begin code :skip-test<literals only>
 12.3e-32
 3e8
 =end code
 
-L<Num> literals (floating point numbers) consist of L<Rat> or L<Int>
-literals followed by an C<e> and a (possibly negative) exponent. C<3e8>
-constructs a L<Num> with value C<3 * 10**8>.
+L<Num|/type/Num> literals (floating point numbers) consist of L<Rat|/type/Rat>
+or L<Int|/type/Int> literals followed by an C<e> and a (possibly negative)
+exponent. C<3e8> constructs a L<Num|/type/Num> with value C<3 * 10**8>.
 
 =head2 Str
 
-    =begin code :skip-test
-    'a string'
-    'I\'m escaped!'
-    "I don't need to be"
-    "\"But I still can be,\" he said."
-    q|Other delimiters can be used too!|
-    =end code
+=begin code :skip-test<literals only>
+'a string'
+'I\'m escaped!'
+"I don't need to be"
+"\"But I still can be,\" he said."
+q|Other delimiters can be used too!|
+=end code
 
-String literals are most often created with C<'> or C<">, however strings
-are actually a powerful sub-language of Perl 6. See L<Quoting Constructs|/language/quoting>.
+String literals are most often created with C<'> or C<">, however strings are
+actually a powerful sub-language of Raku. See
+L<Quoting Constructs|/language/quoting>.
 
 =head2 Regex
 
-    =begin code :skip-test
-    / match some text /
-    rx/slurp \s rest (.*) $/
-    =end code
+=begin code :skip-test<literals only>
+/ match some text /
+rx/slurp \s rest (.*) $/
+=end code
 
-These forms produce regex literals. See L<Quoting Constructs|/language/quoting>.
+These forms produce regex literals. See L<quoting constructs|/language/quoting>.
 
 =head2 Pair
 
-    =begin code :skip-test
+    =begin code :skip-test<literals only>
     a => 1
     'a' => 'b'
     :identifier
@@ -89,7 +91,7 @@ These forms produce regex literals. See L<Quoting Constructs|/language/quoting>.
     :&callable
     =end code
 
-L<Pair> objects can be created either with C<< infix:«=>» >> (which
+L<Pair|/type/Pair> objects can be created either with C<< infix:«=>» >> (which
 auto-quotes the left-hand side if it is an identifier), or with the various
 colon-pair forms. Those almost always start with a colon and then are followed
 either by an identifier or the name of an already existing variable (whose
@@ -106,7 +108,7 @@ with the exception of C<< 'quoted string' => $value >>.
 
 =head2 List
 
-    =begin code :skip-test
+    =begin code :skip-test<literals only>
     ()
     1, 2, 3
     <a b c>
@@ -114,17 +116,17 @@ with the exception of C<< 'quoted string' => $value >>.
     qw/a b c/
     =end code
 
-L<List> literals are: the empty pair of parentheses C<()>, a comma-separated
-list, or several quoting constructs.
+L<List|/type/List> literals are: the empty pair of parentheses C<()>, a
+comma-separated list, or several quoting constructs.
 
 =head2 term *
 
-Creates an object of type C<Whatever>. See L<Whatever> documentation for
-more details.
+Creates an object of type C<Whatever>. See L<Whatever|/type/Whatever>
+documentation for more details.
 
 =head1 Identifier terms
 
-There are built-in identifier terms in Perl 6, which are listed below.  In
+There are built-in identifier terms in Raku, which are listed below.  In
 addition one can add new identifier terms with the syntax:
 
     sub term:<forty-two> { 42 };
@@ -139,30 +141,31 @@ or as constants:
 
 Inside a method, C<self> refers to the invocant (i.e. the object the method
 was called on). If used in a context where it doesn't make sense, a
-compile-time exception of type L<X::Syntax::NoSelf> is thrown.
+compile-time exception of type L<X::Syntax::NoSelf|/type/X::Syntax::NoSelf> is thrown.
 
 =head2 term now
 
-Returns an L<Instant> object representing the current time. It includes
-L<leap seconds|https://en.wikipedia.org/wiki/Leap_second> and as such a few
-dozen seconds larger than L<time|/language/terms#term_time>:
+Returns an L<Instant|/type/Instant> object representing the current time. It
+includes L<leap seconds|https://en.wikipedia.org/wiki/Leap_second> and as such a
+few dozen seconds larger than L<time|/language/terms#term_time>:
 
     say (now - time).Int; # OUTPUT: «37␤»
 
 =head2 term time
 
-Returns the current POSIX time as an L<Int>. See L<now|/language/terms#term_now>
-for high-resolution timestamp that includes
+Returns the current POSIX time as an L<Int|/type/Int>. See
+L<now|/language/terms#term_now> for high-resolution timestamp that includes
 L<leap seconds|https://en.wikipedia.org/wiki/Leap_second>.
 
 =head2 term rand
 
-Returns a pseudo-random L<Num> in the range C<0..^1>.
+Returns a pseudo-random L<Num|/type/Num> in the range C<0..^1>.
 
 =head2 term π
 
-Returns the number C<π>, i.e., the ratio between circumference and diameter
-of a circle. The ASCII equivalent of C<π> is C<pi>.
+Returns the number C<π> at codepoint U+03C0 (GREEK SMALL LETTER PI), i.e.
+the ratio between circumference and diameter of a circle. The ASCII equivalent
+of C<π> is C<pi>.
 
 =head2 term pi
 
@@ -171,32 +174,45 @@ of a circle. C<pi> is the ASCII equivalent of C<π>.
 
 =head2 term τ
 
-Returns the number C<τ>, i.e., the ratio between circumference and radius
-of a circle. The ASCII equivalent of C<τ> is C<tau>.
+Returns the number C<τ> at codepoint U+03C4 (GREEK SMALL LETTER TAU), i.e.
+the ratio between circumference and radius of a circle. The ASCII equivalent
+of C<τ> is C<tau>.
 
 =head2 term tau
 
-Returns the number C<τ>, i.e., the ratio between circumference and radius
-of a circle. C<tau> is the ASCII equivalent of C<τ>.
+Returns the number C<τ>, i.e.  the ratio between circumference and radius of
+a circle. C<tau> is the ASCII equivalent of C<τ>.
+
+=head2 term 𝑒
+
+Returns Euler's number at codepoint U+1D452 (MATHEMATICAL ITALIC SMALL E).
+The ASCII equivalent of C<𝑒> is C<e>.
 
 =head2 term e
 
-Returns Euler's number.
+Returns Euler's number.  C<e> is the ASCII equivalent of C<𝑒>.
 
 =head2 term i
 
-Returns the imaginary unit (for L<Complex> numbers).
+Returns the imaginary unit (for L<Complex|/type/Complex> numbers).
+
+=head2 term ∅
+
+X<|∅>
+
+Returns C<set()>, aka the X<empty set>, at codepoint U+2205 (EMPTY SET).
 
 =head1 Variables
 
 Variables are discussed in the L<variable language docs |/language/variables>.
 
 X<|constant (Terms)>
+
 =head1 Constants
 
 Constants are similar to L<variables|/language/variables> without a
 L<container|/language/containers>, and thus cannot be rebound. However,
-their initializers are evaluated at L<BEGIN|https://docs.perl6.org/syntax/%20BEGIN> time:
+their initializers are evaluated at L<BEGIN|/syntax/BEGIN> time:
 
     constant speed-of-light = 299792458; # m/s
     constant @foo  = 1, 2, 3;
@@ -206,19 +222,19 @@ their initializers are evaluated at L<BEGIN|https://docs.perl6.org/syntax/%20BEG
 
 Compile-time evaluation means
 L<you should be careful|/language/traps#Constants_are_Compile_Time>
-with using contants
-inside modules, which get automatically pre-compiled, and so the value
+with using constants
+inside modules, which get automatically precompiled, and so the value
 of the constant would not change even between multiple executions of the
 program:
 
-=begin code :skip-test<defining modules>
+=begin code :solo
 # Foo.pm6
 unit module Foo;
 constant comp-time = DateTime.now;
 =end code
 
     =begin code :lang<shell>
-    # The value of the constant remains the same eventhough our script
+    # The value of the constant remains the same even though our script
     # is executed multiple times:
     $ perl6 -I. -MFoo -e 'say Foo::comp-time'
     2018-06-17T18:18:50.021484-04:00
@@ -231,23 +247,21 @@ an L<identifier|/language/syntax#Identifiers> with an I<optional> sigil.
 Constants are L«C<our> scoped|/language/variables#The_our_declarator»
 by default.
 
-    =begin code
-        constant foo  = 42;
-    my  constant $baz = rand;
-    our constant @foo = 1, 2, 3;
-        constant %bar = %(:42foo, :100bar);
-    =end code
+=begin code
+    constant foo  = 42;
+my  constant $baz = rand;
+our constant @foo = 1, 2, 3;
+    constant %bar = %(:42foo, :100bar);
+=end code
 
 I<NOTE: if you're using the Rakudo compiler, you need version 2018.08 or
 newer for type constraints and auto-coercion on constants to be
-available. Auto-coercion on %-sigilled constants requires 6.d language,
-preview version of which can be enabled with the C«use v6.d.PREVIEW»
-pragma>
+available. Auto-coercion on %-sigiled constants requires 6.d>
 
 An optional type constraint can be used, in which case the use
 of scope declarator is required:
 
-=begin code :skip-test<showcasing deliberate syntax error>
+=begin code :skip-test<illustrates error>
 # !!WRONG!! missing scope declarator before type:
 Int constant bar = 42;
 
@@ -256,11 +270,11 @@ our Int constant bar = 42;
 =end code
 
 Unlike L<variables|/language/variables>, you cannot parameterize C<@>-,
-C<%>-, and C<&>-sigilled constants by specifying the parameterization
+C<%>-, and C<&>-sigiled constants by specifying the parameterization
 type in the declarator itself:
 
-    =begin code :skip-test<showcasing deliberate compile-time error>
-    # !!WRONG!! cannot parameterize @-sigilled constant with Int
+    =begin code :skip-test<illustrates error>
+    # !!WRONG!! cannot parameterize @-sigiled constant with Int
     our Int constant @foo = 42;
 
     # OK: parameterized types as values are fine
@@ -268,17 +282,17 @@ type in the declarator itself:
     =end code
 
 The reason for the restriction is that constants with C<@> and C<%>
-sigils default to L<List> and L<Map> types, which cannot be
+sigils default to L<List|/type/List> and L<Map|/type/Map> types, which cannot be
 parameterized. To keep things simple and consistent, parameterization
 was simply disallowed in these constructs.
 
-The C<@>-, C<%>-, and C<&>-sigilled constants specify implied typecheck
-of the given value for L<Positional>, L<Associative>, and L<Callable>
-roles respectively. The C<@>-sigilled constants—and as of C<6.d>
-language version, the C<%>-sigilled constants as well—perform
+The C<@>-, C<%>-, and C<&>-sigiled constants specify implied typecheck
+of the given value for L<Positional|/type/Positional>, L<Associative|/type/Associative>, and L<Callable|/type/Callable>
+roles respectively. The C<@>-sigiled constants—and as of C<6.d>
+language version, the C<%>-sigiled constants as well—perform
 auto-coercion of the value if it does not pass the implied typecheck.
-The C<@>-sigilled constants will coerce using method L<cache> and
-C<%>-sigilled constants coerce using method L<Map>.
+The C<@>-sigiled constants will coerce using method L<cache|/routine/cache> and
+C<%>-sigiled constants coerce using method L<Map|/type/Map>.
 
     =begin code
     constant @foo = 42;
@@ -288,7 +302,7 @@ C<%>-sigilled constants coerce using method L<Map>.
     @bar.perl.say; # OUTPUT: «["a", "b", "c"]»
     =end code
 
-    =begin code :skip-test<Too late for use>
+    =begin code :solo
     use v6.d.PREVIEW;
     constant %foo = <foo bar>;
     %foo.perl.say; # OUTPUT: «Map.new((:foo("bar")))»

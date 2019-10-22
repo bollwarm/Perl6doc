@@ -1,19 +1,19 @@
-=begin pod :tag<perl6>
+=begin pod :kind("Language") :subkind("Language") :category("fundamental")
 
 =TITLE Containers
 
-=SUBTITLE A low-level explanation of Perl 6 containers
+=SUBTITLE A low-level explanation of Raku containers
 
 This section explains the levels of indirection involved in dealing with
-variables and container elements. The difference types of containers used in
-Perl 6 are explained and the actions applicable to them like assigning, binding
-and flattening. More advanced topics like self-referencial data, type
+variables and container elements. The different types of containers used in
+Raku are explained and the actions applicable to them like assigning, binding
+and flattening. More advanced topics like self-referential data, type
 constraints and custom containers are discussed at the end.
 
 =head1 What is a variable?
 
 Some people like to say "everything is an object", but in fact a variable is
-not a user-exposed object in Perl 6.
+not a user-exposed object in Raku.
 
 When the compiler encounters a variable declaration like C<my $x>, it
 registers it in some internal symbol table. This internal symbol table is
@@ -30,7 +30,7 @@ container>.
 
 =head1 Scalar containers
 
-Although objects of type L<C<Scalar>|/type/Scalar> are everywhere in Perl 6, you
+Although objects of type L<C<Scalar>|/type/Scalar> are everywhere in Raku, you
 rarely see them directly as objects, because most operations I<decontainerize>,
 which means they act on the C<Scalar> container's contents instead of the
 container itself.
@@ -107,8 +107,8 @@ omitted when executing the C<Callable>. The default type constraint is
 L<Callable|/type/Callable>.
 
     my &callable = -> $ν { say "$ν is", $ν ~~ Int??" whole"!!" not whole" }
-    callable( ⅓ );
-    callable( 3 );
+    callable(⅓);
+    callable(3);
 
 The sigil has to be provided when referring to the value stored in the
 container. This in turn allows C<Routine>s to be used as
@@ -121,7 +121,7 @@ L<arguments|/type/Signature#Constraining_signatures_of_Callables> to calls.
 
 =head1 Binding
 
-Next to assignment, Perl 6 also supports I<binding> with the C<:=> operator.
+Next to assignment, Raku also supports I<binding> with the C<:=> operator.
 When binding a value or a container to a variable, the lexpad entry of the
 variable is modified (and not just the container it points to). If you write
 
@@ -166,8 +166,8 @@ bind (whether C<=> or C<:=> is used):
 =head1 Scalar containers and listy things
 
 There are a number of positional container types with slightly different
-semantics in Perl 6. The most basic one is L<List|/type/List>;
-it is created by the comma operator.
+semantics in Raku. The most basic one is L<List|/type/List>, which
+is created by the comma operator.
 
     say (1, 2, 3).^name;    # OUTPUT: «List␤»
 
@@ -185,8 +185,8 @@ you can still assign to it:
 So the list doesn't care about whether its elements are values or
 containers, they just store and retrieve whatever was given to them.
 
-Lists can also be lazy; in that case, elements at the end are generated on demand from an
-iterator.
+Lists can also be lazy; in that case, elements at the end are generated on
+demand from an iterator.
 
 An C<Array> is just like a list, except that it forces all its elements to
 be containers, which means that you can always assign to elements:
@@ -220,7 +220,7 @@ To place a non-C<Array> into an array variable, binding works:
 
 =head1 Binding to array elements
 
-As a curious side note, Perl 6 supports binding to array elements:
+As a curious side note, Raku supports binding to array elements:
 
     my @a = (1, 2, 3);
     @a[0] := my $x;
@@ -239,7 +239,7 @@ method (called C<BIND-KEY>) is called on the array. This method handles binding
 to array elements.
 
 Note that, while supported, one should generally avoid directly binding
-uncontainerized things into array elements.  Doing so may produce
+uncontainerized things into array elements. Doing so may produce
 counter-intuitive results when the array is used later.
 
     my @a = (1, 2, 3);
@@ -256,7 +256,7 @@ a thing happening accidentally.
 
 =head1 Flattening, items and containers
 
-The C<%> and C<@> sigils in Perl 6 generally indicate multiple values
+The C<%> and C<@> sigils in Raku generally indicate multiple values
 to an iteration construct, whereas the C<$> sigil indicates only one value.
 
     my @a = 1, 2, 3;
@@ -280,13 +280,16 @@ container: slurpy parameters (C<*@a>) and explicit calls to C<flat>:
     sub f(*@x) { @x.elems };
     say f @a, 4, 5;             # OUTPUT: «5␤»
 
-You can also use C<|> to create a L<Slip>, introducing a list into the other.
+You can also use C<|> to create a L<Slip|/type/Slip>, introducing a list into
+the other.
 
     my @l := 1, 2, (3, 4, (5, 6)), [7, 8, (9, 10)];
-    say (|@l, 11, 12); # OUTPUT: «(1 2 (3 4 (5 6)) [7 8 (9 10)] 11 12)␤»
+    say (|@l, 11, 12);    # OUTPUT: «(1 2 (3 4 (5 6)) [7 8 (9 10)] 11 12)␤»
     say (flat @l, 11, 12) # OUTPUT: «(1 2 3 4 5 6 7 8 (9 10) 11 12)␤»
 
-In the first case, every element of C<@l> is I<slipped> as the corresponding elements of the resulting list. C<flat>, in the other hand, I<flattens> all elements including the elements of the included array, except for C«(9 10)».
+In the first case, every element of C<@l> is I<slipped> as the corresponding
+elements of the resulting list. C<flat>, in the other hand, I<flattens> all
+elements including the elements of the included array, except for C«(9 10)».
 
 As hinted above, scalar containers prevent that flattening:
 
@@ -294,7 +297,8 @@ As hinted above, scalar containers prevent that flattening:
     my @a = 1, 2, 3;
     say f $@a, 4, 5;            # OUTPUT: «3␤»
 
-The C<@> character can also be used as a prefix to coerce the argument to a list, thus removing a scalar container:
+The C<@> character can also be used as a prefix to coerce the argument to a
+list, thus removing a scalar container:
 
     my $x = (1, 2, 3);
     .say for @$x;               # 3 iterations
@@ -317,7 +321,7 @@ maps over a list of three elements, not of one.
 
 =head1 Self-referential data
 
-Containers types, including C<Array> and C<Hash>, allow you to create
+Container types, including C<Array> and C<Hash>, allow you to create
 self-referential structures.
 
     my @a;
@@ -325,8 +329,8 @@ self-referential structures.
     put @a.perl;
     # OUTPUT: «((my @Array_75093712) = [@Array_75093712,])␤»
 
-Perl 6 does not prevent you from creating and using self-referential
-data; You may end up in a loop trying to dump the data; as a
+Although Raku does not prevent you from creating and using self-referential
+data, by doing so you may end up in a loop trying to dump the data. As a
 last resort, you can use Promises to L<handle|/type/Promise#method_in> timeouts.
 
 =head1 Type constraints
@@ -345,19 +349,20 @@ C<Three-letter>.
 
 Variables may have no container in them, yet still offer the ability to
 re-bind and typecheck that rebind. The reason for that is in such cases the
-binding operator L<:=|/operators#infix_:=> performs the typecheck:
+binding operator L<:=|/language/operators#infix_:=> performs the typecheck:
 
     my Int \z = 42;
     z := 100; # OK
     z := "x"; # Typecheck failure
 
-The same isn't the case when, say, binding to a L<Hash> key, as the binding is
-then handled by a method call (even though the syntax remains the same, using
-C<:=> operator).
+The same isn't the case when, say, binding to a L<Hash|/type/Hash> key, as
+the binding is then handled by a method call (even though the syntax remains
+the same, using C<:=> operator).
 
-The default type constraint of a C<Scalar> container is L<Mu>. Introspection of
-type constraints on containers is provided by C<.VAR.of> method, which for C<@>
-and C<%> sigiled variables gives the constraint for values:
+The default type constraint of a C<Scalar> container is L<Mu|/type/Mu>.
+Introspection of type constraints on containers is provided by C<.VAR.of>
+method, which for C<@> and C<%> sigiled variables gives the constraint for
+values:
 
     my Str $x;
     say $x.VAR.of;  # OUTPUT: «(Str)␤»
@@ -368,32 +373,34 @@ and C<%> sigiled variables gives the constraint for values:
 
 =head2 Definedness constraints
 
-A container can also enforce a variable to be defined. Put a smiley in the declaration:
+A container can also enforce a variable to be defined. Put a smiley in the
+declaration:
 
     my Int:D $def = 3;
-    say $def; # OUTPUT: «3␤»
+    say $def;   # OUTPUT: «3␤»
     $def = Int; # Typecheck failure
 
 You'll also need to initialize the variable in the declaration, it can't be
 left undefined after all.
 
 It's also possible to have this constraint enforced in all variables declared
-in a scope with the L<default defined variables pragma|/language/variables#Default_defined_variables_pragma>.
+in a scope with the
+L<default defined variables pragma|/language/variables#Default_defined_variables_pragma>.
 People coming from other languages where variables are always defined will
 want to have a look.
 
 =head1 Custom containers
 
-To provide custom containers Perl 6 provides the class C<Proxy>. It takes two
+To provide custom containers Raku provides the class C<Proxy>. It takes two
 methods that are called when values are stored or fetched from the container.
 Type checks are not done by the container itself and other restrictions like
 readonlyness can be broken. The returned value must therefore be of the same
 type as the type of the variable it is bound to. We can use type captures to
-work with types in Perl 6.
+work with types in Raku.
 
     sub lucky(::T $type) {
         my T $c-value; # closure variable
-        return Proxy.new(
+        return-rw Proxy.new(
             FETCH => method () { $c-value },
             STORE => method (T $new-value) {
                 X::OutOfRange.new(what => 'number', got => '13', range => '-∞..12, 14..∞').throw

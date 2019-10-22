@@ -1,20 +1,21 @@
-=begin pod :tag<tutorial>
+=begin pod :kind("Language") :subkind("Language") :category("tutorial")
 
 =TITLE Entering unicode characters
 
-=SUBTITLE Input methods for unicode characters in editors and the shell
+=SUBTITLE Input methods for unicode characters in terminals, the shell, and editors
 
-Perl 6 allows the use of unicode characters as variable names.  Many
+Raku allows the use of unicode characters as variable names.  Many
 operators are defined with unicode symbols (in particular the L<set/bag
 operators|/language/setbagmix#Set%2FBag_operators>) as well as some quoting
 constructs.  Hence it is good to know how to enter these symbols into editors,
-the Perl 6 shell and the command line, especially if the symbols aren't
+the Raku shell and the command line, especially if the symbols aren't
 available as actual characters on a keyboard.
 
 General information about entering unicode under various operating systems
 and environments can be found on the Wikipedia L<unicode input page|https://en.wikipedia.org/wiki/Unicode_input>.
 
 =head1 XCompose (Linux)
+X<|XCompose>
 
 Xorg includes digraph support using a
 L<I<Compose key>|https://en.wikipedia.org/wiki/Compose_key#GNU.2FLinux> .
@@ -24,7 +25,7 @@ C<Preferences → Keyboard → Layouts → Options → Position of Compose Key>.
 So, for example, to input C<»+«> you could type
 C<< CAPSLOCK > > + CAPSLOCK < < >>
 
-I<XCompose> allows customising the digraph sequences using a C<.XCompose>
+I<XCompose> allows customizing the digraph sequences using a C<.XCompose>
 file and
 L<https://github.com/kragen/xcompose/blob/master/dotXCompose> is an extremely
 complete one. In I<GNOME>, I<XCompose> was overridden and replaced with a
@@ -52,6 +53,7 @@ and that should work. Other desktop environments will be different. Look up
 how to set environment variables in yours or use the system-wide option above.
 
 =head2 ibus
+X<|ibus>
 
 If you have problems entering high codepoint symbols such as B<🐧> using the
 C<xim> input module, you can instead use ibus. You will have to install the ibus
@@ -75,6 +77,7 @@ C<--desktop=plasma>. Click OK. It should now launch automatically when you
 log in again.
 
 =head1 WinCompose (Windows)
+X<|WinCompose>
 
 L<WinCompose|https://github.com/samhocevar/wincompose> adds
 L<compose key|https://en.wikipedia.org/wiki/Compose_key> functionality to Windows.
@@ -82,17 +85,82 @@ It can be installed either via the L<WinCompose releases|https://github.com/samh
 page on GitHub, or with the L<Chocolatey package manager|https://chocolatey.org/packages/wincompose>.
 
 Once the program is installed and running, right click the tray icon and
-select C<Options → General → Compose Key> to set your desired key.
+select C<Options → Composing → Behavior → Compose Key> to set your desired key.
 
-WinCompose uses L<kragen/xcompose|https://github.com/kragen/xcompose> as
-a source, so by default has plenty of useful sequences available.
-These sequences can be viewed by right clicking the tray icon and selecting C<Show Sequences>.
+WinCompose has multiple sources to choose from in C<Options → Composing → Sequences>.
+It is recommended to enable C<XCompose> and disable C<Xorg>, as there are a handful
+of operators which C<Xorg> does not provide sequences for, and C<Xorg> also has
+sequences which conflict with operator sequences present in C<XCompose>.
+Sequences can be viewed by right clicking the tray icon and selecting C<Show Sequences>.
 If you wish to add your own sequences, you can do so by either adding/modifying
 C<.XCompose> in C<%USERPROFILE%>, or editing user-defined sequences in the options menu.
 
-=head1 Editors and shells
+=head1 Terminals, shells, and editors:
+
+=head2 XTerm
+
+Unicode support is enabled in XTerm primarily by setting its C<utf8> and
+C<utf8Fonts> options to C<1>, along with its C<locale> option to C<UTF-8>, in
+C<~/.Xdefaults>. Here is a sample configuration that supports displaying enough
+of unicode to program in Raku:
+
+    =begin code :lang<.Xdefaults>
+    XTerm*faceName:           xft:Noto Mono:style=Regular
+    XTerm*faceNameDoublesize: xft:Noto Emoji:style=Regular
+    XTerm*faceSize:           10
+    XTerm*locale:             UTF-8
+    XTerm*titleModes:         16
+    XTerm*utf8:               1
+    XTerm*utf8Fonts:          1
+    XTerm*utf8Title:          true
+    =end code
+
+=head2 URxvt
+
+Similarly to XTerm, unicode support is enabled in URxvt primarily by setting
+its C<locale> option to C<en_US.UTF-8> in C<~/.Xdefaults>. Here is a sample
+configuration that supports displaying enough of unicode to program in Raku:
+
+    =begin code :lang<.Xdefaults>
+    URxvt*font:              xft:Noto Mono:pixelsize=14:style=Regular,\
+                             xft:Noto Emoji:pixelsize=14:style=Regular
+    URxvt*letterSpace:       -1
+    URxvt*locale:            en_US.UTF-8
+    URxvt*skipBuiltInGlyphs: true
+    =end code
+
+=head2 Unix shell
+
+At the bash shell, one enters unicode characters by using entering
+C<Ctrl-Shift-u>, then the unicode code point value followed by enter.  For
+instance, to enter the character for the element-of operator (∈) use the
+following key combination (whitespace has been added for clarity):
+
+    =begin code :lang<shell>
+    Ctrl-Shift-u 2208 Enter
+    =end code
+
+This also the method one would use to enter unicode characters into the
+C<perl6> REPL, if one has started the REPL inside a Unix shell.
+
+=head2 Screen
+
+L<GNU Screen|https://www.gnu.org/software/screen/> does sport a B<digraph>
+command but with a rather limited digraph table. Thanks to B<bindkey> and
+B<exec> an external program can be used to insert characters to the current
+screen window.
+
+    =begin code :lang<screen>
+    bindkey ^K exec .! digraphs
+    =end code
+
+This will bind control-k to the shell command digraphs. You can use
+L<digraphs|https://github.com/gfldex/digraphs> if you prefer a Raku friendly
+digraph table over L<RFC 1345|https://tools.ietf.org/html/rfc1345> or change it
+to your needs.
 
 =head2 Vim
+X<|Vim>
 
 In L<Vim|https://www.vim.org/>, unicode characters are entered (in
 insert-mode) by pressing first C<Ctrl-V> (also denoted C<^V>), then C<u> and
@@ -125,6 +193,7 @@ equivalents. This will convert the ASCII based ops on the fly while typing
 them.
 
 =head2 Emacs
+X<|Emacs>
 
 In L<Emacs|https://www.gnu.org/software/emacs/>, unicode characters are
 entered by first entering the chord C<C-x 8 RET> at which point the
@@ -177,41 +246,11 @@ run the C<describe-input-method> command:
     C-h I TeX
     =end code
 
-=head2 Unix shell
-
-At the bash shell, one enters unicode characters by using entering
-C<Ctrl-Shift-u>, then the unicode code point value followed by enter.  For
-instance, to enter the character for the element-of operator (∈) use the
-following key combination (whitespace has been added for clarity):
-
-    =begin code :lang<shell>
-    Ctrl-Shift-u 2208 Enter
-    =end code
-
-This also the method one would use to enter unicode characters into the
-C<perl6> REPL, if one has started the REPL inside a Unix shell.
-
-=head2 Screen
-
-L<GNU Screen|https://www.gnu.org/software/screen/> does sport a B<digraph>
-command but with a rather limited digraph table. Thanks to B<bindkey> and
-B<exec> an external program can be used to insert characters to the current
-screen window.
-
-    =begin code :lang<screen>
-    bindkey ^K exec .! digraphs
-    =end code
-
-This will bind control-k to the shell command digraphs. You can use
-L<digraphs|https://github.com/gfldex/digraphs> if you prefer a Perl 6 friendly
-digraph table over L<RFC 1345|https://tools.ietf.org/html/rfc1345> or change it
-to your needs.
-
-=head1 Some characters useful in Perl 6
+=head1 Some characters useful in Raku
 
 =head2 L<Smart quotes|https://en.wikipedia.org/wiki/Quotation_mark#Curved_quotes_and_Unicode>
 
-These characters are used in different languages as quotation marks. In Perl 6
+These characters are used in different languages as quotation marks. In Raku
 they are used as L<quoting characters|/language/quoting>
 
 Constructs such as these are now possible:
@@ -232,9 +271,9 @@ since you can just copy and paste some piece of code and not worry about quotes.
 
 =head2 L<Guillemets|https://en.wikipedia.org/wiki/Guillemet>
 
-These characters are used in French and German as quotation marks. In Perl 6
+These characters are used in French and German as quotation marks. In Raku
 they are used as L<interpolation word quotes|/language/quoting#Word_quoting_with_interpolation_and_quote_protection:_qqww>,
-L<hyper operators|/language/operators#Hyper_operators> and as bracket
+L<hyper operators|/language/operators#Hyper_operators> and as an angle bracket
 alternative in POD6.
 
 =begin table

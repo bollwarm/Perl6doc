@@ -1,4 +1,4 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("domain-specific")
 
 =TITLE class IO::Notification
 
@@ -9,7 +9,7 @@ X<|FileChanged (FileChangeEvent)>
 X<|FileRenamed (FileChangeEvent)>
 =for code
 enum FileChangeEvent (:FileChanged(1), :FileRenamed(2));
-=for code :skip-test
+=for code :skip-test<compile time error>
 class IO::Notification  {
     class Change {
         has $.path;

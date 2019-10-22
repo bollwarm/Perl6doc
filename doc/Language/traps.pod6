@@ -1,8 +1,8 @@
-=begin pod :tag<index>
+=begin pod :kind("Language") :subkind("Language") :category("reference")
 
 =TITLE Traps to avoid
 
-=SUBTITLE Traps to avoid when getting started with Perl 6
+=SUBTITLE Traps to avoid when getting started with Raku
 
 When learning a programming language, possibly with the background of
 being familiar with another programming language, there are always some
@@ -11,41 +11,44 @@ and discovery.
 
 This document aims to show common misconceptions in order to avoid them.
 
-During the making of Perl 6 great pains were taken to get rid of warts in
-the syntax.  When you whack one wart, though, sometimes another pops up.  So
-a lot of time was spent finding the minimum number of warts or trying to put
-them where they would rarely be seen.  Because of this, Perl 6's warts are
-in different places than you may expect them to be when coming from another
-language.
+During the making of Raku great pains were taken to get rid of warts
+in the syntax.  When you whack one wart, though, sometimes another pops
+up.  So a lot of time was spent finding the minimum number of warts or
+trying to put them where they would rarely be seen.  Because of this,
+Raku's warts are in different places than you may expect them to be
+when coming from another language.
 
 =head1 Variables and constants
 
 =head2 Constants are computed at compile time
 
-Constants are computed at compile time, so if you use them in modules keep in mind
-that their values will be frozen due to pre-compilation of the module itself:
+Constants are computed at compile time, so if you use them in modules
+keep in mind that their values will be frozen due to precompilation of
+the module itself:
 
-=for code :skip-test
+=for code :solo
 # WRONG (most likely):
 unit module Something::Or::Other;
 constant $config-file = "config.txt".IO.slurp;
 
-The C<$config-file> will be slurped during pre-compilation and changes to
-C<config.txt> file won't be re-loaded when you start the script again; only when
-the module is re-compiled.
+The C<$config-file> will be slurped during precompilation and changes
+to C<config.txt> file won't be re-loaded when you start the script
+again; only when the module is re-compiled.
 
 Avoid L<using a container|/language/containers> and prefer
-L<binding a value|/language/containers#Binding> to a variable that offers
-a behaviour similar to a constant, but allowing the value to get updated:
+L<binding a value|/language/containers#Binding>
+to a variable that offers a
+behavior similar to a constant, but allowing the value to get updated:
 
-=for code :skip-test
+=for code :solo
 # Good; file gets updated from 'config.txt' file on each script run:
 unit module Something::Or::Other;
 my $config-file := "config.txt".IO.slurp;
 
-=head2 Assigning to C<Nil> produces a different value, usually C<Any>.
+=head2 Assigning to C<Nil> produces a different value, usually C<Any>
 
-Actually, assigning to C<Nil> L<reverts the variable to its default value|https://docs.perl6.org/type/Nil>. So:
+Actually, assigning to C<Nil>
+L<reverts the variable to its default value|/type/Nil>. So:
 
 =begin code
 my @a = 4, 8, 15, 16;
@@ -76,12 +79,14 @@ my $result2 = 'abcdef' ~~ / dex /;
 say "Result2 is { $result2.^name }"; # OUTPUT: «Result2 is Any␤»
 =end code
 
-A L<C<Match> will be C<Nil>|https://docs.perl6.org/language/regexes#Literals> if it finds nothing; however it assigning C<Nil> to C<$result2> above will result in its default value, which is C<Any> as shown.
+A L<C<Match> will be C<Nil>|/language/regexes#Literals>
+if it finds nothing; however it assigning C<Nil> to C<$result2> above
+will result in its default value, which is C<Any> as shown.
 
 =head2 Using a block to interpolate anon state vars
 
-The programmer intended for the code to count the number of times the routine
-is called, but the counter is not increasing:
+The programmer intended for the code to count the number of times the
+routine is called, but the counter is not increasing:
 
     =begin code
     sub count-it { say "Count is {$++}" }
@@ -94,9 +99,9 @@ is called, but the counter is not increasing:
     =end code
 
 When it comes to state variables, the block in which the vars are
-declared gets cloned — and vars get initialized anew—whenever that
+declared gets cloned —and vars get initialized anew— whenever that
 block's block is re-entered. This lets constructs like the one below
-behave appropriately: the state variable inside the loop gets
+behave appropriately; the state variable inside the loop gets
 initialized anew each time the sub is called:
 
     =begin code
@@ -141,18 +146,44 @@ instead:
     # Count is 1
     =end code
 
-Alternatively, you can also use the L<concatenation operator|/routine/~> instead:
+Alternatively, you can also use the L<concatenation operator|/routine/~>
+instead:
 
     =begin code
     sub count-it { say "Count is " ~ $++ }
     =end code
 
+=head2 Using set subroutines on C<Associative> when the value is falsy
+
+Using L<(cont)|/routine/(cont) , infix  ∋>, L<∋|/routine/(cont), infix ∋>, L<∌|/routine/∌>,
+L<(elem)|/routine/(elem), infix ∈>, L<∈|/routine/(elem), infix ∈>, or L<∉|/routine/∉> on classes
+implementing L<Associative|/type/Associative> will return C<False> if the value
+of the key is falsy:
+
+=begin code
+enum Foo «a b»;
+say Foo.enums ∋ 'a';
+
+# OUTPUT:
+# False
+=end code
+
+Instead, use C<:exists>:
+
+=begin code
+enum Foo «a b»;
+say Foo.enums<a>:exists;
+
+# OUTPUT:
+# True
+=end code
+
 =head1 Blocks
 
 =head2 Beware of empty "blocks"
 
-Curly braces are used to declare blocks. However, empty curly braces will
-declare a hash.
+Curly braces are used to declare blocks. However, empty curly braces
+will declare a hash.
 
 =begin code
 $ = {say 42;} # Block
@@ -161,24 +192,24 @@ $ = {…}       # Block
 $ = { }       # Hash
 =end code
 
-You can use the second form if you effectively want to declare an empty block:
+You can use the second form if you effectively want to declare an empty
+block:
 
     my &does-nothing = {;};
-    say does-nothing(33);# OUTPUT: «Nil␤»
+    say does-nothing(33); # OUTPUT: «Nil␤»
 
 
 =head1 Objects
 
 =head2 Assigning to attributes
 
-Newcomers often think that, because attributes with accessors are declared
-as C<has $.x>, they can assign to C<$.x> inside the class. That's not the
-case.
+Newcomers often think that, because attributes with accessors are
+declared as C<has $.x>, they can assign to C<$.x> inside the class.
+That's not the case.
 
 For example
 
 =begin code
-use v6.c;
 class Point {
     has $.x;
     has $.y;
@@ -193,8 +224,8 @@ say Point.new(x => 1, y => -2).double.x
 # OUTPUT: «Cannot assign to an immutable value␤»
 =end code
 
-in the first line marked with C<# WRONG>, because C<$.x>, short for C<$(
-self.x )>, is a call to a read-only accessor.
+the first line inside the method C<double> is marked with C<# WRONG> because
+C<$.x>, short for C<$( self.x )>, is a call to a read-only accessor.
 
 The syntax C<has $.x> is short for something like C<has $!x; method x() {
 $!x }>, so the actual attribute is called C<$!x>, and a read-only accessor
@@ -202,7 +233,7 @@ method is automatically generated.
 
 Thus the correct way to write the method C<double> is
 
-=for code :skip-test
+=for code :preamble<has ($.x, $.y)>
 method double {
     $!x *= 2;
     $!y *= 2;
@@ -211,13 +242,13 @@ method double {
 
 which operates on the attributes directly.
 
-=head2 C<BUILD> prevents automatic attribute initialization from constructor arguments
+=head2 C<BUILD> prevents automatic attribute initialization from constructor
+arguments
 
 When you define your own C<BUILD> submethod, you must take care of
 initializing all attributes by yourself. For example
 
 =begin code
-use v6.c;
 class A {
     has $.x;
     has $.y;
@@ -229,16 +260,18 @@ class A {
 say A.new(x => 42).x;       # OUTPUT: «Any␤»
 =end code
 
-leaves C<$!x> uninitialized, because the custom C<BUILD> doesn't initialize
-it.
+leaves C<$!x> uninitialized, because the custom C<BUILD> doesn't
+initialize it.
 
 B<Note:> Consider using L<TWEAK|/language/objects#index-entry-TWEAK>
-instead. L<Rakudo|/language/glossary#Rakudo> supports L<TWEAK|/language/objects#index-entry-TWEAK> method
-since release 2016.11.
+instead. L<Rakudo|/language/glossary#Rakudo> supports
+L<TWEAK|/language/objects#index-entry-TWEAK> method since release
+2016.11.
 
-One possible remedy is to explicitly initialize the attribute in C<BUILD>:
+One possible remedy is to explicitly initialize the attribute in
+C<BUILD>:
 
-=for code :skip-test
+=for code :preamble<has ($.x, $.y)>
 submethod BUILD(:$x) {
     $!y = 18;
     $!x := $x;
@@ -246,34 +279,10 @@ submethod BUILD(:$x) {
 
 which can be shortened to:
 
-=for code :skip-test
+=for code :preamble<has ($.x, $.y)>
 submethod BUILD(:$!x) {
     $!y = 18;
 }
-
-Another, more general approach is to leave C<BUILD> alone, and hook into the
-C<BUILDALL> mechanism instead:
-
-=begin code
-use v6.c;
-class A {
-    has $.x;
-    has $.y;
-    method BUILDALL(|c) {
-        callsame;
-        $!y = 18;
-        self
-    }
-}
-
-say A.new(x => 42).x;       # OUTPUT: «42␤»
-=end code
-
-Remember that C<BUILDALL> is a method, not a submethod. That's because by
-default, there is only one such method per class hierarchy, whereas C<BUILD>
-is explicitly called per class. That is the reason why, in order to properly initialize
-parent objects, it is required to use C<callsame> inside C<BUILDALL>, but not inside C<BUILD>
-(for more on the subject see L<object creation|/language/objects#Object_construction>).
 
 =head1 Whitespace
 
@@ -283,7 +292,7 @@ parent objects, it is required to use C<callsame> inside C<BUILDALL>, but not in
 say 'a b' ~~ /a b/; # OUTPUT: «False␤»
 
 Whitespace in regexes is, by default, considered an optional filler without
-semantics, just like in the rest of the Perl 6 language.
+semantics, just like in the rest of the Raku language.
 
 Ways to match whitespace:
 
@@ -299,17 +308,17 @@ Ways to match whitespace:
 =head2 Ambiguities in parsing
 
 While some languages will let you get away with removing as much whitespace
-between tokens as possible, Perl 6 is less forgiving. The overarching
+between tokens as possible, Raku is less forgiving. The overarching
 mantra is we discourage code golf, so don't scrimp on whitespace (the
 more serious underlying reason behind these restrictions is
-single-pass parsing and ability to parse Perl 6 programs with virtually
+single-pass parsing and ability to parse Raku programs with virtually
 no L<backtracking|https://en.wikipedia.org/wiki/Backtracking>).
 
 The common areas you should watch out for are:
 
 =head3 Block vs. Hash slice ambiguity
 
-=for code :skip-test
+=for code :skip-test<illustrates error>
 # WRONG; trying to hash-slice a Bool:
 while ($++ > 5){ .say }
 
@@ -317,14 +326,14 @@ while ($++ > 5){ .say }
 # RIGHT:
 while ($++ > 5) { .say }
 
-# EVEN BETTER; Perl 6 does not require parentheses there:
+# EVEN BETTER; Raku does not require parentheses there:
 while $++ > 5 { .say }
 =end code
 
 =head3 Reduction vs. Array constructor ambiguity
 
-=for code :skip-test
-# WRONG; ambiguity with `[<]` meta op:
+=for code :skip-test<illustrates error>
+# WRONG; ambiguity with `[<]` metaop:
 my @a = [[<foo>],];
 
 =begin code
@@ -336,14 +345,22 @@ my @a = [[<foo bar ber>],];
 =end code
 
 =head3 Less than vs. Word quoting/Associative indexing
-=for code :skip-test
-# WRONG; trying to index 3 associatively
+=for code :skip-test<illustrates error>
+# WRONG; trying to index 3 associatively:
 say 3<5>4
 
 =begin code
-# RIGHT; prefer some extra whitespace around infix operators
+# RIGHT; prefer some extra whitespace around infix operators:
 say 3 < 5 > 4
 =end code
+
+=head3 Exclusive sequences vs. sequences with Ranges
+
+See the section on L<operator traps|#Exclusive_sequence_operator> for
+more information about how the C<...^> operator can be mistaken for
+the C<...> operator with a C<^> operator immediately following it. You
+must use whitespace correctly to indicate which interpretation will be
+followed.
 
 =head1 Captures
 
@@ -356,9 +373,10 @@ value when that C<Capture> is later used.  For example:
 my $a = 2; say join ",", ($a, ++$a);  # OUTPUT: «3,3␤»
 
 Here the C<Capture> contained the B<container> pointed to by C<$a> and the
-B<value> of the result of the expression C<++$a>.  Since the C<Capture> must
-be reified before C<&say> can use it, the C<++$a> may happen before C<&say>
-looks inside the container in C<$a> (and before the C<List> is created with the two terms) and so it may already be incremented.
+B<value> of the result of the expression C<++$a>.  Since the C<Capture> must be
+reified before C<&say> can use it, the C<++$a> may happen before C<&say> looks
+inside the container in C<$a> (and before the C<List> is created with the two
+terms) and so it may already be incremented.
 
 Instead, use an expression that produces a value when you want a value.
 
@@ -380,7 +398,11 @@ for ^5 {
 };
 =end code
 
-Outputs C<«[(1 2)]␤[(2 3) (2 3)]␤[(3 5) (3 5) (3 5)]␤...>. C<$a> and C<$b> are not reified until C<say> is called, the value that they have in that precise moment is the one printed. To avoid that, decontainerize values or take them out of the variable in some way before using them.
+Outputs C<«[(1 2)]␤[(2 3) (2 3)]␤[(3 5) (3 5) (3 5)]␤...>. C<$a> and C<$b> are
+not reified until C<say> is called, the value that they have in that precise
+moment is the one printed. To avoid that, decontainerize values or take them out
+of the variable in some way before using them.
+
 =begin code
 my @arr;
 my ($a, $b) = (1,1);
@@ -396,17 +418,19 @@ value extracted, and the desired outcome achieved.
 
 =head1 C<Cool> tricks
 
-Perl 6 includes a L<Cool|/type/Cool> class, which provides some of the DWIM
+Raku includes a L<Cool|/type/Cool> class, which provides some of the DWIM
 behaviors we got used to by coercing arguments when necessary. However, DWIM is
-never perfect. Especially with L<List>s, which are C<Cool>, there are many
-methods that will not do what you probably think they do, including C<contains>,
-C<starts-with> or C<index>. Please see some examples in the section below.
+never perfect. Especially with L<List|/type/List>s, which are C<Cool>, there are
+many methods that will not do what you probably think they do, including
+C<contains>, C<starts-with> or C<index>. Please see some examples in the section
+below.
 
 =head2 Strings are not C<List>s, so beware indexing
 
-In Perl 6, L<strings|/type/Str> are not lists of characters. One
-L<cannot iterate|#Strings_are_not_iterable> over them or index into them as you can
-with L<lists|/type/List>, despite the name of the L<.index routine|/type/Str#routine_index>.
+In Raku, L<strings|/type/Str> are not lists of characters. One
+L<cannot iterate|#Strings_are_not_iterable> over them or index into them as you
+can with L<lists|/type/List>, despite the name of the L<.index
+routine|/type/Str#routine_index>.
 
 =head2 C<List>s become strings, so beware C<.index()>ing
 
@@ -439,8 +463,8 @@ say @menu.contains('er fr');                # True!
 say @menu.contains(<es mi>);                # True!
 
 If you actually want to check for the presence of an element, use the
-L<(cont)|/routine/(cont)> operator for single elements, and the
-L<superset|/routine/(%3E%3D)> and L<strict superset|/routine/(%3E)>
+L<(cont)|/routine/(elem), infix ∈> operator for single elements, and the
+L<superset|/language/operators#infix_(<=), _infix_⊆> and L<strict superset|/language/operators#infix_(>), _infix_⊃>
 operators for multiple elements.
 
 =for code
@@ -482,17 +506,22 @@ say @colors.roll;       # blue
 say @colors.pick(2);    # yellow violet  (cannot repeat)
 say @colors.roll(3);    # red green red  (can repeat)
 
-=head2 List numify to their number of elements in numeric context
+=head2 C<List>s numify to their number of elements in numeric context
 
 You want to check whether a number is divisible by any of a set of numbers:
 
-    say 42 %% <11 33 88 55 111 20325>; # OUTPUT: «True␤
+    say 42 %% <11 33 88 55 111 20325>; # OUTPUT: «True␤»
 
-What? There's no single number 42 should be divisible by. However, that list has 6 elements, and 42 is divisible by 6. That's why the output is true. In this case, you should turn the C<List> into a L<Junction>:
+What? There's no single number 42 should be divisible by. However, that list has
+6 elements, and 42 is divisible by 6. That's why the output is true. In this
+case, you should turn the C<List> into a L<Junction|/type/Junction>:
 
-    say 42 %% <11 33 88 55 111 20325>.any;# OUTPUT: «any(False, False, False, False, False, False)␤»
+=for code
+say 42 %% <11 33 88 55 111 20325>.any;
+# OUTPUT: «any(False, False, False, False, False, False)␤»
 
-which will clearly reveal the falsehood of the divisiveness of all the numbers in the list, which will be numified separately.
+which will clearly reveal the falsehood of the divisiveness of all the numbers
+in the list, which will be numified separately.
 
 =head1 Arrays
 
@@ -505,8 +534,8 @@ asking for the "-1th" element of the array, e.g.:
 my @array = qw{victor alice bob charlie eve};
 say @array[-1];    # OUTPUT: «eve␤»
 
-In Perl 6 it is not possible to use negative subscripts, however the same is
-achieved by actually using a function, namely C<*-1>.  Thus accessing the
+In Raku it is not possible to use negative subscripts, however the same is
+achieved by actually using a function, namely C<*-1>.  Thus, accessing the
 last element of an array becomes:
 
 =for code
@@ -544,7 +573,7 @@ The problem here is that [1, 2, 3] is not an C<Array[Int]>, it is a plain
 old Array that just happens to have Ints in it.  To get it to work,
 the argument must also be an C<Array[Int]>.
 
-=for code :skip-test
+=for code :preamble<sub bar (Int @a) { 42.say }>
 my Int @b = 1, 2, 3;
 bar(@b);                    # OUTPUT: «42␤»
 bar(Array[Int].new(1, 2, 3));
@@ -584,16 +613,20 @@ hole. To stay on the safe side, refrain from using C<«»>.
 
 =head1 Strings
 
+Some problems that might arise when dealing with L<strings|/type/Str>.
+
 =head2 Quotes and interpolation
 
 Interpolation in string literals can be too clever for your own good.
 
-=for code :skip-test
-"$foo<html></html>" # Perl 6 understands that as:
+=for code :preamble<my $foo>
+# "HTML tags" interpreted as associative indexing:
+"$foo<html></html>" eq
 "$foo{'html'}{'/html'}"
 
-=for code :skip-test
-"$foo(" ~ @args ~ ")" # Perl 6 understands that as:
+=for code :preamble<my $foo = { $^x }>
+# Parentheses interpreted as call with argument:
+"$foo(" ~ @args ~ ")" eq
 "$foo(' ~ @args ~ ')"
 
 You can avoid those problems using non-interpolating single quotes and switching
@@ -614,30 +647,34 @@ say Q:c«{$a}()$b()»;
 
 =head2 Strings are not iterable
 
-There are methods that L<Str|/type/Str> inherits from L<Any|/type/Any> that work on iterables like lists. Iterators on strings contain one element that is the whole string. To use list-based methods like C<sort>, C<reverse>, you need to convert the string into a list first.
+There are methods that L<Str|/type/Str> inherits from L<Any|/type/Any> that work
+on iterables like lists. Iterators on strings contain one element that is the
+whole string. To use list-based methods like C<sort>, C<reverse>, you need to
+convert the string into a list first.
 
 =for code
 say "cba".sort;              # OUTPUT: «(cba)␤»
 say "cba".comb.sort.join;    # OUTPUT: «abc␤»
 
-=head2 C<.chars> Gets the Number of Graphemes, not Codepoints
+=head2 C<.chars> gets the number of graphemes, not Codepoints
 
-In Perl 6, L«C<.chars>|chars» returns the number of graphemes, or user visible characters.
-These graphemes could be made up of a letter plus an accent for example.
-If you need the number of codepoints, you should use L«C<.codes>|codes». If you need
-the number of bytes when encoded as UTF8, you should use C<.encode.bytes> to
-encode the string as UTF8 and then get the number of bytes.
+In Raku, L«C<.chars>|/routine/chars» returns the number of graphemes, or user visible
+characters. These graphemes could be made up of a letter plus an accent for
+example. If you need the number of codepoints, you should use
+L«C<.codes>|/routine/codes». If you need the number of bytes when encoded as UTF8, you
+should use C<.encode.bytes> to encode the string as UTF8 and then get the number
+of bytes.
 
     say "\c[LATIN SMALL LETTER J WITH CARON, COMBINING DOT BELOW]"; # OUTPUT: «ǰ̣»
     say 'ǰ̣'.codes;        # OUTPUT: «2»
     say 'ǰ̣'.chars;        # OUTPUT: «1»
     say 'ǰ̣'.encode.bytes; # OUTPUT: «4»
 
-For more information on how strings work in Perl 6, see the L<Unicode page|/language/unicode>.
+For more information on how strings work in Raku, see the L<Unicode page|/language/unicode>.
 
 =head2 All text is normalized by default
 
-Perl 6 normalizes all text into Unicode NFC form (Normalization Form Canonical).
+Raku normalizes all text into Unicode NFC form (Normalization Form Canonical).
 Filenames are the only text not normalized by default. If you are expecting
 your strings to maintain a byte for byte representation as the original,
 you need to use L«C<UTF8-C8>|/language/unicode#UTF8-C8» when reading or writing
@@ -645,19 +682,19 @@ to any filehandles.
 
 =head2 Allomorphs generally follow numeric semantics
 
-L<Str> C<"0"> is C<True>, while L<Numeric> is C<False>. So what's the L<Bool> value of
+L<Str|/type/Str> C<"0"> is C<True>, while L<Numeric|/type/Numeric> is C<False>. So what's the L<Bool|/type/Bool> value of
 L<allomorph|/language/glossary#index-entry-Allomorph> C«<0>»?
 
-In general, allomorphs follow L<Numeric> semantics, so the ones that I<numerically> evaluate
+In general, allomorphs follow L<Numeric|/type/Numeric> semantics, so the ones that I<numerically> evaluate
 to zero are C<False>:
 
     say so   <0>; # OUTPUT: «False␤»
     say so <0e0>; # OUTPUT: «False␤»
     say so <0.0>; # OUTPUT: «False␤»
 
-To force comparison being done for the L<Stringy> part of the allomorph, use
-L«prefix C<~> operator|/routine/~» or the L<Str> method to coerce the allomorph
-to L<Str>, or use the L<chars> routine to test whether the allomorph has any length:
+To force comparison being done for the L<Stringy|/type/Stringy> part of the allomorph, use
+L«prefix C<~> operator|/routine/~» or the L<Str|/type/Str> method to coerce the allomorph
+to L<Str|/type/Str>, or use the L<chars|/routine/chars> routine to test whether the allomorph has any length:
 
     say so      ~<0>;     # OUTPUT: «True␤»
     say so       <0>.Str; # OUTPUT: «True␤»
@@ -668,7 +705,7 @@ to L<Str>, or use the L<chars> routine to test whether the allomorph has any len
 In order to do case-insensitive comparison, you can use C<.fc>
 (fold-case). The problem is that people tend to use C<.lc> or C<.uc>,
 and it does seem to work within the ASCII range, but fails on other
-characters. This is not just a Perl 6 trap, the same applies to other
+characters. This is not just a Raku trap, the same applies to other
 languages.
 
 =begin code
@@ -730,7 +767,7 @@ about L<Pair|/type/Pair>.
 
 =head1 Sets, bags and mixes
 
-=head2 Sets, bags and mixes do not have a fixed order.
+=head2 Sets, bags and mixes do not have a fixed order
 
 When iterating over this kind of objects, an order is not defined.
 
@@ -741,25 +778,25 @@ my $set = <a b c>.Set;
 # OUTPUT: «c => True␤b => True␤a => True␤»
 =end code
 
-Every iteration might (and will) yield a different order, so you cannot trust on
+Every iteration might (and will) yield a different order, so you cannot trust
 a particular sequence of the elements of a set. If order does not matter, just
 use them that way. If it does, use C<sort>
 
     my $set = <a b c>.Set;
-    .say for $set.list.sort;# OUTPUT: «a => True␤b => True␤c => True␤»
+    .say for $set.list.sort;  # OUTPUT: «a => True␤b => True␤c => True␤»
 
 In general, sets, bags and mixes are unordered, so you should not depend on them
 having a particular order.
 
 =head1 Operators
 
-Some operators commonly shared among other languages were repurposed in Perl 6
+Some operators commonly shared among other languages were repurposed in Raku
 for other, more common, things:
 
 =head2 Junctions
 
 The C<^>, C<|>, and C<&> are I<not> bitwise operators, they create
-L<Junctions|/type/Junction>. The corresponding bitwise operators in Perl 6 are:
+L<Junctions|/type/Junction>. The corresponding bitwise operators in Raku are:
 C<+^>, C<+|>, C<+&> for integers and C<?^>, C<?|>, C<?&> for booleans.
 
 =head2 Exclusive sequence operator
@@ -774,7 +811,7 @@ equivalent|/language/unicode_ascii> C<…^>).
 
 If you place whitespace between the ellipsis (C<…>) and the caret (C<^>),
 it's no longer a single infix operator, but an infix inclusive sequence operator
-(C<…>) and a prefix L<Range> operator (C<^>). L«Iterables|/type/Iterable»
+(C<…>) and a prefix L<Range|/type/Range> operator (C<^>). L«Iterables|/type/Iterable»
 are valid endpoints for the sequence operator, so the result you'll get might
 not be what you expected.
 
@@ -784,11 +821,11 @@ In some languages, using strings as range end points, considers the entire
 string when figuring out what the next string should be; loosely treating the
 strings as numbers in a large base. Here's Perl 5 version:
 
-=for code :skip-test
+=for code
 say join ", ", "az".."bc";
 # OUTPUT: «az, ba, bb, bc␤»
 
-Such a range in Perl 6 will produce a different result, where I<each letter>
+Such a range in Raku will produce a different result, where I<each letter>
 will be ranged to a corresponding letter in the end point, producing more
 complex sequences:
 
@@ -804,7 +841,7 @@ say join ", ", "az".."bc";
 say join ", ", "r2".."t3";
 # OUTPUT: «r2, r3, s2, s3, t2, t3␤»
 
-To achieve simpler behaviour, similar to the Perl 5 example above, use a
+To achieve simpler behavior, similar to the Perl 5 example above, use a
 sequence operator that calls C<.succ> method on the starting string:
 
 =for code
@@ -813,9 +850,9 @@ say join ", ", ("az", *.succ ... "bc");
 
 =head2 Topicalizing operators
 
-The smartmatch operator C<~~> and C<andthen> set the topic C<$_> to their
-left-hand-side. In conjunction with implicit method calls on the topic this can
-lead to surprising results.
+The smartmatch operator C<~~> and C<andthen> set the topic C<$_> to
+their left-hand-side. In conjunction with implicit method calls on the
+topic this can lead to surprising results.
 
 =for code
 my &method = { note $_; $_ };
@@ -837,9 +874,9 @@ say .&method ~~ 'topic';
 
 =head2 Fat arrow and constants
 
-The fat arrow operator C«=>» will turn words on its left-hand side to C<Str>
-without checking the scope for constants or C<\>-sigiled variables. Use
-explicit scoping to get what you mean.
+The fat arrow operator C«=>» will turn words on its left-hand side to
+C<Str> without checking the scope for constants or C<\>-sigiled
+variables. Use explicit scoping to get what you mean.
 
 =for code
 constant V = 'x';
@@ -875,7 +912,7 @@ in mind that C<+=> isn't defined as method on the left hand argument
 Here C<@a> is assigned the result of adding C<@a> (which has three elements)
 and C<10>; C<13> is therefore placed in C<@a>.
 
-Use the L<hyper form|https://docs.perl6.org/language/operators#Hyper_operators>
+Use the L<hyper form|/language/operators#Hyper_operators>
 of the assignment operators instead:
 
     my @a = 1, 2, 3;
@@ -884,46 +921,57 @@ of the assignment operators instead:
 
 =head1 Regexes
 
-=head2 C«<{$x}>» vs C«$($x)»: Implicit EVAL
+=head2 C«$x» vs C«<$x>», and C«$(code)» vs C«<{code}>»
 
-Sometimes you may need to match a generated string in a regex. This can be done
-using C<$(…)> or C«<{…}>» syntax:
+Raku offers several constructs to generate regexes at runtime through
+interpolation (see their detailed description
+L<here|/language/regexes#Regex_interpolation>). When a regex generated this way
+contains only literals, the above constructs behave (pairwise) identically, as
+if they are equivalent alternatives. As soon as the generated regex contains
+metacharacters, however, they behave differently, which may come as a confusing
+surprise.
 
-=for code
-my $x = ‘ailemac’;
-say ‘I ♥ camelia’ ~~ / $($x.flip) /; # OUTPUT: «｢camelia｣␤»
-say ‘I ♥ camelia’ ~~ / <{$x.flip}> /; # OUTPUT: «｢camelia｣␤»
+The first two constructs that may easily be confused with each other are
+C«$variable» and C«<$variable>»:
 
-However, the latter only works I<sometimes>.
+    my $variable = 'camelia';
+    say ‘I ♥ camelia’ ~~ /  $variable  /;   # OUTPUT: ｢camelia｣
+    say ‘I ♥ camelia’ ~~ / <$variable> /;   # OUTPUT: ｢camelia｣
 
-Internally C«<{…}>» EVAL-s the given string inside an anonymous regex, while
-C<$(…)> lexically interpolates the given string. So C«<{…}>» immediately breaks
-with more complicated inputs. For example:
+Here they act the same because the value of C<$variable> consists of literals.
+But when the variable is changed to comprise regex metacharacters the outputs
+become different:
 
-=for code :skip-test
-my $x = ‘ailemac#’;
-say ‘I ♥ #camelia’ ~~ / $($x.flip) /; # OUTPUT: «｢#camelia｣␤»
-#                    ⚠ ↓↓ WRONG ↓↓ ⚠
-say ‘I ♥ #camelia’ ~~ / <{$x.flip}> /;
-# OUTPUT:
-# ===SORRY!===
-# Regex not terminated.
-# at EVAL_0:1
-# ------> anon regex { #camelia}⏏<EOL>
-# Malformed regex
-# at EVAL_0:1
-# ------> anon regex { #camelia}⏏<EOL>
-#     expecting any of:
-#         infix stopper
+    my $variable = '#camelia';
+    say ‘I ♥ #camelia’ ~~ /  $variable  /;   # OUTPUT: ｢#camelia｣
+    say ‘I ♥ #camelia’ ~~ / <$variable> /;   # !! Error: malformed regex
 
-Therefore, try not to use C«<{}>» unless you really need EVAL.
+What happens here is that the string C<#camelia> contains the metacharacter
+C<#>. In the context of a regex, this character should be quoted to match
+literally; without quoting, the C<#> is parsed as the start of a comment that
+runs until the end of the line, which in turn causes the regex not to be
+terminated, and thus to be malformed.
 
-Note that even though EVAL is normally considered unsafe, in this case
-it is restricted to a set of safe operations (which is why it works
-without L<MONKEY-SEE-NO-EVAL|
-/language/pragmas#index-entry-MONKEY-SEE-NO-EVAL-MONKEY-SEE-NO-EVAL> pragma).
-In theory, careless use of C«<{}>» will only result in an exception being
-thrown, and should not introduce security issues.
+Two other constructs that must similarly be distinguished from one another are
+C«$(code)» and C«<{code}>». Like before, as long as the (stringified) return
+value of C<code> comprises only literals, there is no distinction between the
+two:
+
+    my $variable = 'ailemac';
+    say ‘I ♥ camelia’ ~~ / $($variable.flip)   /;   # OUTPUT: ｢camelia｣
+    say ‘I ♥ camelia’ ~~ / <{$variable.flip}>  /;   # OUTPUT: ｢camelia｣
+
+But when the return value is changed to comprise regex metacharacters, the
+outputs diverge:
+
+    my $variable = 'ailema.';
+    say ‘I ♥ camelia’ ~~ / $($variable.flip)   /;   # OUTPUT: Nil
+    say ‘I ♥ camelia’ ~~ / <{$variable.flip}>  /;   # OUTPUT: ｢camelia｣
+
+In this case the return value of the code is the string C<.amelia>, which
+contains the metacharacter C<.>. The above attempt by C«$(code)» to match the
+dot literally fails; the attempt by C«<{code}>» to match the dot as a regex
+wildcard succeeds. Hence the different outputs.
 
 =head2 C<|> vs C<||>: which branch will win
 
@@ -976,7 +1024,7 @@ Within a regex, the following are lists with a single item, C<'foo'>:
 
 but this is a call to the named rule C<foo>:
 
-=begin code :skip-test
+=begin code
 say 'foo' ~~ /<foo>/;
 # OUTPUT: «No such method 'foo' for invocant of type 'Match'␤ in block <unit> at <unknown file> line 1␤»
 =end code
@@ -1005,7 +1053,7 @@ To achieve the desired result, use global matching, capturing parentheses or a l
 
 =head2 Adverbs and precedence
 
-Adverbs do have a precedence that may not follow the order of operators that is displayed on your screen. If two operators of equal precedence are followed by an adverb it will pick the first operator it finds in the abstract syntax tree. Use parentheses to help Perl 6 understand what you mean or use operators with looser precedence.
+Adverbs do have a precedence that may not follow the order of operators that is displayed on your screen. If two operators of equal precedence are followed by an adverb it will pick the first operator it finds in the abstract syntax tree. Use parentheses to help Raku understand what you mean or use operators with looser precedence.
 
 =for code
 my %x = a => 42;
@@ -1046,7 +1094,7 @@ say -1**2; # OUTPUT: «-1␤»
 When performing a
 L<regular mathematical calculation|https://www.wolframalpha.com/input/?i=-1%C2%B2>,
 the power takes precedence over the minus; so C<-1²> can be written as C<-(1²)>.
-Perl 6 matches these rules of mathematics and the precedence of C<**> operator is
+Raku matches these rules of mathematics and the precedence of C<**> operator is
 tighter than that of the prefix C<->. If you wish to raise a negative number
 to a power, use parentheses:
 
@@ -1054,11 +1102,21 @@ to a power, use parentheses:
 say (-1)²;   # OUTPUT: «1␤»
 say (-1)**2; # OUTPUT: «1␤»
 
+=head2 Method operator calls and prefix minus
+
+Prefix minus binds looser than dotty method op calls. The prefix minus will be
+applied to the return value from the method. To ensure the minus gets
+passed as part of the argument, enclose in parenthesis.
+
+=for code
+say  -1.abs;  # OUTPUT: «-1␤»
+say (-1).abs; # OUTPUT: «1␤»
+
 =head1 Subroutine and method calls
 
 Subroutine and method calls can be made using one of two forms:
 
-=for code :skip-test
+=for code :skip-test<illustrates pattern>
 foo(...); # function call form, where ... represent the required arguments
 foo ...;  # list op form, where ... represent the required arguments
 
@@ -1074,7 +1132,7 @@ sub bar($a) { say "one arg: $a" }
 
 Then execute each with and without a space after the name:
 
-=for code :skip-test
+=for code :skip-test<illustrates error>
 foo();    # okay: no arg
 foo ();   # FAIL: Too many positionals passed; expected 0 arguments but got 1
 bar($a);  # okay: one arg: 1
@@ -1087,7 +1145,7 @@ sub foo($a, $b) { say "two args: $a, $b" }
 
 Execute it with and without the space after the name:
 
-=for code :skip-test
+=for code :skip-test<illustrates error>
 foo($a, $b);  # okay: two args: 1, 2
 foo ($a, $b); # FAIL: Too few positionals passed; expected 2 arguments but got 1
 
@@ -1119,7 +1177,7 @@ What happened? That second argument is not a named parameter argument, but a
 L<Pair|/type/Pair> passed as a positional argument. If you want a named
 parameter it has to look like a name to Perl:
 
-=begin code :skip-test
+=begin code :preamble<sub foo ($a, *%arg) {}>
 foo(1, b => 2); # okay
 foo(1, :b(2));  # okay
 foo(1, :b<it>); # okay
@@ -1141,13 +1199,13 @@ means to treat them as named arguments.
 If you really do want to pass them as pairs you should use a L<List|/type/List>
 or L<Capture|/type/Capture> instead:
 
-=for code :skip-test
+=for code :skip-test<illustrates error>
 my $list = ('b' => 2),; # this is a List containing a single Pair
 foo(|$list, :$b);       # okay: we passed the pair 'b' => 2 to the first argument
 foo(1, |$list);         # FAIL: Too many positionals passed; expected 1 argument but got 2
 foo(1, |$list.Capture); # OK: .Capture call converts all Pair objects to named args in a Capture
 
-=for code :skip-test
+=for code :skip-test<illustrates error>
 my $cap = \('b' => 2); # a Capture with a single positional value
 foo(|$cap, :$b); # okay: we passed the pair 'b' => 2 to the first argument
 foo(1, |$cap);   # FAIL: Too many positionals passed; expected 1 argument but got 2
@@ -1205,10 +1263,11 @@ sub doesn't-return-ret () {
 }
 
 say returns-ret;        # OUTPUT: «ret»
-say doesn't-return-ret; # BAD: outputs «Nil» and a warning «Useless use of constant string "ret" in sink context (line 13)»
+say doesn't-return-ret;
+# BAD: outputs «Nil» and a warning «Useless use of constant string "ret" in sink context (line 13)»
 =end code
 
-Code for C<returns-ret> and C<doesn't-return-ret> might look exactly the same, since in principle it does not matter where the L<C<CATCH>|https://docs.perl6.org/language/phasers#index-entry-Phasers__CATCH-CATCH> block goes. However, a block is an object and the last object in a C<sub> will be returned, so the C<doesn't-return-ret> will return C<Nil>, and, besides, since "ret" will be now in sink context, it will issue a warning. In case you want to place phasers last for conventional reasons, use the explicit form of C<return>.
+Code for C<returns-ret> and C<doesn't-return-ret> might look exactly the same, since in principle it does not matter where the L<C<CATCH>|/language/phasers#index-entry-Phasers__CATCH-CATCH> block goes. However, a block is an object and the last object in a C<sub> will be returned, so the C<doesn't-return-ret> will return C<Nil>, and, besides, since "ret" will be now in sink context, it will issue a warning. In case you want to place phasers last for conventional reasons, use the explicit form of C<return>.
 
 =begin code
 sub explicitly-return-ret () {
@@ -1224,29 +1283,29 @@ sub explicitly-return-ret () {
 
 =head2 Closing open filehandles and pipes
 
-Unlike some other languages, Perl 6 does not use reference counting,
+Unlike some other languages, Raku does not use reference counting,
 and so B<the filehandles are NOT closed when they go out of scope>. You
-have to explicitly close them either by using L<close> routine or using the
+have to explicitly close them either by using L<close|/routine/close> routine or using the
 C<:close> argument several of L<IO::Handle's|/type/IO::Handle> methods accept.
 See L«C<IO::Handle.close>|/type/IO::Handle#routine_close» for details.
 
 The same rules apply to L<IO::Handle's|/type/IO::Handle> subclass
-L<IO::Pipe>, which is what you operate on when reading from a L<Proc> you get
-with routines L<run> and L<shell>.
+L<IO::Pipe|/type/IO::Pipe>, which is what you operate on when reading from a L<Proc|/type/Proc> you get
+with routines L<run|/routine/run> and L<shell|/routine/shell>.
 
-The caveat applies to L<IO::CatHandle> type as well, though not as severely.
+The caveat applies to L<IO::CatHandle|/type/IO::CatHandle> type as well, though not as severely.
 See L«C<IO::CatHandle.close>|/type/IO::CatHandle#method_close» for details.
 
 =head2 IO::Path stringification
 
-Partly for historical reasons and partly by design, an L<IO::Path> object
+Partly for historical reasons and partly by design, an L<IO::Path|/type/IO::Path> object
 L<stringifies|/type/IO::Path#method_Str> without considering its
-L«C<CWD> attribute|/type/IO::Path#attribute_CWD», which means if you L<chdir>
-and then stringify an L<IO::Path>, or stringify an L<IO::Path> with custom
+L«C<CWD> attribute|/type/IO::Path#attribute_CWD», which means if you L<chdir|/routine/chdir>
+and then stringify an L<IO::Path|/type/IO::Path>, or stringify an L<IO::Path|/type/IO::Path> with custom
 C<$!CWD> attribute, the resultant string won't reference the original
 filesystem object:
 
-=begin code :skip-test
+=begin code
 with 'foo'.IO {
     .Str.say;       # OUTPUT: «foo␤»
     .relative.say;  # OUTPUT: «foo␤»
@@ -1260,18 +1319,18 @@ with 'foo'.IO {
 unlink IO::Path.new("foo", :CWD</bar>).Str
 =end code
 
-The easy way to avoid this issue is to not stringify an L<IO::Path> object at all.
-Core routines that work with paths can take an L<IO::Path> object, so you don't
+The easy way to avoid this issue is to not stringify an L<IO::Path|/type/IO::Path> object at all.
+Core routines that work with paths can take an L<IO::Path|/type/IO::Path> object, so you don't
 need to stringify the paths.
 
-If you do have a case where you need a stringified version of an L<IO::Path>, use
-L<absolute> or L<relative> methods to stringify it into an absolute or relative
+If you do have a case where you need a stringified version of an L<IO::Path|/type/IO::Path>, use
+L<absolute|/routine/absolute> or L<relative|/routine/relative> methods to stringify it into an absolute or relative
 path, respectively.
 
-If you are facing this issue because you use L<chdir> in your code,
+If you are facing this issue because you use L<chdir|/routine/chdir> in your code,
 consider rewriting it in a way that does not involve changing the
 current directory. For example, you can pass C<cwd> named argument to
-L<run> without having to use C<chdir> around it.
+L<run|/routine/run> without having to use C<chdir> around it.
 
 =head2 Splitting the input data into lines
 
@@ -1280,7 +1339,7 @@ L«C<IO::Handle>|/type/IO::Handle#routine_lines» and on a
 L«C<Str>|/type/Str#routine_lines». The trap arises if you start
 assuming that both split data the same way.
 
-=begin code :skip-test
+=begin code
 say $_.perl for $*IN.lines # .lines called on IO::Handle
 # OUTPUT:
 # "foox"
@@ -1297,7 +1356,7 @@ be “smart” about processing data from different operating
 systems. Therefore, it will split by all possible variations of a
 newline.
 
-=begin code :skip-test
+=begin code
 say $_.perl for $*IN.slurp(:bin).decode.lines # .lines called on a Str
 # OUTPUT:
 # "foox"
@@ -1314,7 +1373,7 @@ texts.
 
 Use C<$data.split(“\n”)> in cases where you need the behavior of
 L«C<IO::Handle.lines>|/type/IO::Handle#routine_lines» but the original
-L<IO::Handle> is not available.
+L<IO::Handle|/type/IO::Handle> is not available.
 
 =comment RT#132154
 
@@ -1327,7 +1386,7 @@ newlines.
 
 =comment RT#131923
 
-If you are using L<Proc::Async>, then there is currently no easy way
+If you are using L<Proc::Async|/type/Proc::Async>, then there is currently no easy way
 to make it split data the right way. You can try reading the whole
 output and then using L«C<Str.split>|/type/Str#routine_split» (not viable
 if you are dealing with large data) or writing your own logic to split
@@ -1344,7 +1403,7 @@ once, so it may cause a hard-to-detect intermittent fail.
 
 Here is an example that demonstrates the issue:
 
-=begin code :skip-test
+=begin code
 loop {
     my $proc = Proc::Async.new: :w, ‘head’, ‘-n’, ‘1’;
     my $got-something;
@@ -1361,7 +1420,7 @@ loop {
 
 And the output it may produce:
 
-=begin code :skip-test
+=begin code :lang<text>
 0
 1
 2
@@ -1378,7 +1437,7 @@ Resolving this is easy because C<.print> returns a promise that you
 can await on. The solution is even more beautiful if you are
 working in a L<react|/language/concurrency#index-entry-react> block:
 
-=begin code :skip-test
+=begin code :skip-test<$proc needs a complex initialization>
 whenever $proc.print: “one\ntwo\nthree\nfour” {
     $proc.close-stdin;
 }
@@ -1386,7 +1445,7 @@ whenever $proc.print: “one\ntwo\nthree\nfour” {
 
 =head2 Using C<.stdout> without C<.lines>
 
-Method C<.stdout> of L<Proc::Async> returns a supply that emits
+Method C<.stdout> of L<Proc::Async|/type/Proc::Async> returns a supply that emits
 I<chunks> of data, not lines. The trap is that sometimes people assume
 it to give lines right away.
 
@@ -1400,7 +1459,7 @@ react {
 
 The output is clearly not just 1 line:
 
-=begin code :skip-test
+=begin code :lang<text>
 A
 A's
 AMD
@@ -1430,8 +1489,8 @@ trick: C<whenever $proc.stdout { $out ~= $_ }>.
 
 =head2 Sunk C<Proc>
 
-Some methods return a L<Proc> object. If it represents a failed process, C<Proc> itself
-won't be exception-like, but B<sinking it> will cause an L<X::Proc::Unsuccessful>
+Some methods return a L<Proc|/type/Proc> object. If it represents a failed process, C<Proc> itself
+won't be exception-like, but B<sinking it> will cause an L<X::Proc::Unsuccessful|/type/X::Proc::Unsuccessful>
 exception to be thrown. That means this construct will throw, despite the C<try> in place:
 
 =for code
@@ -1471,19 +1530,25 @@ can be shortened to just
 =for code
 for 1..8 { say $^a + $^b; }
 
-The trouble arises when a person wants to use more complex names for the variables, instead of just one letter. The C<^> twigil is able to have the positional variables be out of order and named whatever you want, but assigns values based on the variable's Unicode ordering. In the above example, we can have C<$^a> and C<$^b> switch places, and those variables will keep their positional values. This is because the Unicode character 'a' comes before the character 'b'. For example:
+The trouble arises when a person wants to use more complex names for the
+variables, instead of just one letter. The C<^> twigil is able to have
+the positional variables be out of order and named whatever you want,
+but assigns values based on the variable's Unicode ordering. In the
+above example, we can have C<$^a> and C<$^b> switch places, and those
+variables will keep their positional values. This is because the Unicode
+character 'a' comes before the character 'b'. For example:
 
 =for code
 # In order
 sub f1 { say "$^first $^second"; }
-f1 "Hello", "there";    # OUTPUT: «Hello There␤»
+f1 "Hello", "there";    # OUTPUT: «Hello there␤»
 
 =for code
 # Out of order
 sub f2 { say "$^second $^first"; }
 f2 "Hello", "there";    # OUTPUT: «there Hello␤»
 
-Due to the variables allowed to be called anything, this can cause some problems if you are not accustomed to how Perl 6 handles these variables.
+Due to the variables allowed to be called anything, this can cause some problems if you are not accustomed to how Raku handles these variables.
 
 =begin code
 # BAD NAMING: alphabetically `four` comes first and gets value `1` in it:
@@ -1508,14 +1573,14 @@ possibility of a race condition, as multiple invocations may happen
 simultaneously, from different threads.
 
 =comment This is an actual output from Rakudo 2015.09
-=begin code :skip-test
+=begin code
 <a b c d>».say # OUTPUT: «d␤b␤c␤a␤»
 =end code
 
 Second, C<»> checks the L<nodality|/routine/is%20nodal> of the routine being
-invoked and based on that will use either L<deepmap> or L<nodemap> to map over
-the list, which can be different from how a L<map> call would map over it:
-=begin code :skip-test
+invoked and based on that will use either L<deepmap|/routine/deepmap> or L<nodemap|/routine/nodemap> to map over
+the list, which can be different from how a L<map|/routine/map> call would map over it:
+=begin code
 say ((1, 2, 3), [^4], '5')».Numeric;       # OUTPUT: «((1 2 3) [0 1 2 3] 5)␤»
 say ((1, 2, 3), [^4], '5').map: *.Numeric; # OUTPUT: «(3 4 5)␤»
 =end code
@@ -1546,7 +1611,7 @@ L<filenames that begin with hyphens|https://mywiki.wooledge.org/BashPitfalls#Fil
 
 =head1 Scope
 
-=head2 Using an C<once> block
+=head2 Using a C<once> block
 
 The C<once> block is a block of code that will only run once when its parent block is run. As an example:
 
@@ -1566,7 +1631,7 @@ for 1..10 {
 }
 say "Variable = $var";    # OUTPUT: «Variable = 10␤»
 
-In the above example, the C<once> block was nested inside of a code block which was inside of a C<for> loop code block. This causes the C<once> block to run multiple times, because the C<once> block uses state variables to determine whether it has run previously. This means that if the parent code block goes out of scope, then the state variable the C<once> block uses to keep track of if it has run previously, goes out of scope as well. This is why C<once> blocks and C<state> variables can cause some unwanted behaviour when buried within more than one code block.
+In the above example, the C<once> block was nested inside of a code block which was inside of a C<for> loop code block. This causes the C<once> block to run multiple times, because the C<once> block uses state variables to determine whether it has run previously. This means that if the parent code block goes out of scope, then the state variable the C<once> block uses to keep track of if it has run previously, goes out of scope as well. This is why C<once> blocks and C<state> variables can cause some unwanted behavior when buried within more than one code block.
 
 If you want to have something that will emulate the functionality of a once block, but still work when buried a few code blocks deep, we can manually build the functionality of a C<once> block. Using the above example, we can change it so that it will only run once, even when inside the C<do> block by changing the scope of the C<state> variable.
 
@@ -1603,7 +1668,7 @@ the program is stopped with L«C<exit>|/routine/exit».
 
 The following nondeterministic example should demonstrate the
 complications of this trap:
-=begin code :skip-test
+=begin code
 my $x = say ‘Opened some resource’;
 LEAVE say ‘Closing the resource gracefully’ with $x;
 
@@ -1613,7 +1678,7 @@ die ‘Dying because of unhandled exception’ if rand < ½; # ② ｢die｣ is 
 =end code
 
 There are three possible results:
-=begin code :skip-test
+=begin code :lang<text>
 ①
 Opened some resource
 
@@ -1683,9 +1748,9 @@ say foo rand; # OUTPUT: «Type check failed in binding to parameter '<anon>'; ex
 
 =head1 Grammars
 
-=head2 Using regexes within grammar's actions.
+=head2 Using regexes within grammar's actions
 
-=begin code :skip-test
+=begin code
 grammar will-fail {
     token TOP {^ <word> $}
     token word { \w+ }
@@ -1723,16 +1788,14 @@ grammar g {
     token item { 'defined' }
 };
 say g.parse('defined');
-# OUTPUT: «(exit code 1) Too many positionals passed; expected 1 argument but #
-# got 2␤  in regex item at /tmp/dZ3evir0pb line 1␤  in regex TOP at
-# /tmp/dZ3evir0pb line 1␤  in block <unit> at /tmp/dZ3evir0pb line 1␤␤»
+# OUTPUT: «Too many positionals passed; expected 1 argument but got 2␤  in regex item at /tmp/grammar-clash.p6 line 3␤  in regex TOP at /tmp/grammar-clash.p6 line 2␤  in block <unit> at /tmp/grammar-clash.p6 line 5»
 =end code
 
 C«item» seems innocuous enough, but it is a L<C<sub> defined in class
 C<Mu>|/routine/item>. The message is a bit cryptic and totally unrelated to that
 fact, but that is why this is listed as a trap. In general, all subs defined in
 any part of the hierarchy are going to cause problems; some methods will too.
-For instance, C<CREATE>, C<take> and C<defined> (which are defined in L<Mu>). In
+For instance, C<CREATE>, C<take> and C<defined> (which are defined in L<Mu|/type/Mu>). In
 general, multi methods and simple methods will not have any problem, but it
 might not be a good practice to use them as rule names.
 
@@ -1756,7 +1819,7 @@ say ‘Huh‽’     if %h<x y>:exists; # ← WRONG; returns a 2-item list
 =end code
 
 Did you mean “if C<any> of them exists”, or did you mean that C<all>
-of them should exist? Use C<any> or C<all> L<Junction> to clarify:
+of them should exist? Use C<any> or C<all> L<Junction|/type/Junction> to clarify:
 
 =begin code
 my %h = a => 1, b => 2;
@@ -1767,8 +1830,8 @@ say ‘a and b’    if all %h<a b>:exists;   # ← RIGHT (all); True
 =end code
 
 The reason why it is always C<True> (without using a junction) is that
-it returns a list with L<Bool> values for each requested
-lookup. Non-empty lists always give C<True> when you L<Bool>ify them,
+it returns a list with L<Bool|/type/Bool> values for each requested
+lookup. Non-empty lists always give C<True> when you L<Bool|/type/Bool>ify them,
 so the check always succeeds no matter what keys you give it.
 
 =head2 Using C<[…]> metaoperator with a list of lists
@@ -1799,12 +1862,12 @@ there are other cases when this kind of a generalization may not work.
 =head2 Using [~] for concatenating a list of blobs
 
 The L<C<~> infix operator|/routine/~#(Operators)_infix_~> can be used
-to concatenate L<Str>s I<or> L<Blob>s. However, an empty list will
+to concatenate L<Str|/type/Str>s I<or> L<Blob|/type/Blob>s. However, an empty list will
 I<always> be reduced to an empty C<Str>. This is due to the fact that,
 in the presence of a list with no elements, the
 L<reduction|/language/operators#Reduction_operators> metaoperator
 returns the
-L<identity element|https://en.wikipedia.org/wiki/Identity_element>
+L<identity element|/language/operators#Identity>
 for the given operator. Identity element for C<~> is an empty string,
 regardless of the kind of elements the list could be populated with.
 
@@ -1816,7 +1879,7 @@ say ([~] @chunks).perl; # OUTPUT: «""␤»
 This might cause a problem if you attempt to use the result while
 assuming that it is a Blob:
 
-=for code :skip-test<Documenting the error>
+=for code
 my Blob @chunks;
 say ([~] @chunks).decode;
 # OUTPUT: «No such method 'decode' for invocant of type 'Str'. Did you mean 'encode'?␤…»
@@ -1853,14 +1916,14 @@ other operators.
 
 =head1 Maps
 
-=head2 Beware of nesting C<Map>s in sink context.
+=head2 Beware of nesting C<Map>s in sink context
 
-Maps apply an expression to every element of a L<List> and return a L<Seq>:
+Maps apply an expression to every element of a L<List|/type/List> and return a L<Seq|/type/Seq>:
 
     say <þor oðin loki>.map: *.codes; # OUTPUT: «(3 4 4)␤»
 
-Maps are often used as a compact substitute for a loop, performing some kind of
-action in the map code block:
+Maps are often used as a compact substitute for a loop, performing some
+kind of action in the map code block:
 
     <þor oðin loki>.map: *.codes.say; # OUTPUT: «3␤4␤4␤»
 
@@ -1894,6 +1957,38 @@ as it will be saving the two nested sequences from void context:
 
     say <foo bar ber>.map: { $^þ.comb }; # OUTPUT: « ((f o o) (b a r) (b e r))»
 
+=head1 Smartmatching
+
+The
+L<smartmatch operator|/language/operators#index-entry-smartmatch_operator>
+shortcuts to the right hand side I<accepting> the left hand side. This
+may cause some confusion.
+
+=head2 Smartmatch and C<WhateverCode>
+
+Using C<WhateverCode> in the left hand side of a smartmatch does not
+work as expected, or at all:
+
+=begin code
+my @a = <1 2 3>;
+say @a.grep( *.Int ~~ 2 );
+# OUTPUT: «Cannot use Bool as Matcher with '.grep'.  Did you mean to
+# use $_ inside a block?␤␤␤»
+=end code
+
+The error message does not make a lot of sense. It does, however, if you
+put it in terms of the C<ACCEPTS> method: that code is equivalent to
+C<2.ACCEPTS( *.Int )>, but C<*.Int> cannot be
+L<coerced to C<Numeric>|/routine/ACCEPTS#(Numeric)_method_ACCEPTS>,
+being as it is a C<Block>.
+
+Solution: don't use C<WhateverCode> in the left hand side of a
+smartmatch:
+
+=begin code
+my @a = <1 2 3>;
+say @a.grep( 2 ~~ *.Int ); # OUTPUT: «(2)␤»
+=end code
 
 =end pod
 # vim: expandtab softtabstop=4 shiftwidth=4 ft=perl6

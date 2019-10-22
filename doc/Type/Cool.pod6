@@ -1,4 +1,4 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("basic")
 
 =TITLE class Cool
 
@@ -6,27 +6,28 @@
 
     class Cool is Any { }
 
-C<Cool>, also known as the B<C>onvenient B<OO> B<L>oop, is a base class
-employed by a number of built-in classes that can be meaningfully
-coerced to a string and a number. For example, an L<Array> can be used
-in mathematical operations, where its numerical representation is the
-number of elements it contains. At the same time, it can be concatenated
-to a string, where its stringy representation is all of its elements
-L<joined|/routine/join> by a space. Because L<Array> is L<Cool>, the
-appropriate coercion happens automatically.
+C<Cool>, also known as the B<C>onvenient B<OO> B<L>oop, is a base class employed
+by a number of built-in classes whose instances can be meaningfully coerced to a
+string and a number. For example, an L<Array|/type/Array> can be used in
+mathematical operations, where its numerical representation is the number of
+elements it contains. At the same time, it can be concatenated to a string,
+where its stringy representation is all of its elements L<joined|/routine/join>
+by a space. Because L<Array|/type/Array> is L<Cool|/type/Cool>, the appropriate
+coercion happens automatically.
 
 Methods in C<Cool> coerce the invocant to a more specific type, and then call
-the same method on that type. For example both L<Int> and L<Str> inherit from
-C<Cool>, and calling method C<substr> on an C<Int> converts the integer to
-C<Str> first.
+the same method on that type. For example both L<Int|/type/Int> and
+L<Str|/type/Str> inherit from C<Cool>, and calling method C<substr> on an C<Int>
+converts the integer to C<Str> first.
 
     123.substr(1, 1);   # '2', same as 123.Str.substr(1, 1)
 
-The following built-in types inherit from C<Cool>:
-L<Array> L<Bool> L<Complex> L<Cool>
-L<Duration> L<Map> L<FatRat> L<Hash> L<Instant>
-L<Int> L<List> L<Match> L<Nil> L<Num>
-L<Range> L<Seq> L<Stash> L<Str>
+The following built-in types inherit from C<Cool>: L<Array|/type/Array>
+L<Bool|/type/Bool> L<Complex|/type/Complex> L<Cool|/type/Cool>
+L<Duration|/type/Duration> L<Map|/type/Map> L<FatRat|/type/FatRat>
+L<Hash|/type/Hash> L<Instant|/type/Instant> L<Int|/type/Int> L<List|/type/List>
+L<Match|/type/Match> L<Nil|/type/Nil> L<Num|/type/Num> L<Range|/type/Range>
+L<Seq|/type/Seq> L<Stash|/type/Stash> L<Str|/type/Str>.
 
 The following table summarizes the methods that C<Cool> provides, and
 what type they coerce to:
@@ -141,6 +142,17 @@ imaginary part negated).
 
     say (1+2i).conj;        # OUTPUT: «1-2i␤»
 
+=head2 routine EVAL
+
+Defined as:
+
+=for code :method
+method EVAL(*%_)
+
+It calls the L<subroutine form|/type/independent-routines#sub_mkdir> with the
+invocant as the first argument, C<$code>, passing along named args, if any.
+
+
 =head2 routine sqrt
 
 Defined as:
@@ -193,7 +205,7 @@ returns its L<sine|https://en.wikipedia.org/wiki/Sine>.
     say sin(pi/4);          # OUTPUT: «0.707106781186547␤»
     say sin(pi/2);          # OUTPUT: «1␤»
 
-Note that Perl 6 is no computer algebra system, so C<sin(pi)> typically does
+Note that Raku is no computer algebra system, so C<sin(pi)> typically does
 not produce an exact 0, but rather a very small L<floating-point
 number|/type/Num>.
 
@@ -272,18 +284,19 @@ radians.
 
 Defined as:
 
-    sub atan2(Numeric() $x, Numeric() $y = 1e0)
     method atan2($y = 1e0)
 
-Coerces the arguments (including the invocant in the method form) to
-L<Numeric|/type/Numeric>, and returns their two-argument
-L<arc-tangent|https://en.wikipedia.org/wiki/Inverse_trigonometric_functions> in
-radians.
+Coerces self and argument to L<Numeric|/type/Numeric>, using them to compute the
+two-argument L<arc-tangent|https://en.wikipedia.org/wiki/Atan2> in radians.
 
-    say atan2(3);               # OUTPUT: «1.24904577239825␤»
     say 3.atan2;                # OUTPUT: «1.24904577239825␤»
+    say ⅔.atan2(⅓);             # OUTPUT: «1.1071487177940904␤»
 
-=head2 method sec
+The first argument defaults to 1, so in the first case the function will return
+the angle θ in radians between a vector that goes from origin to the point (3, 1)
+and the x axis.
+
+=head2 routine sec
 
 Defined as:
 
@@ -563,7 +576,7 @@ of 10. Returns C<NaN> for negative arguments and C<-Inf> for C<0>.
 
     say log10(1001);            # OUTPUT: «3.00043407747932␤»
 
-=head2 method exp
+=head2 routine exp
 
 Defined as:
 
@@ -611,6 +624,15 @@ Always rounds B<up> if the number is at mid-point:
     say (−.55).round(.1);   # OUTPUT: «-0.5␤»
     say ( .55).round(.1);   # OUTPUT: «0.6␤»
 
+B<Pay attention> to types when using this method, as ending up with the wrong type may
+affect the precision you seek to achieve. For L<Real|/type/Real> types, the type of the result
+is the type of the argument (L<Complex|/type/Complex> argument gets coerced to L<Real|/type/Real>, ending up a L<Num|/type/Num>).
+If rounding a L<Complex|/type/Complex>, the result is L<Complex|/type/Complex> as well, regardless of the type of the argument.
+
+    9930972392403501.round(1)      .perl.say; # OUTPUT: «9930972392403501␤»
+    9930972392403501.round(1e0)    .perl.say; # OUTPUT: «9.9309723924035e+15␤»
+    9930972392403501.round(1e0).Int.perl.say; # OUTPUT: «9930972392403500␤»
+
 =head2 routine floor
 
 Defined as:
@@ -625,6 +647,22 @@ the nearest integer.
     say "-1.9".floor;       # OUTPUT: «-2␤»
     say 0.floor;            # OUTPUT: «0␤»
 
+=head2 method fmt
+
+Defined as:
+
+    method fmt($format = '%s')
+
+Uses C<$format> to return a formatted representation of the invocant; equivalent
+to calling L<sprintf|/routine/sprintf> with C<$format> as format and the
+invocant as the second argument. The C<$format> will be coerced to
+L<Stringy|/type/Stringy> and defaults to C<'%s'>.
+
+For more information about formats strings, see L<sprintf|/routine/sprintf>.
+
+    say 11.fmt('This Int equals %03d');         # OUTPUT: «This Int equals 011␤»
+    say '16'.fmt('Hexadecimal %x');             # OUTPUT: «Hexadecimal 10␤»
+
 =head2 routine ceiling
 
 Defined as:
@@ -632,8 +670,8 @@ Defined as:
     multi sub ceiling(Numeric(Cool))
     multi method ceiling
 
-Coerces the invocant (or in sub form, its argument) to L<Numeric|/type/Numeric>, and rounds it upwards to
-the nearest integer.
+Coerces the invocant (or in sub form, its argument) to L<Numeric|/type/Numeric>,
+and rounds it upwards to the nearest integer.
 
     say "1".ceiling;        # OUTPUT: «1␤»
     say "-0.9".ceiling;     # OUTPUT: «0␤»
@@ -659,13 +697,13 @@ Defined as:
     sub ord(Str(Cool))
     method ord()
 
-Coerces the invocant (or in sub form, its argument) to
-L<Str|/type/Str>, and returns the L<Unicode code point|https://en.wikipedia.org/wiki/Code_point> number of the first
-code point.
+Coerces the invocant (or in sub form, its argument) to L<Str|/type/Str>, and
+returns the L<Unicode code point|https://en.wikipedia.org/wiki/Code_point>
+number of the first code point.
 
     say 'a'.ord;            # OUTPUT: «97␤»
 
-The inverse operation is L<chr|#method chr>.
+The inverse operation is L<chr|/routine/chr>.
 
 Mnemonic: returns an ordinal number
 
@@ -675,11 +713,10 @@ Defined as:
 
     method path()
 
-B<DEPRECATED>. I<Existed only in the Rakudo implementation and isn't part of
-any language released. Will issue deprecation warnings in future language
-versions and eventually will be removed entirely.>
+B<DEPRECATED>. I<It's been deprecated as of the 6.d version. Will be removed in
+the next ones.>
 
-Stringifies the invocant and converts it to L<IO::Path> object.
+Stringifies the invocant and converts it to L<IO::Path|/type/IO::Path> object.
 Use the L«C<.IO method>|/routine/IO» instead.
 
 =head2 routine chr
@@ -689,13 +726,14 @@ Defined as:
     sub chr(Int(Cool))
     method chr()
 
-Coerces the invocant (or in sub form, its argument) to L<Int|/type/Int>, interprets it as a
-L<Unicode code points|https://en.wikipedia.org/wiki/Code_point>,
-and returns a L<string|/type/Str> made of that code point.
+Coerces the invocant (or in sub form, its argument) to L<Int|/type/Int>,
+interprets it as a
+L<Unicode code points|https://en.wikipedia.org/wiki/Code_point>, and returns a
+L<string|/type/Str> made of that code point.
 
     say '65'.chr;       # OUTPUT: «A␤»
 
-The inverse operation is L<ord|#method ord>.
+The inverse operation is L<ord|/routine/ord>.
 
 Mnemonic: turns an integer into a I<char>acter.
 
@@ -703,16 +741,21 @@ Mnemonic: turns an integer into a I<char>acter.
 
 Defined as:
 
-    sub chars(Str(Cool))
-    method chars()
+    multi sub chars(Cool $x)
+    multi sub chars(Str:D $x)
+    multi sub chars(str $x --> int)
+    method chars(--> Int:D)
 
-Coerces the invocant (or in sub form, its argument) to L<Str|/type/Str>, and returns the
-number of characters in the string. Please note that on the JVM, you currently get
-codepoints instead of graphemes.
+Coerces the invocant (or in sub form, its argument) to L<Str|/type/Str>, and
+returns the number of characters in the string. Please note that on the JVM, you
+currently get codepoints instead of graphemes.
 
     say 'møp'.chars;    # OUTPUT: «3␤»
-    say 'ã̷̠̬̊'.chars;     # OUTPUT: «1␤»
+    say 'ã̷̠̬̊'.chars;     # OUTPUT: «1␤»
     say '👨‍👩‍👧‍👦🏿'.chars;    # OUTPUT: «1␤»
+
+If the string is native, the number of chars will be also returned as a native
+C<int>.
 
 X<|Grapheme>
 
@@ -729,12 +772,12 @@ there are many other cases when this may happen. Another example is C<\c[ZWJ]>
 You can check C<Grapheme_Cluster_Break> property of a character in
 order to see how it is going to behave:
 
-    say ‘ã̷̠̬̊’.uniprops(‘Grapheme_Cluster_Break’); # OUTPUT: «(Other Extend Extend Extend Extend)␤»
+    say ‘ã̷̠̬̊’.uniprops(‘Grapheme_Cluster_Break’); # OUTPUT: «(Other Extend Extend Extend Extend)␤»
     say ‘👨‍👩‍👧‍👦🏿’.uniprops(‘Grapheme_Cluster_Break’); # OUTPUT: «(E_Base_GAZ ZWJ E_Base_GAZ ZWJ E_Base_GAZ ZWJ E_Base_GAZ E_Modifier)␤»
 
 You can read more about graphemes in the
 L<Unicode Standard|https://unicode.org/reports/tr29/#Grapheme_Cluster_Boundaries>,
-which Perl 6 tightly follows, using a method called L<NFG, normal form graphemes|/language/glossary#NFG> for efficiently representing them.
+which Raku tightly follows, using a method called L<NFG, normal form graphemes|/language/glossary#NFG> for efficiently representing them.
 
 =head2 routine codes
 
@@ -743,8 +786,8 @@ Defined as:
     sub codes(Str(Cool))
     method codes()
 
-Coerces the invocant (or in sub form, its argument) to L<Str|/type/Str>, and returns the number of
-L<Unicode code points|https://en.wikipedia.org/wiki/Code_point>.
+Coerces the invocant (or in sub form, its argument) to L<Str|/type/Str>, and
+returns the number of L<Unicode code points|https://en.wikipedia.org/wiki/Code_point>.
 
     say 'møp'.codes;    # OUTPUT: «3␤»
 
@@ -752,16 +795,17 @@ The same result will be obtained with
 
     say +'møp'.ords;    # OUTPUT: «3␤»
 
-L<ords> first obtains the actual codepoints, so there might be a difference in speed.
+L<ords|/routine/ords> first obtains the actual codepoints, so there might be a difference in speed.
 
 =head2 routine flip
 
 Defined as:
 
-    sub flip(Str(Cool))
+    sub flip(Cool $s --> Str:D)
     method flip()
 
-Coerces the invocant (or in sub form, its argument) to L<Str|/type/Str>, and returns a reversed version.
+Coerces the invocant (or in sub form, its argument) to L<Str|/type/Str>, and
+returns a reversed version.
 
     say 421.flip;       # OUTPUT: «124␤»
 
@@ -772,8 +816,8 @@ Defined as:
     sub trim(Str(Cool))
     method trim()
 
-Coerces the invocant (or in sub form, its argument) to L<Str|/type/Str>, and returns the string with both
-leading and trailing whitespace stripped.
+Coerces the invocant (or in sub form, its argument) to L<Str|/type/Str>, and
+returns the string with both leading and trailing whitespace stripped.
 
     my $stripped = '  abc '.trim;
     say "<$stripped>";          # OUTPUT: «<abc>␤»
@@ -785,8 +829,8 @@ Defined as:
     sub trim-leading(Str(Cool))
     method trim-leading()
 
-Coerces the invocant (or in sub form, its argument) to L<Str|/type/Str>, and returns the string with
-leading whitespace stripped.
+Coerces the invocant (or in sub form, its argument) to L<Str|/type/Str>, and
+returns the string with leading whitespace stripped.
 
     my $stripped = '  abc '.trim-leading;
     say "<$stripped>";          # OUTPUT: «<abc >␤»
@@ -811,8 +855,8 @@ Defined as:
     sub lc(Str(Cool))
     method lc()
 
-Coerces the invocant (or in sub form, its argument) to L<Str|/type/Str>, and returns it case-folded to lower
-case.
+Coerces the invocant (or in sub form, its argument) to L<Str|/type/Str>, and
+returns it case-folded to lower case.
 
     say "ABC".lc;       # OUTPUT: «abc␤»
 
@@ -823,8 +867,8 @@ Defined as:
     sub uc(Str(Cool))
     method uc()
 
-Coerces the invocant (or in sub form, its argument) to L<Str|/type/Str>, and returns it case-folded to upper
-case (capital letters).
+Coerces the invocant (or in sub form, its argument) to L<Str|/type/Str>, and
+returns it case-folded to upper case (capital letters).
 
     say "Abc".uc;       # OUTPUT: «ABC␤»
 
@@ -849,8 +893,9 @@ Defined as:
     sub tc(Str(Cool))
     method tc()
 
-Coerces the invocant (or in sub form, its argument) to L<Str|/type/Str>, and returns it with the first letter
-case-folded to title case (or where not available, upper case).
+Coerces the invocant (or in sub form, its argument) to L<Str|/type/Str>, and
+returns it with the first letter case-folded to title case (or where not
+available, upper case).
 
     say "abC".tc;       # OUTPUT: «AbC␤»
 
@@ -879,7 +924,7 @@ smartmatches against C<$where> through the C<&filter>. With the default
 filter (first character to upper case, rest to lower) and matcher (which
 accepts everything), this title-cases each word:
 
-    say "perl 6 programming".wordcase;      # OUTPUT: «Perl 6 Programming␤»
+    say "perl 6 programming".wordcase;      # OUTPUT: «Raku Programming␤»
 
 With a matcher:
 
@@ -898,18 +943,23 @@ Defined as:
     sub samecase(Cool $string, Cool $pattern)
     method samecase(Cool:D: Cool $pattern)
 
-Coerces the invocant (or in sub form, the first argument) to L<Str|/type/Str>, and returns a
-copy of C<$string> with case information for each individual character changed according to C<$pattern>.
-(The pattern string can contain three types of characters, i.e. uppercase, lowercase and caseless.
-For a given character in C<$pattern> its case information determines the case of the corresponding
-character in the result.)
-If C<$string> is longer than C<$pattern>, the case information from the last character of
-C<$pattern> is applied to the remaining characters of C<$string>.
+Coerces the invocant (or in sub form, the first argument) to L<Str|/type/Str>,
+and returns a copy of C<$string> with case information for each individual
+character changed according to C<$pattern>.
 
-    say "perL 6".samecase("A__a__"); # OUTPUT: «Perl 6␤»
-    say "pERL 6".samecase("Ab");     # OUTPUT: «Perl 6␤»
+B<Note>: The pattern string can contain
+three types of characters, i.e. uppercase, lowercase and caseless. For a given
+character in C<$pattern> its case information determines the case of the
+corresponding character in the result.
 
-=head2 method uniprop
+If C<$string> is longer than
+C<$pattern>, the case information from the last character of C<$pattern> is
+applied to the remaining characters of C<$string>.
+
+    say "perL 6".samecase("A__a__"); # OUTPUT: «Raku␤»
+    say "pERL 6".samecase("Ab");     # OUTPUT: «Raku␤»
+
+=head2 routine uniprop
 
 Defined as:
 
@@ -921,14 +971,15 @@ Defined as:
 Returns the L<unicode property|http://userguide.icu-project.org/strings/properties>
 of the first character. If no property is specified returns the
 L<General Category|https://en.wikipedia.org/wiki/Unicode_character_property#General_Category>.
-Returns a Bool for Boolean properties.
+Returns a Bool for Boolean properties. A L<uniprops|/routine/uniprops> routine can be used
+to get the property for every character in a string.
 
     say 'a'.uniprop;               # OUTPUT: «Ll␤»
     say '1'.uniprop;               # OUTPUT: «Nd␤»
     say 'a'.uniprop('Alphabetic'); # OUTPUT: «True␤»
     say '1'.uniprop('Alphabetic'); # OUTPUT: «False␤»
 
-=head2 method uniprops
+=head2 sub uniprops
 
 Defined as:
 
@@ -938,20 +989,21 @@ Interprets the invocant as a L<Str|/type/Str>, and returns the
 L<unicode property|http://userguide.icu-project.org/strings/properties> for each character
 as a Seq. If no property is specified returns the
 L<General Category|https://en.wikipedia.org/wiki/Unicode_character_property#General_Category>.
-Returns a Bool for Boolean properties. Similar to L<uniprop|/routine/uniprop>
+Returns a Bool for Boolean properties. Similar to
+L<uniprop|/routine/uniprop>, but for each character in the passed
+string.
 
-
-=head2 method uniname
+=head2 routine uniname
 
 Defined as:
 
     sub uniname(Str(Cool) --> Str)
     method uniname(--> Str)
 
-Interprets the invocant / first argument as a L<Str|/type/Str>, and returns the
+Interprets the invocant or first argument as a L<Str|/type/Str>, and returns the
 Unicode codepoint name of the first codepoint of the first character. See
-L<uninames|#routine_uninames> for a routine that works with multiple
-codepoints, and L<uniparse> for the opposite direction.
+L<uninames|/routine/uninames> for a routine that works with multiple
+codepoints, and L<uniparse|/routine/uniparse> for the opposite direction.
 
     # Camelia in Unicode
     say ‘»ö«’.uniname;
@@ -963,14 +1015,15 @@ codepoints, and L<uniparse> for the opposite direction.
     say (0..0x1FFFF).sort(*.uniname.chars)[*-1].chr.uniname;
     # OUTPUT: ««ARABIC LIGATURE UIGHUR KIRGHIZ YEH WITH HAMZA ABOVE WITH ALEF MAKSURA INITIAL FORM␤»␤»
 
-=head2 method uninames
+=head2 routine uninames
 
 Defined as:
 
     sub uninames(Str:D)
     method uninames()
 
-Returns of a Seq of Unicode names for the all the codepoints in the Str provided.
+Returns of a Seq of Unicode names for the all the codepoints in the Str
+provided.
 
     say ‘»ö«’.uninames.perl;
     # OUTPUT: «("RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK", "LATIN SMALL LETTER O WITH DIAERESIS", "LEFT-POINTING DOUBLE ANGLE QUOTATION MARK").Seq␤»
@@ -981,18 +1034,19 @@ codepoints in that character.
     say "Ḍ̇'oh".comb>>.uninames.perl;
     # OUTPUT: «(("LATIN CAPITAL LETTER D WITH DOT BELOW", "COMBINING DOT ABOVE").Seq, ("APOSTROPHE",).Seq, ("LATIN SMALL LETTER O",).Seq, ("LATIN SMALL LETTER H",).Seq)␤»
 
-See L<uniparse> for the opposite direction.
+See L<uniparse|/routine/uniparse> for the opposite direction.
 
-=head2 method unimatch
+=head2 routine unimatch
 
 Defined as:
 
     multi sub unimatch(Str:D $str, |c)
     multi unimatch(Int:D $code, Stringy:D $pvalname, Stringy:D $propname = $pvalname)
 
-Checks if the given integer codepoint or the first letter of the string given have a unicode property
-equal to the value you give. If you supply the Unicode property to be checked it will only return True
-if that property matches the given value.
+Checks if the given integer codepoint or the first letter of the string given
+have a unicode property equal to the value you give. If you supply the Unicode
+property to be checked it will only return True if that property matches the
+given value.
 
     say unimatch 'A', 'Latin';           # OUTPUT: «True␤»
     say unimatch 'A', 'Latin', 'Script'; # OUTPUT: «True␤»
@@ -1005,8 +1059,8 @@ Defined as:
     sub chop(Str(Cool))
     method chop()
 
-Coerces the invocant (or in sub form, its argument) to L<Str|/type/Str>, and returns it with the last
-character removed.
+Coerces the invocant (or in sub form, its argument) to L<Str|/type/Str>, and
+returns it with the last character removed.
 
     say 'perl'.chop;                        # OUTPUT: «per␤»
 
@@ -1017,8 +1071,8 @@ Defined as:
     sub chomp(Str(Cool))
     method chomp()
 
-Coerces the invocant (or in sub form, its argument) to L<Str|/type/Str>, and returns it with the last
-character removed, if it is a logical newline.
+Coerces the invocant (or in sub form, its argument) to L<Str|/type/Str>, and
+returns it with the last character removed, if it is a logical newline.
 
     say 'ab'.chomp.chars;                   # OUTPUT: «2␤»
     say "a\n".chomp.chars;                  # OUTPUT: «1␤»
@@ -1034,6 +1088,17 @@ Coerces the invocant (or in the sub form, the first argument) to
 L<Str|/type/Str>, and calls L<Str.substr|/type/Str#routine_substr> with
 the arguments.
 
+=head2 routine substr-rw
+
+Defined as:
+
+    multi method substr-rw(|) is rw
+    multi sub substr-rw(|) is rw
+
+Coerces the invocant (or in the sub form, the first argument) to
+L<Str|/type/Str>, and calls L<Str.substr-rw|/type/Str#routine_substr-rw> with
+the arguments.
+
 =head2 routine ords
 
 Defined as:
@@ -1047,9 +1112,9 @@ L<Str|/type/Str>, and returns a list of Unicode codepoints for each character.
     say "Camelia".ords;              # OUTPUT: «67 97 109 101 108 105 97␤»
     say ords 10;                     # OUTPUT: «49 48␤»
 
-This is the list-returning version of L<ord>. The inverse operation in
-L<chrs>. If you are only interested in the number of codepoints,
-L<codes> is a possibly faster option.
+This is the list-returning version of L<ord|/routine/ord>. The inverse operation in
+L<chrs|/routine/chrs>. If you are only interested in the number of codepoints,
+L<codes|/routine/codes> is a possibly faster option.
 
 =head2 routine chrs
 
@@ -1064,7 +1129,7 @@ Unicode codepoint, and joining the characters.
 
     say <67 97 109 101 108 105 97>.chrs;   # OUTPUT: «Camelia␤»
 
-This is the list-input version of L<chr>. The inverse operation is L<ords>.
+This is the list-input version of L<chr|/routine/chr>. The inverse operation is L<ords|/routine/ords>.
 
 =head2 routine split
 
@@ -1077,8 +1142,8 @@ Defined as:
     multi method split(Regex:D $delimiter, $limit = Inf, :$k, :$v, :$kv, :$p, :$skip-empty)
     multi method split(@delimiters, $limit = Inf, :$k, :$v, :$kv, :$p, :$skip-empty)
 
-B<NOTE:> I«the L<comb> routine is a much better choice for many tasks that in other
-languages are handled by the C<split>.»
+N<I«the L<comb|/routine/comb> routine is a much better choice for many tasks that in other
+languages are handled by the C<split>.»>
 
 Coerces the invocant (or in the sub form, the second argument) to
 L<Str|/type/Str>, and splits it into pieces based on delimiters found in the
@@ -1174,60 +1239,108 @@ for $*IN.lines -> $_ is copy { s/(\w+)/{$0 ~ $0}/; .say }
 
 Defined as:
 
-    method words(Int() $limit)
+    method words(Cool:D: |c)
 
-Coerces the invocant to L<Str|/type/Str>, and returns a list of words that make
-up the string (and if C<$limit> is supplied, only the first C<$limit> words).
+Coerces the invocant (or first argument, if it is called as a subroutine) to
+L<Str|/type/Str>, and returns a list of words that make up the string. Check
+L<C<Str.words>|/type/Str#routine_words> for additional arguments and its
+meaning.
 
-    say 'The quick brown fox'.words.join('|');      # OUTPUT: «The|quick|brown|fox␤»
-    say 'The quick brown fox'.words(2).join('|');   # OUTPUT: «The|quick␤»
+=for code
+say <The quick brown fox>.words.join('|');     # OUTPUT: «The|quick|brown|fox␤»
+say <The quick brown fox>.words(2).join('|');  # OUTPUT: «The|quick␤»
 
-Only whitespace counts as word boundaries
+C<Cool> is the base class for many other classes, and some of them, like
+L<Match|/type/Match>, can be converted to a string. This is what happens in this case:
 
-    say "isn't, can't".words.join('|');             # OUTPUT: «isn't,|can't␤»
+    say ( "easy come, easy goes" ~~ m:g/(ea\w+)/).words(Inf);
+    # OUTPUT: «(easy easy)␤»
+    say words( "easy come, easy goes" ~~ m:g/(ea\w+)/ , ∞);
+    # OUTPUT: «(easy easy)␤»
+
+The example above illustrates two of the ways C<words> can be invoked, with the
+first argument turned into invocant by its signature. Of course, C<Inf> is the
+default value of the second argument, so in both cases (and forms) it can be
+simply omitted.
+
+Only whitespace (including no-break space) counts as word boundaries
+
+    say <Don't we ♥ Raku>.words.join('|');  # OUTPUT: «Don't|we|♥|Perl|6␤»
+
+In this case, Raku includes an (visible only in the source) no-break space;
+C<words> still splits the (resulting) C<Str> on it, even if the original array
+only had 4 elements:
+
+    say <Don't we ♥ Raku>.join("|");  # OUTPUT: «Don't|we|♥|Raku␤»
+
+Please see L<C<Str.words>|/type/Str#routine_words> for more examples and ways to
+invoke it.
 
 =head2 routine comb
 
 Defined as:
 
-    multi sub comb(Regex $matcher, Str(Cool) $input, $limit = * --> Seq)
-    multi method comb(Regex $matcher, $limit = * --> Seq)
+    multi sub comb(Regex $matcher, Cool $input, $limit = *)
+    multi sub comb(Str $matcher, Cool $input, $limit = *)
+    multi sub comb(Int:D $size, Cool $input, $limit = *)
+    multi method comb(|c)
 
-Returns all (or if supplied, at most C<$limit>) matches of the invocant
-(method form) or the second argument (sub form) against the
-L<Regex|/type/Regex> as a list of strings.
+Returns a L<Seq|/type/Seq> of all (or if supplied, at most C<$limit>) matches of the
+invocant (method form) or the second argument (sub form) against the
+L<Regex|/type/Regex>, string or defined number.
 
     say "6 or 12".comb(/\d+/).join(", ");           # OUTPUT: «6, 12␤»
+    say comb(/\d <[1..9]> /,(11..30)).join("--");
+    # OUTPUT:
+    # «11--12--13--14--15--16--17--18--19--21--22--23--24--25--26--27--28--29␤»
+
+The second statement exemplifies the first form of C<comb>, with a C<Regex> that
+excludes multiples of ten, and a C<Range> (which is C<Cool>) as C<$input>.
+C<comb> stringifies the C<Range> before applying C<.comb> on the resulting
+string. Check L<C<Str.comb>|/type/Str#routine_comb> for its effect on different
+kind of input strings. When the first argument is an integer, it indicates the
+(maximum) size of the chunks the input is going to be divided in
+
+    say comb(3,[3,33,333,3333]).join("*");  # OUTPUT: «3 3*3 3*33 *333*3␤»
+
+In this case the input is a list, which after transformation to C<Str> (which
+includes the spaces) is divided in chunks of size 3.
 
 =head2 method contains
 
-    multi method contains(Cool:D: Str(Cool) $needle, Cool $start? --> Bool:D)
+Defined as:
 
-Coerces the invocant and first argument to L<Str|/type/Str>, and searches for
-C<$needle> in the string starting from C<$start>. Returns C<True> if C<$needle>
-is found.
+    method contains(Cool:D: |c)
 
-    say "Hello, World".contains('Hello');      # OUTPUT: «True␤»
-    say "Hello, World".contains('hello');      # OUTPUT: «False␤»
-    say "Hello, World".contains(',');          # OUTPUT: «True␤»
-    say "Hello, World".contains(',', 3);       # OUTPUT: «True␤»
-    say "Hello, World".contains(',', 10);      # OUTPUT: «False␤»
+Coerces the invocant L<C<Str>|/type/Str>, and calls
+L<C<Str.contains>|/type/Str#routine_contains> on it. Please refer to
+that version of the method for arguments and general syntax.
 
-Note that because of how a L<List|/type/List> or L<Array|/type/Array> is
-L<coerced|/type/List#method_Str> into a L<Str|/type/Str>, the results may
-sometimes be surprising. See L<traps|/language/traps#Lists_become_strings,_so_beware_.contains()>.
+    say 123.contains("2")# OUTPUT: «True␤»
+
+Since L<Int|/type/Int> is a subclass of C<Cool>, C<123> is coerced to a C<Str> and
+then C<contains> is called on it.
+
+    say (1,1, * + * … * > 250).contains(233)# OUTPUT: «True␤»
+
+L<Seq|/type/Seq>s are also subclasses of C<Cool>, and they are stringified to a
+comma-separated form. In this case we are also using an C<Int>, which is
+going to be stringified also; C<"233"> is included in that sequence, so
+it returns C<True>. Please note that this sequence is not lazy; the
+stringification of lazy sequences does not include each and every one of
+their components for obvious reasons.
 
 =head2 routine index
 
 Defined as:
 
-    multi sub    index(Str(Cool) $s, Str:D $needle, Int(Cool) $startpos = 0 --> Int)
-    multi method index(Str(Cool) $needle, Int(Cool) $startpos = 0 --> Int)
+    multi sub index(Cool $s, Cool $needle, Cool $pos = 0)
+    method    index(Cool:D: |c)
 
-Coerces the first two arguments (in method form, also counting the invocant)
-to L<Str|/type/Str>, and searches for C<$needle> in the string starting from C<$startpos>.
-It returns the offset into the string where C<$needle> was found, and an undefined
-value if it was not found.
+Coerces the first two arguments (in method form, also counting the invocant) to
+a L<Str|/type/Str>, and searches for C<$needle> in the string C<$s> starting
+from C<$startpos>. It returns the offset into the string where C<$needle> was
+found, and an undefined value if it was not found.
 
 See L<the documentation in type Str|/type/Str#routine_index> for examples.
 
@@ -1245,26 +1358,14 @@ Returns an undefined value if C<$needle> wasn't found.
 
 See L<the documentation in type Str|/type/Str#routine_rindex> for examples.
 
-=head2 routine match
+=head2 method match
 
 Defined as:
 
     multi method match(Cool:D: $target, *%adverbs)
 
-Coerces the invocant to L<Str|/type/Str> and calls the method L<match|/type/Str#method_match> on it.
-
-=head2 method fmt
-
-Defined as:
-
-    method fmt($format = '%s' --> Str:D)
-
-Uses C<$format> to return a formatted representation of the invocant.
-
-For more information about formats strings, see L<sprintf|/routine/sprintf>.
-
-    say 11.fmt('This Int equals %03d');               # OUTPUT: «This Int equals 011␤»
-    say '16'.fmt('Hexadecimal %x');                   # OUTPUT: «Hexadecimal 10␤»
+Coerces the invocant to L<Str|/type/Str> and calls the method
+L<match|/type/Str#method_match> on it.
 
 =head2 routine roots
 
@@ -1274,9 +1375,10 @@ Defined as:
     multi method roots(Int(Cool) $n)
 
 Coerces the first argument (and in method form, the invocant) to
-L<Numeric|/type/Numeric> and the second (C<$n>) to L<Int|/type/Int>, and produces a
-list of C<$n> L<Complex|/type/Complex> C<$n>-roots, which means numbers that,
-raised to the C<$n>th power, approximately produce the original number.
+L<Numeric|/type/Numeric> and the second (C<$n>) to L<Int|/type/Int>, and
+produces a list of C<$n> L<Complex|/type/Complex> C<$n>-roots, which means
+numbers that, raised to the C<$n>th power, approximately produce the original
+number.
 
 For example
 
@@ -1296,132 +1398,42 @@ for @roots -> $r {
 # OUTPUT:«1.04441561648202e-14␤»
 =end code
 
+=head2 method match
+
+Defined as:
+
+    method match(|)
+
+Coerces the invocant to L<Stringy|/type/Stringy> and calls
+L<Str.match|/type/Str#method_match>.
+
+=head2 method subst
+
+Defined as:
+
+    method subst(|)
+
+Coerces the invocant to L<Stringy|/type/Stringy> and calls L<Str.subst|/type/Str#method_subst>.
+
+=head2 method trans
+
+Defined as:
+
+    method trans(|)
+
+Coerces the invocant to L<Str|/type/Str> and calls L<Str.trans|/type/Str#method_trans>
+
 =head2 method IO
 
 Defined as:
 
     method IO(--> IO::Path:D)
 
-Coerces the invocant to L<IO::Path>.
+Coerces the invocant to L<IO::Path|/type/IO::Path>.
 
 =for code
 .say for '.'.IO.dir;        # gives a directory listing
 
-=head2 routine EVAL
-
-Defined as:
-
-=for code
-method EVAL(*%_)
-=for code
-sub EVAL($code where Cool|Blob, :$lang = 'perl6')
-
-The method form calls subroutine form with invocant as C<$code>, passing
-along named args, if any. Subroutine form coerces L<Cool> C<$code> to
-L<Str>. If C<$code> is a L<Blob>, it'll be processed using the same
-encoding as the C<$lang> compiler would: for C<perl6>, uses the encoding
-specified via C<--encoding> command line argument, or C<utf-8> if none
-were given; for C<Perl5>, processes using same rules as C<perl>.
-
-This works as-is with a literal string parameter. More complex input,
-such as a variable or string with embedded code, is illegal by default.
-This can be overridden in any of several ways:
-
-    use MONKEY-SEE-NO-EVAL; # Or...
-    use MONKEY;             # shortcut that turns on all MONKEY pragmas
-    use Test;
-
-    # any of the above allows:
-    EVAL "say { 5 + 5 }";   # OUTPUT: «10␤»
-
-In case the C<MONKEY-SEE-NO-EVAL> pragma is not activated, the compiler
-will complain with a C<EVAL is a very dangerous function!!!> exception.
-And it is essentially right, since that will run arbitrary code with the
-same permissions as the program. You should take care of cleaning the
-code that is going to pass through EVAL if you activate the
-C<MONKEY-SEE-NO-EVAL> pragma.
-
-Please note that you can interpolate to create routine names using
-quotation, as can be seen in
-L<this example|/language/quoting#index-entry-%26_(interpolation)>
-or  L<other ways to interpolate to create identifier names|/language/syntax#Identifiers>.
-This only works, however, for already declared functions and other
-objects and is thus safer to use.
-
-Symbols in the current lexical scope are visible to code in an C<EVAL>.
-
-    my $answer = 42;
-    EVAL 'say $answer;';    # OUTPUT: «42␤»
-
-However, since the set of symbols in a lexical scope is immutable after
-compile time, an EVAL can never introduce symbols into the surrounding
-scope.
-
-=for code :skip-test
-EVAL 'my $lives = 9'; say $lives;   # error, $lives not declared
-
-Furthermore, the C<EVAL> is evaluated in the current package:
-
-    module M {
-        EVAL 'our $answer = 42'
-    }
-    say $M::answer;         # OUTPUT: «42␤»
-
-And also the current language, meaning any added syntax is available:
-
-    sub infix:<mean>(*@a) is assoc<list> {
-        @a.sum / @a.elems
-    }
-    EVAL 'say 2 mean 6 mean 4';     # OUTPUT: «4␤»
-
-An C<EVAL> statement evaluates to the result of the last statement:
-
-    sub infix:<mean>(*@a) is assoc<list> {
-        @a.sum / @a.elems
-    }
-    say EVAL 'say 1; 2 mean 6 mean 4';         # OUTPUT: «1␤4␤»
-
-C<EVAL> is also a gateway for executing code in other languages:
-
-=for code
-EVAL "use v5.20; say 'Hello from perl5!'", :lang<Perl5>;
-
-=head2 routine EVALFILE
-
-Defined as:
-
-    sub EVALFILE($filename where Blob|Cool, :$lang = 'perl6')
-
-Slurps the specified file and evaluates it. Behaves the same way as
-C<EVAL> with regard to L<Blob> decoding, scoping, and the C<$lang>
-parameter. Evaluates to the value produced by the final statement in the
-file.
-
-=for code
-EVALFILE "foo.p6";
-
-=head2 routine unpolar
-
-Defined as:
-
-    method unpolar(Real $angle)
-    multi sub unpolar(Real $mag, Real $angle)
-
-Returns a C<Complex> with the coordinates corresponding to the angle in
-radians and magnitude corresponding to the object value or C<$mag> in
-the case it's being used as a C<sub>
-
-    say 1.unpolar(⅓*pi);# OUTPUT:                «0.5000000000000001+0.8660254037844386i␤»
-
-=begin comment
-
-
-
-TODO:
-unpolar, fmt, substr-rw, trans,
-match, subst, sprintf, printf, samecase
-
-=end comment
 
 =end pod
 

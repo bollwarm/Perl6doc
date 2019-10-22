@@ -1,15 +1,15 @@
-=begin pod :tag<perl6>
+=begin pod :kind("Language") :subkind("Language") :category("fundamental")
 
 =TITLE Variables
 
-=SUBTITLE Variables in Perl 6
+=SUBTITLE Variables in Raku
 
-Variable names can start with or without a special character called a
-I<sigil>, followed optionally by a second special character named
-I<twigil> and then an L<identifier|/language/syntax#Identifiers>.
-Variables are symbolic names for values or
-L<containers|/language/containers>. Variable declarations or assignment
-of values may create a container on the fly.
+Variables are symbolic names for values or L<containers|/language/containers>.
+Variable declarations or assignment of values may create a container on the fly.
+Variable names can start with or without a special character called a I<sigil>,
+followed optionally by a second special character named I<twigil> and then an
+L<identifier|/language/syntax#Identifiers>.
+
 
 =head1 Sigils
 X<|sigil,$>X<|sigil,@>X<|sigil,%>X<|sigil,&>
@@ -34,12 +34,12 @@ simplify assignment by flattening by default.
 
 =begin table
 
-    Sigil   Type constraint              Default type  Assignment  Examples
-    =====   ===============              ============  ==========  ========
-    $       Mu (no type constraint)      Any           item        Int, Str, Array, Hash
-    @       Positional                   Array         list        List, Array, Range, Buf
-    %       Associative                  Hash          list        Hash, Map, Pair
-    &       Callable                     Callable      item        Sub, Method, Block, Routine
+Sigil   Type constraint          Default type  Assignment  Examples
+=====   ===============          ============  ==========  ========
+$       Mu (no type constraint)  Any           item        Int, Str, Array, Hash
+@       Positional               Array         list        List, Array, Range, Buf
+%       Associative              Hash          list        Hash, Map, Pair
+&       Callable                 Callable      item        Sub, Method, Block, Routine
 
 =end table
 
@@ -49,14 +49,16 @@ Examples:
     my @array  = 1, 2, 3;   # Array variable with three elements
     my %hash   = London => 'UK', Berlin => 'Germany';
 
-X<|is (container type)>
-The container type can be set with C<is> in a declaration.
+X<|is (type of variable)>
+The type to which the variable will be bound can be set with C<is> in the
+declaration of the variable.  Assuming we have a C<FailHash> class:
 
     class FailHash is Hash {
         has Bool $!final = False;
         multi method AT-KEY ( ::?CLASS:D: Str:D \key ){
-            fail X::OutOfRange.new(:what("Hash key"), :got(key), :range(self.keys)) if $!final && !self.EXISTS-KEY(key);
-            callsame
+            fail X::OutOfRange.new(:what("Hash key"), :got(key),
+              :range(self.keys)) if $!final && !self.EXISTS-KEY(key);
+            callsame  # still not final, so do normal action from Hash
         }
 
         method finalize() {
@@ -64,13 +66,20 @@ The container type can be set with C<is> in a declaration.
         }
     }
 
-    my %h is FailHash = oranges => "round", bananas => "bendy";
-    say %h<oranges>;
-    # OUTPUT: «round␤»
-    %h.finalize;
-    say %h<cherry>;
-    CATCH { default { put .^name, ': ', .Str } }
-    # OUTPUT: «X::OutOfRange: Hash key out of range. Is: cherry, should be in (oranges bananas)»
+One can then define a C<%h> variable of this type using C<is>:
+
+=for code :preamble<class FailHash {}>
+my %h is FailHash = oranges => "round", bananas => "bendy";
+
+And then run the following code:
+
+=for code :preamble<my %h>
+say %h<oranges>;
+# OUTPUT: «round␤»
+%h.finalize;
+say %h<cherry>;
+CATCH { default { put .^name, ': ', .Str } }
+# OUTPUT: «X::OutOfRange: Hash key out of range. Is: cherry, should be in (oranges bananas)»
 
 For information on variables without sigils, see
 L<sigilless variables|#Sigilless_variables>.
@@ -86,8 +95,8 @@ Item assignment places the value from the right-hand side into the variable
 
 List assignment leaves the choice of what to do to the variable on the left.
 
-For example, L<Array> variables (C<@> sigil) empty themselves on list
-assignment and then put all the values from the right-hand side into
+For example, L<Array|/type/Array> variables (C<@> sigil) empty themselves on
+list assignment and then put all the values from the right-hand side into
 themselves.
 
 The type of assignment (item or list) is decided by the first context
@@ -116,24 +125,32 @@ assignment:
     say @array.perl;                # OUTPUT: «[42, "str"]␤» (an Array)
     say $num.perl;                  # OUTPUT: «42␤» (a Num)
 
-Similarly, if the internal or contained assignment is an expression that is being
-used as an initializer for a container declarator, the context of the internal
-expression determines the assignment type:
+Similarly, if the internal or contained assignment is an expression that is
+being used as an initializer for a container declarator, the context of the
+internal expression determines the assignment type:
 
     my $num;
     my @array = $num = 42, "str";    # item assignment for $num: uses expression
     say @array.perl;                 # OUTPUT: «[42, "str"]␤» (an Array)
     say $num.perl;                   # OUTPUT: «42␤» (a Num)
 
-The same result would be obtained if C<@array> is declared before the assignment; C<$num> would be still item-assigned, C<@array> list-assigned; the assignment expression is parsed as C<@array = (($num = 42), "str")>,
-because item assignment has tighter precedence than the comma. However, let's see what happens if the internal variable assignment is in a list context:
+The same result would be obtained if C<@array> is declared before the
+assignment; C<$num> would be still item-assigned, C<@array> list-assigned; the
+assignment expression is parsed as C<@array = (($num = 42), "str")>, because
+item assignment has tighter precedence than the comma. However, let's see what
+happens if the internal variable assignment is in a list context:
 
-    my ( @foo, $bar );
-    @foo = ($bar) = 42, "str";       # list assignment for $bar: uses parentheses
-    say @foo.perl;                   # OUTPUT: «[(42, "str"),]␤» (an Array)
-    say $bar.perl;                   # OUTPUT: «$(42, "str")␤» (a List)#
+=for code
+my ( @foo, $bar );
+@foo = ($bar) = 42, "str";       # list assignment for $bar: uses parentheses
+say @foo.perl;                   # OUTPUT: «[(42, "str"),]␤» (an Array)
+say $bar.perl;                   # OUTPUT: «$(42, "str")␤» (a List)#
 
-In this case, C<()> is the list contextualizer, putting the assignment to C<$bar> in a list context; C<$bar> then I<decides> to include all the items to the right hand side of the C<=> sign; this is still included in a list assignment to C<@foo>, which then becomes an array with a single element, a C<List>.
+In this case, C<()> is the list contextualizer, putting the assignment to
+C<$bar> in a list context; C<$bar> then I<decides> to include all the items to
+the right hand side of the C<=> sign; this is still included in a list
+assignment to C<@foo>, which then becomes an array with a single element, a
+C<List>.
 
 See L<operators|/language/operators> for more details on precedence.
 
@@ -146,16 +163,17 @@ have a sigil:
     my \degrees = pi / 180;
     my \θ       = 15 * degrees;
 
-Note that sigilless variable do not have associated  L<containers|/language/containers>. This means C<degrees>
-and C<θ>, above, actually directly represent C<Num>s. To illustrate, try
-assigning to one after you've defined it:
+Note that sigilless variable do not have associated
+L<containers|/language/containers>. This means C<degrees> and C<θ>, above,
+actually directly represent C<Num>s. To illustrate, try assigning to one after
+you've defined it:
 
-=begin code :skip-test
+=begin code :skip-test<dies deliberately>
 θ = 3; # Dies with the error "Cannot modify an immutable Num"
 =end code
 
-Sigilless variables do not enforce context, so they can be used to pass
-something on as-is:
+Sigilless variables do not enforce L<context|/language/contexts>, so they can be
+used to pass something on as-is:
 
     sub logged(&f, |args) {
         say('Calling ' ~ &f.name ~ ' with arguments ' ~ args.perl);
@@ -196,34 +214,34 @@ only depends on the C<$>.
 =head2 The C<*> twigil
 X<|$*>
 
-This twigil is used for dynamic variables which are looked up through the caller's, not through the outer,
-scope. Look at the example below.
+This twigil is used for dynamic variables which are looked up through the
+caller's, not through the outer, scope. Look at the example below.
 
 I<Note:> So far, if you use rakudo perl6, the example below cannot run
 correctly in the REPL. Please test it by copy-pasting it into a file, then
 run the file.
 
-    =begin code
-    my $lexical   = 1;
-    my $*dynamic1 = 10;
-    my $*dynamic2 = 100;
+=begin code
+my $lexical   = 1;
+my $*dynamic1 = 10;
+my $*dynamic2 = 100;
 
-    sub say-all() {
-        say "$lexical, $*dynamic1, $*dynamic2";
-    }
+sub say-all() {
+    say "$lexical, $*dynamic1, $*dynamic2";
+}
 
-    say-all();    # OUTPUT: 1, 10, 100
+say-all();    # OUTPUT: 1, 10, 100
 
-    {
-        my $lexical   = 2;
-        my $*dynamic1 = 11;
-        $*dynamic2    = 101;
+{
+    my $lexical   = 2;
+    my $*dynamic1 = 11;
+    $*dynamic2    = 101;
 
-        say-all(); # OUTPUT: 1, 11, 101
-    }
+    say-all(); # OUTPUT: 1, 11, 101
+}
 
-    say-all();  # OUTPUT: 1, 10, 101
-    =end code
+say-all();  # OUTPUT: 1, 10, 101
+=end code
 
 The first time C<&say-all> is called, it prints "C<1, 10, 100>" just as one
 would expect. The second time though, it prints "C<1, 11, 101>". This is
@@ -241,19 +259,21 @@ runtime L<failure|/type/Failure>, so a dynamic variable can be used
 undeclared as long as it's checked for definedness or used in a
 boolean context before using it for anything else:
 
-    =begin code
-    sub foo() {
-        $*FOO // 'foo';
-    }
+=begin code
+sub foo() {
+    $*FOO // 'foo';
+}
 
-    say foo; # OUTPUT: «foo␤»
+say foo; # OUTPUT: «foo␤»
 
-    my $*FOO = 'bar';
+my $*FOO = 'bar';
 
-    say foo; # OUTPUT: «bar␤»
-    =end code
+say foo; # OUTPUT: «bar␤»
+=end code
 
-Dynamic variables can have lexical scope when declared with C<my> or package scope when declared with C<our>. Dynamic resolution and resolution through symbol tables introduced with C<our> are two orthogonal issues.
+Dynamic variables can have lexical scope when declared with C<my> or package
+scope when declared with C<our>. Dynamic resolution and resolution through
+symbol tables introduced with C<our> are two orthogonal issues.
 
 
 =head2 The C<?> twigil
@@ -263,9 +283,9 @@ Compile-time variables may be addressed via the C<?> twigil. They are known
 to the compiler and may not be modified after being compiled in. A popular
 example for this is:
 
-    say "$?FILE: $?LINE"; # OUTPUT: "hello.pl: 23"
+    say "$?FILE: $?LINE"; # OUTPUT: "hello.p6: 23"
                           # if this is the line 23 of a
-                          # file named "hello.pl"
+                          # file named "hello.p6"
 
 For a list of these special variables, see
 L<compile-time variables|/language/variables#Compile-time_variables>.
@@ -286,9 +306,9 @@ of a class. They may be directly accessed from within the class via C<!>:
     }
 
 Note how the attributes are declared as C<$.x> and C<$.y> but are still
-accessed via C<$!x> and C<$!y>. This is because in Perl 6 all attributes are
+accessed via C<$!x> and C<$!y>. This is because in Raku all attributes are
 private and can be directly accessed within the class by using
-C<$!attribute-name>. Perl 6 may automatically generate accessor methods for
+C<$!attribute-name>. Raku may automatically generate accessor methods for
 you though. For more details on objects, classes and their attributes see
 L<object orientation|/language/objects>.
 
@@ -348,10 +368,10 @@ Although it is possible to use nearly any valid identifier as a placeholder
 variable, it is recommended to use short names or ones that can be trivially
 understood in the correct order, to avoid surprise on behalf of the reader.
 
-Normal blocks and subroutines may also make use of placeholder variables but only if they do
-not have an explicit parameter list.
+Normal blocks and subroutines may also make use of placeholder variables but
+only if they do not have an explicit parameter list.
 
-=begin code :skip-test
+=begin code :skip-test<illustrates error>
 sub say-it    { say $^a; } # valid
 sub say-it()  { say $^a; } # invalid
               { say $^a; } # valid
@@ -374,7 +394,7 @@ therefore not ordered using Unicode order, of course). For instance:
     say { $:add ?? $^a + $^b !! $^a - $^b }( 4, 5 ) :!add
     # OUTPUT: «-1␤»
 
-See L<^> for more details about placeholder variables.
+See L<^|/syntax/$CIRCUMFLEX_ACCENT> for more details about placeholder variables.
 
 =head2 The C<=> twigil
 X<|$=>
@@ -384,7 +404,7 @@ current file can be accessed via a Pod object, such as C<$=data>,
 C<$=SYNOPSIS> or C<=UserBlock>. That is: a variable with the same name of
 the desired block and a C<=> twigil.
 
-  =begin code :skip-test
+  =begin code
     =begin code
     =begin Foo
     ...
@@ -419,13 +439,14 @@ X<|$~MAIN>X<|$~Quote>X<|$~Quasi>X<|$~Regex>X<|$~Trans>X<|$~P5Regex>
 
 You C<augment> these languages in your current lexical scope.
 
-=begin code :skip-test
+=begin code :solo
 use MONKEY-TYPING;
 augment slang Regex {  # derive from $~Regex and then modify $~Regex
     token backslash:std<\Y> { YY };
 }
 =end code
 
+X<|supersede>
 =head1 Variable declarators and scope
 
 Most of the time it's enough to create a new variable using the C<my>
@@ -452,17 +473,18 @@ There are also two prefixes that resemble declarators but act on
 predefined variables:
 
 =for table
-    Prefix  Effect
-    ======  ======
-    temp    Restores a variable's value at the end of scope
-    let     Restores a variable's value at the end of scope if the block exits unsuccessfully
+    Prefix    Effect
+    ======    ======
+    temp      Restores a variable's value at the end of scope
+    let       Restores a variable's value at the end of scope if the block exits unsuccessfully
+    constant  Declares that a container value is not going to change during its lifetime
 
 =head2 The C<my> declarator
 
 Declaring a variable with C<my> gives it lexical scope. This means it only
 exists within the current block. For example:
 
-=begin code :skip-test
+=begin code :skip-test<illustrates error>
 {
     my $foo = "bar";
     say $foo; # OUTPUT: «"bar"␤»
@@ -505,7 +527,7 @@ If a variable has been redefined, any code that referenced the outer
 variable will continue to reference the outer variable. So here,
 C<&outer-location> still prints the outer C<$location>:
 
-=begin code :skip-test
+=begin code :skip-test<continued example>
 sub new-location {
     my $location = "nowhere";
     outer-location;
@@ -514,8 +536,10 @@ sub new-location {
 new-location; # OUTPUT: «outside␤»
 =end code
 
-To make C<new-location()> print C<nowhere>, make C<$location> a dynamic
-variable using L<the * twigil|#The_*_Twigil>. This twigil makes the compiler look up the symbol in the calling scope instead of the outer scope after trying the local scope.
+To make C<new-location()> print C<nowhere>, make C<$location> a dynamic variable
+using L<the * twigil|#The_*_Twigil>. This twigil makes the compiler look up the
+symbol in the calling scope instead of the outer scope after trying the local
+scope.
 
 C<my> is the default scope for subroutines, so C<my sub x() {}> and
 C<sub x() {}> do exactly the same thing.
@@ -558,8 +582,8 @@ variables.
     say [$a, $b, $c].perl;
     # OUTPUT: «["a", "b", Int]␤»
 
-To destructure a list into a single value, create a list literal with one element
-by using C<($var,)>. When used with a variable declarator, providing
+To destructure a list into a single value, create a list literal with one
+element by using C<($var,)>. When used with a variable declarator, providing
 parentheses around a single variable is sufficient.
 
     sub f { 1,2,3 };
@@ -597,6 +621,29 @@ but still aren't installed in a scope:
     say %operations<square>.name;       # square
     say %operations<square>(8);         # 64
 
+Since it is a declarator, it can be applied anywhere anything is declared, for
+instance for classes or even sigilless variables.
+
+    say anon class þ {};     # OUTPUT: «(þ)␤»
+    say anon sub þ  { 42 };  # OUTPUT: «&þ␤»
+
+Since these symbols are not installed in the scope, they can't be used by name.
+They are useful, however, if they need to be assigned to an external variable
+and they need to know their own name, but this can be retrieved using
+introspection.
+
+=for code
+my $anon-class = anon class {
+    has $.bar;
+    method equal( ::?CLASS $foo ) {
+      return $foo.bar == $.bar;
+    }
+};
+say $anon-class.new( :3bar).equal( $anon-class.new( :3bar ) );
+
+
+
+
 =head2 The C<state> declarator
 
 C<state> declares lexically scoped variables, just like C<my>. However,
@@ -618,8 +665,7 @@ Therefore, the subroutine
 will continue to increment C<$l> and append it to C<@x> each time it is
 called. So it will output:
 
-=begin code :skip-test
-
+=for code :lang<text>
 [A]
 [A B]
 [A B C]
@@ -627,22 +673,38 @@ called. So it will output:
 [A B C D E]
 [A B C D E F]
 
-=end code
+Since they have a lexical scope, they are tied to the block in which they are
+declared.
 
-This works per "clone" of the containing code object, as in this example:
+=for code
+sub foo () {
+  for 0..1 {
+    state $foo = 1;
+    say $foo++;
+  }
+};
+foo;  # OUTPUT: «1␤2␤»
+foo;  # OUTPUT: «1␤2␤»
 
-    ({ state $i = 1; $i++.say; } xx 3).map: {$_(), $_()}; # says 1 then 2 thrice
+In this case, a new state variable is created every time the block that
+runs the for loop is entered, which is why the state variable is reset
+in every call to C<foo>.
 
-Note that this is B<not> a thread-safe construct when the same clone of the same
-block is run by multiple threads.  Also remember that methods only have one
-clone per class, not per object.
+This works per "clone" of the containing code object, as in this
+example:
 
+=for code
+({ state $i = 1; $i++.say; } xx 3).map: {$_(), $_()}; # says 1 then 2 thrice
 
-As with C<my>, declaring multiple C<state> variables must be placed
-in parentheses and for declaring a single variable, parentheses may
-be omitted.
+Note that this is B<not> a thread-safe construct when the same clone of
+the same block is run by multiple threads.  Also remember that methods
+only have one clone per class, not per object.
 
-Many operators come with implicit binding which can lead to actions at a distance.
+As with C<my>, a declaration of multiple C<state> variables must be placed
+in parentheses which can be omitted for a single variable.
+
+Many operators come with implicit binding which can lead to actions at a
+distance.
 
 Use C<.clone> or coercion to create a new container that can be bound to.
 
@@ -682,19 +744,23 @@ as an anonymous state variable without an explicit C<state> declaration.
 Furthermore, state variables can be used outside of subroutines. You
 could, for example, use C<$> in a one-liner to number the lines in a file.
 
-=begin code :skip-test
+=begin code :lang<shell>
 perl6 -ne 'say ++$ ~ " $_"' example.txt
 =end code
 
 Each reference to C<$> within a lexical scope is in effect a separate
 variable.
 
-=begin code :skip-test
+=begin code :lang<shell>
 perl6 -e '{ say ++$; say $++  } for ^5'
 # OUTPUT: «1␤0␤2␤1␤3␤2␤4␤3␤5␤4␤»
 =end code
 
-That is why, if you need to reference the same $ variable (or, for that matter, any of the other anon state variables C<@> and C<%>) more than once, a possible solution is to bind another variable to it, although in this example it would be more straightforward to just declare state $x and not use the magical/anonymous $ variable:
+That is why, if you need to reference the same $ variable (or, for that matter,
+any of the other anon state variables C<@> and C<%>) more than once, a possible
+solution is to bind another variable to it, although in this example it would be
+more straightforward to just declare state $x and not use the magical/anonymous
+C<$> variable:
 
 =begin code
 sub foo () {
@@ -707,7 +773,8 @@ sub foo () {
 foo() for ^3; # OUTPUT: «1␤3␤5␤»
 =end code
 
-In general, it is better style to declare a named state variable in case you have to refer to it several times.
+In general, it is better style to declare a named state variable in case you
+have to refer to it several times.
 
 Note that the implicit state declarator is only applied to the variable
 itself, not the expression that may contain an initializer. If the
@@ -721,7 +788,7 @@ for ^3 { state $ = .say } # OUTPUT: «0␤»
 
 =head3 The C<@> variable
 
-Similar to the C<$> variable, there is also a L<Positional>
+Similar to the C<$> variable, there is also a L<Positional|/type/Positional>
 anonymous state variable C<@>.
 
     sub foo($x) {
@@ -756,7 +823,8 @@ array.
 
 =head3 The C<%> variable
 
-In addition, there's an L<Associative> anonymous state variable C<%>.
+In addition, there's an L<Associative|/type/Associative> anonymous state
+variable C<%>.
 
     sub foo($x) {
         say (%).push($x => $x);
@@ -788,7 +856,7 @@ given scope will effectively introduce a separate variable.
 
 =head2 The C<augment> declarator
 
-With C<augment>, you can add attributes and methods to existing classes and
+With C<augment>, you can add methods, but not attributes, to existing classes and
 grammars, provided you activated the C<MONKEY-TYPING> pragma first.
 
 Since classes are usually C<our> scoped, and thus global, this means modifying
@@ -861,7 +929,7 @@ successful exit means the block returned a defined value or a list.
 
 In the above case, if the C<Bool.pick> returns true, the answer will
 stay as 84 because the block returns a defined value (C<say> returns
-true). Otherwise the C<die> statement will cause the block to exit
+C<True>). Otherwise the C<die> statement will cause the block to exit
 unsuccessfully, resetting the answer to 42.
 
 X<|constant (Prefix)>
@@ -870,12 +938,14 @@ X<|constant (Prefix)>
 The C<constant> prefix declares that a container value is not going to change
 during its lifetime.
 
-=begin code :skip-test<Illustrating error>
+=begin code
 constant $pi2 = pi * 2;
 $pi2 = 6; # OUTPUT: «(exit code 1) Cannot assign to an immutable value␤
 =end code
 
-The value is assigned at compile time. Please check L<the section on constants in the Terms page|/language/terms#Constants> for additional information.
+The value is assigned at compile time. Please check
+L<the section on constants in the Terms page|/language/terms#Constants> for
+additional information.
 
 =head1 Type constraints and initialization
 
@@ -884,13 +954,16 @@ are bound to, which goes between the declarator and the variable name. The
 default type constraint is L<Mu|/type/Mu>. You can also use the trait
 L<of|/type/Variable#trait_of> to set a type constraint.
 
+=for code :skip-test<compilation error>
     my Int $x = 42;
     $x = 'a string';
     CATCH { default { put .^name, ': ', .Str } }
-    # OUTPUT: «X::TypeCheck::Assignment: Type check failed in assignment to $x; expected Int but got Str ("a string")␤»
+    # OUTPUT: «X::TypeCheck::Assignment: Type check failed in assignment to $x;
+    expected Int but got Str ("a string")␤»
 
 If a scalar variable has a type constraint but no initial value, it's
-initialized with the type object of the default value of the container it's bound to.
+initialized with the type object of the default value of the container it's
+bound to.
 
     my Int $x;
     say $x.^name;       # OUTPUT: «Int␤»
@@ -915,11 +988,12 @@ re-applied by assigning C<Nil> to it:
 
 =head2 Default defined variables pragma
 
-To force all variables to have a L<definitness|/language/mop#index-entry-syntax_DEFINITE-DEFINITE>
-constraint, use the pragma C<use variables :D>. The pragma is lexically scoped and can be
+To force all variables to have a
+L<definiteness|/language/mop#index-entry-syntax_DEFINITE-DEFINITE> constraint,
+use the pragma C<use variables :D>. The pragma is lexically scoped and can be
 switched off with C<use variables :_>.
 
-=begin code :skip-test
+=begin code :skip-test<compile-time error>
 use variables :D;
 my Int $i;
 # OUTPUT: «===SORRY!=== Error while compiling <tmp>␤Variable definition of type Int:D (implicit :D by pragma) requires an initializer ...
@@ -939,12 +1013,12 @@ $x = Nil;
 =end code
 
 As the name suggests, this pragma applies only to variables. To effect
-the same behaviour on parameters, use the C<use parameters :D> pragma
+the same behavior on parameters, use the C<use parameters :D> pragma
 (currently NYI in Rakudo).
 
 =head1 Special variables
 
-Perl 6 attempts to use long, descriptive names for special
+Raku attempts to use long, descriptive names for special
 variables. There are only three special variables that are extra
 short.
 
@@ -965,9 +1039,10 @@ There are three special variables that are available in every block:
 X<|topic variable>
 =head3 The C<$_> variable
 
-C<$_> is the topic variable. It's the default parameter for blocks that do
-not have an explicit signature, so constructs like C<for @array { ... }> and
-C<given $var { ... }> bind to C<$_> by invoking the block.
+C<$_> is the topic variable. It's the default parameter for blocks that do not
+have an explicit signature, so constructs like C<for @array { ... }> and C<given
+$var { ... }> bind the value or values of the variable to C<$_> by invoking the
+block.
 
     for <a b c> { say $_ }  # sets $_ to 'a', 'b' and 'c' in turn
     say $_ for <a b c>;     # same, even though it's not a block
@@ -1000,15 +1075,15 @@ X<|match variable>
 
 C<$/> is the match variable. It stores the result of the last
 L<Regex|/language/regexes>
-match and so usually contains objects of type L<Match>.
+match and so usually contains objects of type L<Match|/type/Match>.
 
     'abc 12' ~~ /\w+/;  # sets $/ to a Match object
     say $/.Str;         # OUTPUT: «abc␤»
 
 The C<Grammar.parse> method also sets the caller's C<$/> to the resulting
-L<Match> object.  For the following code:
+L<Match|/type/Match> object.  For the following code:
 
-=begin code :skip-test
+=begin code :skip-test<needs ecosystem>
 use XML::Grammar; # zef install XML
 XML::Grammar.parse("<p>some text</p>");
 say $/;
@@ -1026,7 +1101,19 @@ say $/;
 #             textnode => ｢some text｣␤»
 =end code
 
-=head4 X«Positional attributes|variable,$0;variable,$1;variable,@()»
+Prior to the 6.d version, you could use C<$()> shortcut to get the
+L<ast|/routine/ast> value from C<$/> L<Match|/type/Match> if that value is
+truthy, or the stringification of the L<Match|/type/Match> object otherwise.
+
+    'test' ~~ /.../;
+    # 6.c language only:
+    say $(); # OUTPUT: «tes␤»;
+    $/.make: 'McTesty';
+    say $(); # OUTPUT: «McTesty␤»;
+
+This (non-)feature has been deprecated as of version 6.d.
+
+=head4 X«Positional attributes|variable,$0;variable,$1»
 
 C<$/> can have positional attributes if the L<Regex|/language/regexes> had
 capture-groups in it, which are just formed with parentheses.
@@ -1040,29 +1127,42 @@ These can also be accessed by the shortcuts C<$0>, C<$1>, C<$2>, etc.
     say $0; # OUTPUT: «｢bbbbb｣␤»
     say $1; # OUTPUT: «｢dddddeff｣␤»
 
-To get all of the positional attributes, any of C<$/.list>, C<@$/>, or
-C<@()> can be used.
+To get all of the positional attributes, you can use C<$/.list> or C<@$/>.
+Before 6.d, you can also use the C<@()> shortcut (no spaces inside the
+parentheses).
 
+    say @$/.join; # OUTPUT: «bbbbbdddddeff␤»
+
+    # 6.c language only:
     say @().join; # OUTPUT: «bbbbbdddddeff␤»
 
-=head4 X«Named attributes|variable,$<named>;variable,%()»
+This I<magic> behavior of C<@()> has been deprecated as of 6.d
+
+=head4 X«Named attributes|variable,$<named>»
 
 C<$/> can have named attributes if the L<Regex|/language/regexes> had named
 capture-groups in it, or if the Regex called out to another Regex.
 
-    'I.... see?' ~~ / \w+ $<punctuation>=[ <-[\w\s]>+ ] \s* $<final-word> = [ \w+ . ] /;
-    say $/<punctuation>; # OUTPUT: «｢....｣␤»
-    say $/<final-word>;  # OUTPUT: «｢see?｣␤»
+=for code
+'I... see?' ~~ / \w+ $<punctuation>=[ <-[\w\s]>+ ] \s* $<final-word> = [ \w+ . ] /;
+say $/<punctuation>; # OUTPUT: «｢....｣␤»
+say $/<final-word>;  # OUTPUT: «｢see?｣␤»
 
 These can also be accessed by the shortcut C«$<named>».
 
     say $<punctuation>; # OUTPUT: «｢....｣␤»
     say $<final-word>;  # OUTPUT: «｢see?｣␤»
 
-To get all of the named attributes, any of C<$/.hash>, C<%$/>, or C<%()> can
-be used.
+To get all of the named attributes, you can use C<$/.hash> or C<%$/>.  Before
+6.d language, you could also use the C<%()> shortcut (no spaces inside the
+parentheses).
 
+    say %$/.join;       # OUTPUT: «"punctuation     ....final-word  see?"␤»
+
+    # 6.c language only
     say %().join;       # OUTPUT: «"punctuation     ....final-word  see?"␤»
+
+This behavior has been deprecated as of the 6.d version.
 
 X<|error variable>
 =head3 The C<$!> variable
@@ -1071,48 +1171,102 @@ C<$!> is the error variable. If a C<try> block or statement prefix catches
 an exception, that exception is stored in C<$!>. If no exception was caught,
 C<$!> is set to the C<Any> type object.
 
-Note that C<CATCH> blocks I<do not> set C<$!>. Rather they set C<$_> inside
+Note that C<CATCH> blocks I<do not> set C<$!>. Rather, they set C<$_> inside
 the block to the caught exception.
 
-X<|$?FILE>X<|$?LINE>X<|::?CLASS>X<|&?ROUTINE>X<|&?BLOCK>X<|%?LANG>X<|%?RESOURCES>
+X<|$?FILE>X<|$?LINE>X<|::?CLASS>X<|%?RESOURCES>
 =head2 Compile-time variables
 
-All compile time variables have a question mark as part of the twigil.
-Being I<compile time> they cannot
-be changed at runtime, however they are valuable in order to introspect
-the program.
-The most common compile time variables are the following:
+All compile time variables have a question mark as part of the twigil. Being
+I<compile time> they cannot be changed at runtime, however they are valuable in
+order to introspect the program. The most common compile time variables are the
+following:
 
 =for table
     $?FILE         Which file am I in?
     $?LINE         Which line am I at? [indexed from 1]
     ::?CLASS       Which class am I in?
-    %?LANG         What is the current set of interwoven languages?
     %?RESOURCES    The files associated with the "Distribution" of the current compilation unit.
 
 C<$?FILE> and C<$?LINE> are also available from L<CallFrame|/type/CallFrame> as
 the L<C<file>|/type/CallFrame#method_file> and
 L<C<line>|/type/CallFrame#method_line> methods, respectively.
 
-=head3 Other compile-time variables:
+=head3 X<%?RESOURCES>
+
+A compile-time variable available within code of a X<Distribution>.
+
+It contains a hash that provides compile and runtime access to files
+associated with the Distribution of the current compilation unit.  It
+is used to access a special storage for Distribution-wide static files
+(for example, examples of configuration files, templates etc).
+
+To add a file to a distribution, it is placed under C<resources> directory:
+
+=begin code :lang<text>
+Module-Foo/
+├── lib
+│   └── Module
+│       └── Foo.pm6
+├── META6.json
+├── README.md
+└── resources
+    └── images
+        └── foo.jpg
+=end code
+
+Then a relative path (starting from root directory of a distribution)
+to a file is specified under C<"resources"> field in META6.json file:
+
+=begin code :lang<js>
+"resources": [
+    "images/foo.jpg"
+]
+=end code
+
+Every resource file is added to an installed Distribution and is
+accessible using a Hash-like access to C<%?RESOURCES>:
+
+=begin code :skip<resources-example>
+my $foo-IO = %?RESOURCE<images/foo.jpg>;          # gets an object you can slurp
+my $foo-IO = %?RESOURCE<images/foo.jpg>.absolute; # gets an absolute path to a file
+my $foo-IO = %?RESOURCE<images/foo.jpg>.open;     # gets an opened IO::Handle to work with
+=end code
+
+Note that paths and names of resource files can be mangled in an
+installed distribution, so do not rely on their values in any other
+case besides using them as keys for C<%?RESOURCES> variable.
+
+C<%?RESOURCES> variable is not implemented as a plain Hash, but an
+instance of C<Distribution::Resources> type, so do not expect to see
+all available resource files in a distribution by printing or other
+ways to inspect its value. Instead, use the API described above to
+access particular files.
+
+=head3 Introspection compile-time variables
 
 X<|$?PACKAGE>X<|$?MODULE>X<|$?CLASS>X<|$?ROLE>
-X<|$?GRAMMAR>X<|$?TABSTOP>X<|$?NL>X<|$?ENC>
+X<|$?TABSTOP>X<|$?NL>X<|$?DISTRIBUTION>
 
 The following compile time variables allow for a deeper introspection:
 
 =for table
-    $?PACKAGE   Which package am I in?
-    $?MODULE    Which module am I in?
-    $?CLASS     Which class am I in? (as variable)
-    $?ROLE      Which role am I in? (as variable)
-    $?GRAMMAR   Which grammar am I in?
-    $?TABSTOP   How many spaces is a tab in a heredoc or virtual margin?
-    $?NL        What a vertical newline "\n" means: LF, CR or CRLF
-    $?ENC       Default encoding of various IO methods, e.g., Str.encode, Buf.decode
+    $?PACKAGE        Which package am I in?
+    $?MODULE         Which module am I in?
+    $?CLASS          Which class am I in? (as variable)
+    $?ROLE           Which role am I in? (as variable)
+    $?TABSTOP        How many spaces is a tab in a heredoc or virtual margin?
+    $?NL             What a vertical newline "\n" means: LF, CR or CRLF
+    $?DISTRIBUTION   The Distribution of the current compilation unit.
 
-With particular regard to the C<$?NL>, see the  L<newline pragma|/language/pragmas>.
+With particular regard to the C<$?NL>, see the L<newline
+pragma|/language/pragmas>.
 
+=head3 Rakudo-specific compile-time variables
+
+These variables are Rakudo specific, with all the corresponding caveats:
+=for table
+$?BITS           Number of data-path bits of the platform the program is being compiled upon.
 
 =head3 X<&?ROUTINE>
 
@@ -1125,7 +1279,7 @@ others method related to C<Sub>:
     sub awesome-sub { say &?ROUTINE.name }
     awesome-sub # OUTPUT: awesome-sub
 
-The special variable C<&?ROUTINE> allows also for recursion:
+It also allows also for recursion:
 
 =begin code
 my $counter = 10;
@@ -1140,7 +1294,7 @@ do-work;
 
 The special compile variable C<?&BLOCK> behaves similarly to
 C<?&ROUTINE> but it allows to introspect a single block of code.
-It holds a L<Sub> and allows for recursion within the
+It holds a L<Sub|/type/Sub> and allows for recursion within the
 same block:
 
 =begin code
@@ -1150,39 +1304,78 @@ for '.' {
 }
 =end code
 
+=head3 X<$?DISTRIBUTION>
+
+C<$?DISTRIBUTION> provides access to the L<Distribution|/type/Distribution> of
+the current compilation unit. This gives module authors a way to reference other
+files in the distribution by their original relative path names, or to view the
+metadata (via the C<.meta> method), without needing to know the underlying file
+structure (such as how C<CompUnit::Repository::Installation> changes the file
+layout on installation).
+
+=begin code :solo
+unit module MyFoo;
+
+sub module-version {
+    say "MyFoo is version:";
+    say $?DISTRIBUTION.meta<ver>;
+}
+
+sub module-source {
+    say "MyFoo source code:";
+    say $?DISTRIBUTION.content('lib/MyFoo.pm6');
+}
+=end code
 
 =head2 Dynamic variables
 
-=comment There should be a better way get this table to be formatted
-    properly, but if there's, Rakudo doesn't support it at the moment.
-
-
-
-All dynamically scoped variables have the C<*> twigil, and their name is written
-in uppercase.
+All dynamically scoped variables have the C<*> twigil, and their name is
+(conventionally) written in uppercase.
 
 X<|$*ARGFILES>X<|@*ARGS>
 =head3 Argument related variables
 
-=item C<$*ARGFILES> An L<IO::ArgFiles> (an empty subclass of L<IO::CatHandle>)
-that uses C<@*ARGS> as source files, if it contains any files, or C<$*IN>
-otherwise. When C<$*IN> is used, its C<:nl-in>, C<:chomp>, C<:encoding>, and
-C<:bin> will be set on the L<IO::ArgFiles> object.
+These variables are related to the arguments passed to a script.
 
-As of 6.d language, C<$*ARGFILES> I<inside>
-L<C«sub MAIN»|/language/functions#sub_MAIN> is always set to C<$*IN>, even
-when C<@*ARGS> is not empty.
+=head4 C<$*ARGFILES>
 
-=item C<@*ARGS>
-Arguments from the command line.
+An L<IO::ArgFiles|/type/IO::ArgFiles> (an empty subclass of L<IO::CatHandle|/type/IO::CatHandle>) that uses C<@*ARGS>
+as source files, if it contains any files, or C<$*IN> otherwise. When C<$*IN> is
+used, its C<:nl-in>, C<:chomp>, C<:encoding>, and C<:bin> will be set on the
+L<IO::ArgFiles|/type/IO::ArgFiles> object.
+
+As of the 6.d version, C<$*ARGFILES> I<inside>
+L<C«sub MAIN»|/language/functions#sub_MAIN> is always set to C<$*IN>, even when
+C<@*ARGS> is not empty. See
+L<the class documentation|/type/IO::ArgFiles#$*ARGFILES>
+for examples and more context.
+
+=head4 C<@*ARGS>
+
+C<@*ARGS> is an array of C<Str> containing the arguments from the command line.
+
+X<|&*ARGS-TO-CAPTURE>
+=head4 C<&*ARGS-TO-CAPTURE>
+
+A dynamic variable available inside any custom
+L<C<ARGS-TO-CAPTURE>|/language/create-cli#sub_ARGS-TO-CAPTURE> subroutine
+that can be used to perform the default argument parsing. Takes the same
+parameters as are expected of the custom C<ARGS-TO-CAPTURE> subroutine.
+
+X<|&*GENERATE-USAGE>
+=head4 C<&*GENERATE-USAGE>
+
+A dynamic variable available inside any custom
+L<C<GENERATE-USAGE>|/language/create-cli#sub_GENERATE-USAGE> subroutine
+that can be used to perform the default usage message creation. Takes the
+same parameters as are expected of the custom C<GENERATE-USAGE> subroutine.
 
 X<|$*IN>X<|$*OUT>X<|$*ERR>
 =head3 Special filehandles: C<STDIN>, C<STDOUT> and C<STDERR>
 
 For more information about special filehandles please see also the L<Input and
-Output|/language/io> page and the L<IO::Special> class. L<IO::Handle> contains
+Output|/language/io> page and the L<IO::Special|/type/IO::Special> class. L<IO::Handle|/type/IO::Handle> contains
 several examples of using C<$*IN> for reading standard input.
-
 
 =item C<$*IN>
 Standard input filehandle, AKA I<STDIN>.
@@ -1194,155 +1387,279 @@ Standard output filehandle, AKA I<STDOUT>.
 Standard error filehandle, AKA I<STDERR>.
 
 =head3 Runtime environment
+
+These dynamic variables contain information related to the environment the
+script or program is running in.
+
 X<|%*ENV>
-=item  C<%*ENV>
-Environment variables;
+=head4  C<%*ENV>
+
+Operating system environment variables. Numeric values are provided
+as L<allomorphs|/language/glossary#index-entry-Allomorph>.
 
 X<|$*REPO>
-=item C<$*REPO>
-a variable holding information about modules installed/loaded;
+=head4 C<$*REPO>
+
+This variable holds information about modules installed/loaded.
 
 X<|$*INIT-INSTANT>
-=item C<$*INIT-INSTANT>
-an Instant object representing program startup time.
-In particular, this is when the core code starts up,
-so the value of C<$*INIT-INSTANT> may be a few milliseconds
-earlier than C<INIT now> or even C<BEGIN now> executed
-in your program;
+=head4 C<$*INIT-INSTANT>
+
+C<$*INIT-INSTANT> is an L<Instant|/type/Instant> object representing program
+startup time. In particular, this is when the core code starts up, so the value
+of C<$*INIT-INSTANT> may be a few milliseconds earlier than C<INIT now> or even
+C<BEGIN now> executed in your program.
 
 X<|$*TZ>
-=item C<$*TZ>
-the system's local timezone offset, as the number of B<seconds> from GMT;
+=head4 C<$*TZ>
+
+C<$*TZ> contains the system's local time zone offset, as the number of
+B<seconds> from GMT.
 
 X<|$*CWD>
-=item C<$*CWD>
-the Current Working Directory;
+=head4 C<$*CWD>
+
+It contains the C<C>urrent C<W>orking C<D>irectory.
 
 X<|$*KERNEL>
-=item C<$*KERNEL>
-the current running Kernel.
+=head4 C<$*KERNEL>
+
+C<$*KERNEL> contains a L<C<Kernel> instance|/type/Kernel>, the C<.gist> of it
+being the current running kernel.
+
+    say $*KERNEL; # OUTPUT: «linux (4.4.92.31.default)␤»
 
 X<|$*DISTRO>
-=item C<$*DISTRO>
-This variable contains information about the current
-operating system distribution (e.g. C<say "Some sort of Windows" if
-$*DISTRO.is-win>); in the current Rakudo implementation it takes the
-following values (which should be self-explanatory): C<mswin32>,
-C<macosx>, C<freebsd>, C<linux>, C<netbsd>, C<raspbian> and
-C<dragonfly>. Since these names are implementation defined and not in
-the specification, they could vary and change at any moment.
+=head4 C<$*DISTRO>
+
+This object (of type C<Distro>) contains information about the current operating
+system distribution. For instance:
+
+    say "Some sort of Windows" if $*DISTRO.is-win;
+
+C<$*DISTRO.name> takes a set of values that depend on the operating system.
+These names will vary with version and implementation, so you should
+double-check and test before using them in your programs; since these names are
+implementation defined and not in the specification, they could vary and change
+at any moment.
+
+The C<$*DISTRO> gist is displayed by using C<say>:
+
+    say $*DISTRO; # OUTPUT: «debian (9.stretch)␤»
+
+This shows additional information on the operating system and version it's
+using, but as a matter of fact, this variable contains information which is
+useful to create portable programs, such as the path separator:
+
+    say $*DISTRO.perl;
+    # OUTPUT: «Distro.new(release => "42.3", is-win => Bool::False,
+    #          path-sep => ":", name => "opensuse",
+    #          auth => "https://www.opensuse.org/", version => v42.3,
+    #          signature => Blob, desc => "2018-12-13T08:50:59.213619+01:00")␤»
 
 
 X<|$*VM>
-=item C<$*VM>
-contains the current virtual machine running the code;
+=head4 C<$*VM>
+
+This variable contains the current virtual machine running the code, as well as
+additional information on the inner workings of aforementioned VM.
+
+    say $*VM.precomp-ext, " ", $*VM.precomp-target; # OUTPUT: «moarvm mbc␤»
+
+These two methods, for instance, will show the extension used in the precompiled
+bytecode scripts and the target used. This is what is found in the Moar Virtual
+Machine, but it could also vary with version and implementation. Other VM, such
+as Java, will show different values for them. C<$*VM.config> includes all
+configuration values used to create the virtual machine, e.g.
+
+    say $*VM.config<versionmajor>, ".", $*VM.config<versionminor>;
+    # OUTPUT: «2018.11␤»
+
+which are the version of the virtual machine, generally the same one as the one
+used in the interpreter and the overall Raku environment.
 
 X<|$*PERL>
-=item C<$*PERL>
-the current implementation of the Perl language;
+=head4 C<$*PERL>
+
+This object of the L<C<Perl>|/type/Perl> class contains information on the
+current implementation of the Raku language:
+
+    say $*PERL.compiler.version; # OUTPUT: «v2018.11.52.g.06156.a.7.ca␤»
+
+but its gist includes the name of the language, followed by the major
+version of the compiler:
+
+    say $*PERL; # OUTPUT: «Raku (6.d)␤»
+
+It stringifies to C<Raku>:
+
+    $*PERL.put; # OUTPUT: «Raku␤»
 
 X<|$*PID>
-=item C<$*PID>
-the current Process IDentifier (operating system dependent);
+=head4 C<$*PID>
+
+Object containing an integer describing the current Process IDentifier
+(operating system dependent).
 
 X<|$*PROGRAM-NAME>
-=item C<$*PROGRAM-NAME>
-path to the current executable as it was entered on the
-command line, or C<-e> if perl was invoked with the -e flag;
+=head4 C<$*PROGRAM-NAME>
+
+This contains the path to the current executable as it was entered on the
+command line, or C<-e> if perl was invoked with the -e flag.
 
 X<|$*PROGRAM>
-=item C<$*PROGRAM>
-location (in the form of an C<IO::Path> object) of the Perl program being executed;
+=head4 C<$*PROGRAM>
 
-X<|$*EXIT>
-=item C<&*EXIT> code that will be executed when doing an exit().  Intended to
-be used in situations where Perl 6 is embedded in another language runtime
-(such as Inline::Perl6 in Perl 5);
+Contains the location (in the form of an C<IO::Path> object) of the Raku
+program being executed.
+
+X<|&*EXIT>
+=head4 C<&*EXIT>
+
+This is a L<Callable|/type/Callable> that contains the code that will be
+executed when doing an C<exit()> call.  Intended to be used in situations where
+Raku is embedded in another language runtime (such as Inline::Perl6 in Perl 5).
 
 X<|$*EXECUTABLE>
-=item C<$*EXECUTABLE>
-absolute path of the perl executable that is currently running;
+=head4 C<$*EXECUTABLE>
+
+Contains an C<IO::Path> absolute path of the perl executable that is currently
+running.
 
 X<|$*EXECUTABLE-NAME>
-=item C<$*EXECUTABLE-NAME>
-the name of the perl executable that is currently running.
-(e.g. perl6-p, perl6-m, Niecza.exe)
-Favor $*EXECUTABLE because it's not guaranteed that the perl
-executable is in C<PATH>;
+=head4 C<$*EXECUTABLE-NAME>
+
+Contains the name of the Perl executable that is currently running. (e.g.
+perl6-p, perl6-m). Favor C<$*EXECUTABLE> over this one, since it's not
+guaranteed that the perl executable is in C<PATH>.
 
 X<|$*USAGE>
-=item C<$*USAGE>
-the default usage message generated from the
+=head4 C<$*USAGE>
+
+This is the default usage message generated from the
 signatures of C<MAIN> subs available from inside
-C<sub MAIN> and C<sub USAGE>. The variable is I<read-only>;
+C<sub MAIN> and C<sub USAGE>. The variable is I<read-only>.
 
 X<|$*USER>
-=item C<$*USER>
-the user that is running the program. It's an object
-that evaluates to C<username (uid)>.  It will evaluate
-to the username only if treated as a string and the
-numeric user id if treated as a number;
+=head4 C<$*USER>
+
+An C<Allomorph> with information about the user that is running the program. It
+will evaluate to the username if treated as a string and the numeric user id if
+treated as a number.
 
 X<|$*GROUP>
-=item C<$*GROUP>
-the primary group of the user who is running the program.
-It's an object that evaluates to C<groupname (gid)>.
-It will evaluate to the groupname only if treated as a
-string and the numeric group id if treated as a number;
+=head4 C<$*GROUP>
+
+An C<Allomorph> with the primary group of the user who is running the program.
+It will evaluate to the groupname only if treated as a string and the numeric
+group id if treated as a number.
+
+X<|$*HOMEDRIVE>
+=head4 C<$*HOMEDRIVE>
+
+Contains information about the "home drive" of the user that is running the
+program on Windows. It's not defined in other operating systems.
+
+X<|$*HOMEPATH>
+=head4 C<$*HOMEPATH>
+
+Contains information about the path to the user directory that is running the
+program on Windows. It's not defined in other operating systems.
 
 X<|$*HOME>
-=item C<$*HOME>
-an L<IO::Path> object representing the "home directory"
-of the user that is running the program. Uses
-C«%*ENV<HOME>» if set. On Windows, uses
-C«%*ENV<HOMEDRIVE> ~ %*ENV<HOMEPATH>». If the
-home directory cannot be determined, it will be L<Any>;
+=head4 C<$*HOME>
+
+Contains an L<IO::Path|/type/IO::Path> object representing the "home directory" of the user
+that is running the program. Uses C«%*ENV<HOME>» if set.
+
+On Windows, uses C«%*ENV<HOMEDRIVE> ~ %*ENV<HOMEPATH>». If the home directory
+cannot be determined, it will be L<Any|/type/Any>.
 
 X<|$*SPEC>
-=item C<$*SPEC>
-the appropriate L<IO::Spec> sub-class for the platform that the program is running on;
+=head4 C<$*SPEC>
+
+Contains the appropriate L<IO::Spec|/type/IO::Spec> sub-class for the platform that the program
+is running on. This is a higher-level class for the operating system; it will
+return C<Unix>, for instance, in the case of Linux (in the form of the
+C<IO::Spec> class used for the current implementation).
 
 X<|$*TMPDIR>
-=item C<$*TMPDIR>
-an L<IO::Path> object representing the "system temporary directory" as determined by L«C<.tmpdir IO::Spec::* method>|/routine/tmpdir»;
+=head4 C<$*TMPDIR>
 
-X<|$*TOLERANCE>
-=item C<$*TOLERANCE>
-used by the C<=~=> operator, and any operations that depend on it, to
-decide if two values are approximately equal. Defaults to C<1e-15>;
+This is an L<IO::Path|/type/IO::Path> object representing the "system temporary directory" as
+determined by L«C<.tmpdir IO::Spec::* method>|/routine/tmpdir».
 
 X<|$*THREAD>
-=item C<$*THREAD>
-a L<Thread> object representing the currently executing thread;
+=head4 C<$*THREAD>
+
+Contains a L<Thread|/type/Thread> object representing the currently executing
+thread.
 
 X<|$*SCHEDULER>
-=item C<$*SCHEDULER>
-a L<ThreadPoolScheduler> object representing the current default scheduler (see note below);
+=head4 C<$*SCHEDULER>
 
-X<|$*SAMPLER>
-=item C<$*SAMPLER>: the current L<Telemetry::Sampler> used for
-making snapshots of system state.  Only available if L<Telemetry> has been
-loaded.
+This is a L<ThreadPoolScheduler|/type/ThreadPoolScheduler> object representing
+the current default scheduler.
 
-
-Note on usage of C<$*SCHEDULER>:
-
-For the current (2018.04) Rakudo, by default this imposes a maximum of 64
-threads on the methods C<.hyper>, C<.race> and other thread-pool classes that
-use that scheduler such as C<Promise>s or C<Supplie>s. To change the maximum
-number of threads, you can either set the environment variable
-C<RAKUDO_MAX_THREADS> before running perl6 or create a scoped copy with the
-default changed before using them:
+By default this imposes a maximum of 64 threads on the methods C<.hyper>,
+C<.race> and other thread-pool classes that use that scheduler such as
+C<Promise>s or C<Supply>s. This is, however, implementation, dependent and might
+be subject to change. To change the maximum number of threads, you can either
+set the environment variable C<RAKUDO_MAX_THREADS> before running perl6 or
+create a scoped copy with the default changed before using them:
 
     my $*SCHEDULER = ThreadPoolScheduler.new( max_threads => 128 );
 
 This behavior is not tested in the spec tests and is subject to change.
 
+X<|$*SAMPLER>
+=head4 C<$*SAMPLER>
+
+The current L<Telemetry::Sampler|/type/Telemetry::Sampler> used for making snapshots of system state.
+Only available if L<Telemetry|/type/Telemetry> has been loaded.
+
+X<|$*USAGE>
+=head4 C<$*USAGE>
+
+This is a L<Str|/type/Str> object that holds value of the auto-generated USAGE
+message.
+
+=for code
+sub MAIN($a, :$b, UInt :$ehehe) {
+    say $*USAGE; # OUTPUT: «Usage:␤  perl6.pl6 [-a=<Int>] [-b=<Str>] [--<opts>=...]»
+}
+
+It is accessible only inside of MAIN sub.
+
+=head3 Runtime variables
+
+These variables affect the behavior of certain functions, and in some cases its
+value can be changed during runtime.
+
+X<|$*COLLATION>
+=head4 C<$*COLLATION>
+
+This is a L<Collation|/type/Collation> object that can be used to
+configure Unicode collation levels.
+
+X<|$*TOLERANCE>
+=head4 C<$*TOLERANCE>
+
+Variable used by the L<C<=~=>|/routine/=~=> operator, and any operations that
+depend on it, to decide if two values are approximately equal. Defaults to
+C<1e-15>.
+
+X<|$*DEFAULT-READ-ELEMS>
+=head4 C<$*DEFAULT-READ-ELEMS>
+
+Affects the number of bytes read by default by
+L<C<IO::Handle.read>|/type/IO::Handle#method_read>. Its default value is 65536.
+
 =head1 Naming conventions
 
 It is helpful to know our naming conventions in order to understand what codes
-do directly. However, there is not yet a conventions list covering anywhere.
-Still we list several conventions that are widely held.
+do directly. However, there is not yet (and might never be) an official list of;
+still, we list several conventions that are widely held.
 
 =item1 Subs and methods from the built-ins library try to have single-word names
 when a good one could be found. In cases where there are two or more words

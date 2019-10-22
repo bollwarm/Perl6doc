@@ -1,10 +1,10 @@
-=begin pod :tag<perl6>
+=begin pod :kind("Language") :subkind("Language") :category("fundamental")
 
 =TITLE Traits
 
 =SUBTITLE Compile-time specification of behavior made easy
 
-In Perl 6,  I<traits> are compiler hooks attached to objects and classes that
+In Raku,  I<traits> are compiler hooks attached to objects and classes that
 modify their default behavior, functionality or representation. As such compiler
 hooks, they are defined in compile time, although they can be used in runtime.
 
@@ -28,16 +28,16 @@ The most common form, involving two classes, one that is being defined and the
 other existing, L<defines parenthood|/syntax/is>. C<A is B>, if both are
 classes, defines A as a subclass of B.
 
-L<C<is DEPRECATED>|/Attribute#trait_is_DEPRECATED> can be applied to classes,
-Attributes or Routines, marks them as deprecated and issues a message, if
-provided.
+L<C<is DEPRECATED>|/type/Attribute#trait_is_DEPRECATED> can be applied to
+classes, Attributes or Routines, marks them as deprecated and issues a message,
+if provided.
 
 Several instances of C<is> are translated directly into attributes for the class
 they refer to: C<rw>, C<nativesize>, C<ctype>, C<unsigned>, C<hidden>,
 C<array_type>.
 
 The X<Uninstantiable representation trait> is not so much related to the
-representation as related to what can be done with an specific class; it
+representation as related to what can be done with a specific class; it
 effectively prevents the creation of instances of the class in any
 possible way.
 
@@ -63,7 +63,8 @@ cannot create an instance of this type (don't-instantiate)>.
 
 Since the C<is> trait refers, in general, to the nature of the class or object
 they are applied to, they are used extensively in
-L<native calls|/language/nativecall> to L<specify the representation|/language/nativecall#Specifying_the_native_representation>
+L<native calls|/language/nativecall> to
+L<specify the representation|/language/nativecall#Specifying_the_native_representation>
 of the data structures that are going to be handled by the native functions via
 the C<is repr> suffix; at the same time, C<is native> is used for the routines
 that are actually implemented via native functions. These are the
@@ -86,12 +87,12 @@ methods are also native.
 in C; see L<this|/language/nativecall#CUnions> for an example.
 
 On the other hand, X<P6opaque> is the default representation used for
-all objects in Perl 6.
+all objects in Raku.
 
-    m: class Thar {};
+    class Thar {};
     say Thar.REPR;    #OUTPUT: «P6opaque␤»
 
-The L<meta object protocol|/language/mop> uses it by default for every object
+The L<metaobject protocol|/language/mop> uses it by default for every object
 and class unless specified otherwise; for that reason, it is in general not
 necessary unless you are effectively working with that interface.
 
@@ -99,11 +100,11 @@ necessary unless you are effectively working with that interface.
 =head2 C<is> on routines
 
 The C<is> trait can be used on the definition of methods and routines to
-establish L<precedence|/functions#Precedence> and
+establish L<precedence|/language/functions#Precedence> and
 L<associativity|/language/functions#Associativity>. They act as a L<sub defined
 using C<trait_mod>|/type/Sub#Traits> which take as argument the types and names
 of the traits that are going to be added. In the case of subroutines, traits
-would be a way of adding functionality which cuts accross class and role
+would be a way of adding functionality which cuts across class and role
 hierarchies, or can even be used to add behaviors to independently defined
 routines.
 

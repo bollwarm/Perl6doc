@@ -1,4 +1,4 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("basic")
 
 =TITLE class Str
 
@@ -6,16 +6,24 @@
 
     class Str is Cool does Stringy { }
 
-Built-in class for strings. Objects of type C<Str> are immutable.
+Built-in class for strings. Objects of type C<Str> are immutable, but
+L<read the FAQ to understand precisely what this means|/language/faq#If_Str_is_immutable,_how_does_s///_work?_If_Int_is_immutable,_how_does_$i%2B%2B_work?>.
 
 =head1 Methods
 
 =head2 routine chop
 
-    multi sub    chop(Str:D --> Str:D)
-    multi method chop(Str:D: $chars = 1 --> Str:D)
+     multi method chop(Str:D:)
+     multi method chop(Str:D: Int() $chopping)
 
-Returns the string with C<$chars> characters removed from the end.
+Returns the string with C<$chopping> characters removed from the end.
+
+    say "Whateverable".chop(3.6);  # OUTPUT: «Whatevera␤»
+    my $string= "Whateverable";
+    say $string.chop("3");         # OUTPUT: «Whatevera␤»
+
+The C<$chopping> positional is converted to C<Int> before being applied to the
+string.
 
 =head2 routine chomp
 
@@ -32,6 +40,40 @@ Examples:
     say chomp("abc\n");       # OUTPUT: «abc␤»
     say "def\r\n".chomp;      # OUTPUT: «def␤» NOTE: \r\n is a single grapheme!
     say "foo\r".chomp;        # OUTPUT: «foo␤»
+
+=head2 method contains
+
+Defined as:
+
+    multi method contains(Str:D: Cool:D $needle --> Bool:D)
+    multi method contains(Str:D: Str:D $needle --> Bool:D)
+    multi method contains(Str:D: Cool:D $needle, Int(Cool:D) $pos --> Bool:D)
+    multi method contains(Str:D: Str:D $needle, Int:D $pos --> Bool:D)
+
+Coerces the invocant (represented in the signature by C<Str:D:>, that would be
+the I<haystack>) and first argument (which we are calling C<$needle>) to
+L<C<Str>|/type/Str> (if it's not already, that is, in the first and third
+C<multi> forms), and searches for C<$needle> in the invocant (or I<haystack>)
+starting from C<$pos> characters into the string, if that is included as an
+argument. Returns C<True> if C<$needle> is found. C<$pos> is an optional
+parameter, and if it's not present, C<contains> will search from the beginning
+of the string (using the first two forms of the C<multi>).
+
+    say <Hello, World>.contains('Hello', 0);   # OUTPUT: «True␤»
+    say "Hello, World".contains('Hello');      # OUTPUT: «True␤»
+    say "Hello, World".contains('hello');      # OUTPUT: «False␤»
+    say "Hello, World".contains('Hello', 1);   # OUTPUT: «False␤»
+    say "Hello, World".contains(',');          # OUTPUT: «True␤»
+    say "Hello, World".contains(',', 3);       # OUTPUT: «True␤»
+    say "Hello, World".contains(',', 10);      # OUTPUT: «False␤»
+
+In the first example, coercion is used to convert a C<List> to a Str.
+In the 4th case, the C<'Hello'> string is not found since we have
+started looking at the second position in it (index 1). Note that
+because of how a L<List|/type/List> or L<Array|/type/Array> is
+L<coerced|/type/List#method_Str> into a L<Str|/type/Str>, the results
+may sometimes be surprising. See
+L<traps|/language/traps#Lists_become_strings,_so_beware_.contains()>.
 
 =head2 routine lc
 
@@ -125,7 +167,7 @@ this currently erroneously returns the number of codepoints instead.
 
     multi method encode(Str:D $encoding = 'utf8', :$replacement, Bool() :$translate-nl = False, :$strict)
 
-Returns a L<Blob> which represents the original string in the given
+Returns a L<Blob|/type/Blob> which represents the original string in the given
 encoding and normal form. The actual return type is as specific as
 possible, so C<$str.encode('UTF-8')> returns a C<utf8> object,
 C<$str.encode('ISO-8859-1')> a C<buf8>. If C<:translate-nl> is set to
@@ -149,16 +191,27 @@ replacement set of characters, C<:replacement> is understood as a C<Bool>:
 say $str.encode("ascii", :replacement).decode("ascii"); # OUTPUT: «?or is mighty␤»
 
 If C<:replacement> is not set or assigned a value, the error C<Error encoding
-ASCII string: could not encode codepoint 222> will be issued.
+ASCII string: could not encode codepoint 222> will be issued (in this case,
+since þ is codepoint 222).
+
+Since the C<Blob> returned by C<encode> is the original string in normal form,
+and every element of a C<Blob> is a byte, you can obtain the length in bytes of
+a string by calling a method that returns the size of the C<Blob> on it:
+
+=for code
+say "þor".encode.bytes; # OUTPUT: «4␤»
+say "þor".encode.elems; # OUTPUT: «4␤»
 
 =head2 routine index
 
-    multi sub    index(Cool $s, Str:D $needle, Cool $startpos = 0 --> Int)
-    multi method index(Cool $needle, Cool $startpos = 0 --> Int)
+    multi method index(Str:D: Cool:D $needle --> Int:D)
+    multi method index(Str:D: Str:D $needle --> Int:D)
+    multi method index(Str:D: Cool:D $needle, Cool:D $pos --> Int:D)
+    multi method index(Str:D: Str:D $needle, Int:D $pos --> Int:D)
 
-Searches for C<$needle> in the string starting from C<$startpos>. It returns
-the offset into the string where C<$needle> was found, and C<Nil> if it was not
-found.
+Searches for C<$needle> in the string starting from C<$pos> (if present). It
+returns the offset into the string where C<$needle> was found, and C<Nil> if it
+was not found.
 
 Examples:
 
@@ -169,6 +222,9 @@ Examples:
     say index "Camelia is a butterfly", "Onion"; # OUTPUT: «Nil␤»
 
     say index("Camelia is a butterfly", "Onion").defined ?? 'OK' !! 'NOT'; # OUTPUT: «NOT␤»
+
+Other forms of index, including a sub, are
+L<inherited from C<Cool>|/type/Cool#routine_index>. Check them there.
 
 =head2 routine rindex
 
@@ -207,11 +263,12 @@ after the previous match.
 
     method match($pat, :continue(:$c), :pos(:$p), :global(:$g), :overlap(:$ov), :exhaustive(:$ex), :st(:$nd), :rd(:$th), :$nth, :$x --> Match)
 
-Performs a match of the string against C<$pat> and returns a L<Match> object if
-there is a successful match; it returns C<(Any)> otherwise. Matches are stored in the
-L<default match variable C<$/>|/language/variables#index-entry-match_variable>.
-If C<$pat> is not a L<Regex> object, match will coerce the argument to a
-Str and then perform a literal match against C<$pat>.
+Performs a match of the string against C<$pat> and returns a
+L<Match|/type/Match> object if there is a successful match; it returns C<(Any)>
+otherwise. Matches are stored in the L<default match variable
+C<$/>|/language/variables#index-entry-match_variable>. If C<$pat> is not a
+L<Regex|/type/Regex> object, match will coerce the argument to a Str and then
+perform a literal match against C<$pat>.
 
 A number of optional named parameters can be specified, which alter how the match is performed.
 
@@ -242,20 +299,20 @@ that start at the same position.
 
 =item :st, :nd, :rd, :nth
 
-Returns the nth match in the string. The argument can be a L<Numeric> or
-an L<Iterable> producing monotonically increasing numbers (that is, the
-next produced number must be larger than the previous one). The L<Iterable>
+Returns the nth match in the string. The argument can be a L<Numeric|/type/Numeric> or
+an L<Iterable|/type/Iterable> producing monotonically increasing numbers (that is, the
+next produced number must be larger than the previous one). The L<Iterable|/type/Iterable>
 will be lazily L<reified|/language/glossary#index-entry-Reify> and if
 non-monotonic sequence is encountered an exception will be thrown.
 
-If L<Iterable> argument is provided the return value and C<$/> variable
-will be set to a possibly-empty L<List> of L<Match> objects.
+If L<Iterable|/type/Iterable> argument is provided the return value and C<$/> variable
+will be set to a possibly-empty L<List|/type/List> of L<Match|/type/Match> objects.
 
 =item :x
 
 Takes as an argument the number of matches to return, stopping once the
-specified number of matches has been reached. The value must be a L<Numeric> or
-a L<Range>; other values will cause C<.match> to return a L<Failure> containing
+specified number of matches has been reached. The value must be a L<Numeric|/type/Numeric> or
+a L<Range|/type/Range>; other values will cause C<.match> to return a L<Failure|/type/Failure> containing
 C<X::Str::Match::x> exception.
 
 Examples:
@@ -282,8 +339,8 @@ Defined as:
 
     method Numeric(Str:D: --> Numeric:D)
 
-Coerces the string to L<Numeric>. L<Fails|/routine/fail> with C<X::Str::Numeric>
-if the coercion cannot be done.
+Coerces the string to L<Numeric|/type/Numeric> using semantics equivalent to L<val|/routine/val> routine.
+L<Fails|/routine/fail> with C<X::Str::Numeric> if the coercion to a number cannot be done.
 
 Only Unicode characters with property C<Nd>, as well as leading and trailing
 whitespace are allowed, with the special case of the empty string being coerced
@@ -300,8 +357,8 @@ Defined as:
 
     method Int(Str:D: --> Int:D)
 
-Coerces the string to L<Int>, using the same rules as
-L«C<Str.Numeric>|/type/Str#method_Numeric>».
+Coerces the string to L<Int|/type/Int>, using the same rules as
+L«C<Str.Numeric>|/type/Str#method_Numeric».
 
 =head2 method Rat
 
@@ -309,9 +366,9 @@ Defined as:
 
     method Rat(Str:D: --> Rational:D)
 
-Coerces the string to a L<Rat> object, using the same rules as
-L«C<Str.Numeric>|/type/Str#method_Numeric>». If the denominator is larger
-than 64-bits is it still kept and no degradation to L<Num> occurs.
+Coerces the string to a L<Rat|/type/Rat> object, using the same rules as
+L«C<Str.Numeric>|/type/Str#method_Numeric». If the denominator is larger
+than 64-bits is it still kept and no degradation to L<Num|/type/Num> occurs.
 
 =head2 method Bool
 
@@ -329,7 +386,7 @@ Returns C<False> if the string is empty, C<True> otherwise.
 Performs the reverse of L«C<base>|/routine/base» by converting a string
 with a base-C<$radix> number to its L«C<Numeric>|/type/Numeric»
 equivalent. Will L«C<fail>|/routine/fail» if radix is not in range C<2..36>
-or of the string being parsed contains characters that are not valid
+or if the string being parsed contains characters that are not valid
 for the specified base.
 
     1337.base(32).parse-base(32).say; # OUTPUT: «1337␤»
@@ -343,7 +400,7 @@ See also: L«:16<FF> syntax for number literals|/syntax/Number%20literals»
     sub    parse-names(Str:D $names  --> Str:D)
     method parse-names(Str:D $names: --> Str:D)
 
-B<DEPRECATED>. Use L<uniparse> instead. Existed in Rakudo implementation as a proof of viability
+B<DEPRECATED>. Use L<uniparse|/routine/uniparse> instead. Existed in Rakudo implementation as a proof of viability
 implementation before being renamed and will be removed when 6.e language is released.
 
 =head2 routine uniparse
@@ -360,35 +417,35 @@ around character names is ignored.
     'TWO HEARTS, BUTTERFLY'.uniparse.say; # OUTPUT: «💕🦋␤»
 
 Note that unlike C<\c[...]> construct available in string interpolation,
-C<uniparse> does not accept decimal numerical values. Use L<chr> routine to
+C<uniparse> does not accept decimal numerical values. Use L<chr|/routine/chr> routine to
 convert those:
 
     say "\c[1337]"; # OUTPUT: «Թ␤»
     say '1337'.chr; # OUTPUT: «Թ␤»
 
 I<Note:> before being standardized in 2017.12, this routine was known
-under its working name of L<parse-names>. This denomination will be removed in the 6.e version.
+under its working name of L<parse-names|/routine/parse-names>. This denomination will be removed in the 6.e version.
 
 =head2 routine split
 
 =for code :method
 multi sub    split(  Str:D $delimiter, Str:D $input, $limit = Inf,
-  :$skip-empty, :$v, :$k, :$kv, :$p --> Positional)
+  :$skip-empty, :$v, :$k, :$kv, :$p)
 =for code :method
 multi sub    split(Regex:D $delimiter, Str:D $input, $limit = Inf,
-  :$skip-empty, :$v, :$k, :$kv, :$p --> Positional)
+  :$skip-empty, :$v, :$k, :$kv, :$p)
 =for code :method
 multi sub    split(List:D $delimiters, Str:D $input, $limit = Inf,
-  :$skip-empty, :$v, :$k, :$kv, :$p --> Positional)
+  :$skip-empty, :$v, :$k, :$kv, :$p)
 =for code :method
 multi method split(Str:D:   Str:D $delimiter, $limit = Inf,
-  :$skip-empty, :$v, :$k, :$kv, :$p --> Positional)
+  :$skip-empty, :$v, :$k, :$kv, :$p)
 =for code :method
 multi method split(Str:D: Regex:D $delimiter, $limit = Inf,
-  :$skip-empty, :$v, :$k, :$kv, :$p --> Positional)
+  :$skip-empty, :$v, :$k, :$kv, :$p)
 =for code :method
 multi method split(Str:D: List:D $delimiters, $limit = Inf,
-  :$skip-empty, :$v, :$k, :$kv, :$p --> Positional)
+  :$skip-empty, :$v, :$k, :$kv, :$p)
 
 Splits a string up into pieces based on delimiters found in the string.
 
@@ -462,11 +519,11 @@ Examples:
     multi method comb(Str:D $input: Regex:D $matcher, $limit = Inf, Bool :$match)
     multi method comb(Str:D $input: Int:D $size, $limit = Inf)
 
-Searches for C<$matcher> in C<$input> and returns a list of non-overlapping
+Searches for C<$matcher> in C<$input> and returns a L<Seq|/type/Seq> of non-overlapping
 matches limited to at most C<$limit> matches.  If C<$matcher> is a Regex,
 each C<Match> object is converted to a C<Str>, unless C<$match> is set.
 
-If no matcher is supplied, a list of characters in the string is returned,
+If no matcher is supplied, a Seq of characters in the string is returned,
 as if the matcher was C<rx/./>.
 
 Examples:
@@ -481,15 +538,17 @@ Examples:
     say comb(/.<(.)>/, "<>[]()").perl;   # OUTPUT: «(">", "]", ")").Seq␤»
 
 If the matcher is an integer value, C<comb> behaves as if the matcher
-was C<rx/ . ** {$matcher} />, but which is optimized to be much faster.
+was C<rx/ . ** {1..$matcher} />, but which is optimized to be much faster.
 
 Note that a Regex matcher may control which portion of the matched text
 is returned by using features which explicitly set the top-level capture.
 
 =head2 routine lines
 
-    multi sub    lines(Str:D $input, $limit = Inf --> Positional)
-    multi method lines(Str:D $input: $limit = Inf --> Positional)
+Defined as:
+
+    multi method lines(Str:D: $limit)
+    multi method lines(Str:D:)
 
 Returns a list of lines (without trailing newline characters), i.e. the
 same as a call to C<$input.comb( / ^^ \N* /, $limit )> would.
@@ -501,10 +560,25 @@ Examples:
     say "a\nb".lines.elems;    # OUTPUT: «2␤»
     say "a\n".lines.elems;     # OUTPUT: «1␤»
 
+You can limit the
+number of lines returned by setting the C<$limit> variable to a non-zero,
+non-C<Infinity> value:
+
+    say <not there yet>.join("\n").lines( 2 ); # OUTPUT: «(not there)␤»
+
+B«DEPRECATED as of C<6.d> language», the C<:count> argument was used
+to return the total number of lines:
+
+    say <not there yet>.join("\n").lines( :count ); # OUTPUT: «3␤»
+
+Use L<elems|/routine/elems> call on the returned L<Seq|/type/Seq> instead:
+
+    say <not there yet>.join("\n").lines.elems; # OUTPUT: «3␤»
+
 =head2 routine words
 
-    multi sub    words(Str:D $input, $limit = Inf --> Positional)
-    multi method words(Str:D $input: $limit = Inf --> Positional)
+    multi method words(Str:D: $limit)
+    multi method words(Str:D:)
 
 Returns a list of non-whitespace bits, i.e. the same as a call to
 C<$input.comb( / \S+ /, $limit )> would.
@@ -515,6 +589,13 @@ Examples:
     say "hello world".words.perl;  # OUTPUT: «("hello", "world").Seq␤»
     say "foo:bar".words.perl;      # OUTPUT: «("foo:bar",).Seq␤»
     say "foo:bar\tbaz".words.perl; # OUTPUT: «("foo:bar", "baz").Seq␤»
+
+It can also be used as a subroutine, turning the first argument into the
+invocant. C<$limit> is optional, but if it is provided (and not equal to
+C<Inf>), it will return only the first C<$limit> words.
+
+    say words("I will be very brief here", 2); # OUTPUT: «(I will)␤»
+
 
 =head2 routine flip
 
@@ -527,330 +608,6 @@ Examples:
 
     "Perl".flip;  # RESULT: «lreP»
     "ABBA".flip;  # RESULT: «ABBA»
-
-=head2 routine sprintf
-
- multi sub sprintf( Str:D $format, *@args --> Str:D)
-
-This function is mostly identical to the C library C<sprintf> and
-C<printf> functions.  The only difference between the two
-functions is that C<sprintf> returns a string while the C<printf> function
-writes to a filehandle. C<sprintf> returns a C<Str>, not a literal.
-
-The C<$format> is scanned for C<%> characters. Any C<%> introduces a
-format token. Format tokens have the following grammar:
-
- grammar Str::SprintfFormat {
-  regex format_token { '%': <index>? <precision>? <modifier>? <directive> }
-  token index { \d+ '$' }
-  token precision { <flags>? <vector>? <precision_count> }
-  token flags { <[ \x20 + 0 \# \- ]>+ }
-  token precision_count { [ <[1..9]>\d* | '*' ]? [ '.' [ \d* | '*' ] ]? }
-  token vector { '*'? v }
-  token modifier { < ll l h V q L > }
-  token directive { < % c s d u o x e f g X E G b p n i D U O F > }
- }
-
-Directives guide the use (if any) of the arguments. When a directive
-(other than C<%>) is used, it indicates how the next argument
-passed is to be formatted into the string to be created.
-
-NOTE: The information below is for a fully functioning C<sprintf>
-implementation which hasn't been achieved yet. Formats or features not
-yet implemented are marked NYI.
-
-The directives are:
-
-=begin table
-
- % |  a literal percent sign
- c |  a character with the given codepoint
- s |  a string
- d |  a signed integer, in decimal
- u |  an unsigned integer, in decimal
- o |  an unsigned integer, in octal
- x |  an unsigned integer, in hexadecimal
- e |  a floating-point number, in scientific notation
- f |  a floating-point number, in fixed decimal notation
- g |  a floating-point number, in %e or %f notation
- X |  like x, but using uppercase letters
- E |  like e, but using an uppercase "E"
- G |  like g, but with an uppercase "E" (if applicable)
- b |  an unsigned integer, in binary
-
-=end table
-
-Compatibility:
-
-=begin table
-
- i |  a synonym for %d
- D |  a synonym for %ld
- U |  a synonym for %lu
- O |  a synonym for %lo
- F |  a synonym for %f
-
-=end table
-
-Modifiers change the meaning of format directives, but are largely
-no-ops (the semantics are still being determined).
-
-=begin table
-
-     | h  | interpret integer as native "short" (typically int16)
- NYI | l  | interpret integer as native "long" (typically int32 or int64)
- NYI | ll | interpret integer as native "long long" (typically int64)
- NYI | L  | interpret integer as native "long long" (typically uint64)
- NYI | q  | interpret integer as native "quads" (typically int64 or larger)
-
-=end table
-
-Between the C<%> and the format letter, you may specify several
-additional attributes controlling the interpretation of the format. In
-order, these are:
-
-B<format parameter index>
-
-An explicit format parameter index, such as C<2$>. By default,
-C<sprintf> will format the next unused argument in the list, but this
-allows you to take the arguments out of order:
-
-  sprintf '%2$d %1$d', 12, 34;      # OUTPUT: «34 12␤»
-  sprintf '%3$d %d %1$d', 1, 2, 3;  # OUTPUT: «3 1 1␤»
-
-B<flags>
-
-One or more of:
-
-=begin table
-   space |  prefix non-negative number with a space
-   +     |  prefix non-negative number with a plus sign
-   -     |  left-justify within the field
-   0     |  use leading zeros, not spaces, for required padding
-   #     |  ensure the leading "0" for any octal,
-         |  prefix non-zero hexadecimal with "0x" or "0X",
-         |  prefix non-zero binary with "0b" or "0B"
-=end table
-
-For example:
-
-  sprintf '<% d>',  12;   # RESULT: «< 12>␤»
-  sprintf '<% d>',   0;   # RESULT: «< 0>"»
-  sprintf '<% d>', -12;   # RESULT: «<-12>␤»
-  sprintf '<%+d>',  12;   # RESULT: «<+12>␤»
-  sprintf '<%+d>',   0;   # RESULT: «<+0>"»
-  sprintf '<%+d>', -12;   # RESULT: «<-12>␤»
-  sprintf '<%6s>',  12;   # RESULT: «<    12>␤»
-  sprintf '<%-6s>', 12;   # RESULT: «<12    >␤»
-  sprintf '<%06s>', 12;   # RESULT: «<000012>␤»
-  sprintf '<%#o>',  12;   # RESULT: «<014>␤»
-  sprintf '<%#x>',  12;   # RESULT: «<0xc>␤»
-  sprintf '<%#X>',  12;   # RESULT: «<0XC>␤»
-  sprintf '<%#b>',  12;   # RESULT: «<0b1100>␤»
-  sprintf '<%#B>',  12;   # RESULT: «<0B1100>␤»
-
-When a space and a plus sign are given as the flags at once, the space
-is ignored:
-
-  sprintf '<%+ d>', 12;   # RESULT: «<+12>␤»
-  sprintf '<% +d>', 12;   # RESULT: «<+12>␤»
-
-When the C<#> flag and a precision are given in the C<%o> conversion, the necessary number of 0s is added at the beginning. If the value of the number is C<0> and the precision is 0, it will output nothing; precision 0 or smaller than the actual number of elements will return the number with 0 to the left:
-
-  say sprintf '<%#.5o>', 0o12;     # OUTPUT: «<00012>␤»
-  say sprintf '<%#.5o>', 0o12345;  # OUTPUT: «<012345>␤»
-  say sprintf '<%#.0o>', 0;        # OUTPUT: «<>␤» zero precision and value 0 results in no output!
-  say sprintf '<%#.0o>', 0o1       # OUTPUT: «<01>␤»
-
-B<vector flag>
-
-This flag tells Perl 6 to interpret the supplied string as a vector of
-integers, one for each character in the string. Perl 6 applies the
-format to each integer in turn, then joins the resulting strings with
-a separator (a dot, C<'.'>, by default). This can be useful for
-displaying ordinal values of characters in arbitrary strings:
-
-=begin code :skip-test
-  NYI sprintf "%vd", "AB\x{100}";           # "65.66.256"
-=end code
-
-You can also explicitly specify the argument number to use for the
-join string using something like C<*2$v>; for example:
-
-=begin code :skip-test
-  NYI sprintf '%*4$vX %*4$vX %*4$vX',       # 3 IPv6 addresses
-          @addr[1..3], ":";
-=end code
-
-B<(minimum) width>
-
-Arguments are usually formatted to be only as wide as required to
-display the given value. You can override the width by putting a
-number here, or get the width from the next argument (with C<*> ) or
-from a specified argument (e.g., with C<*2$>):
-
- sprintf "<%s>", "a";           # RESULT: «<a>␤»
- sprintf "<%6s>", "a";          # RESULT: «<     a>␤»
- sprintf "<%*s>", 6, "a";       # RESULT: «<     a>␤»
-=begin code :skip-test
- NYI sprintf '<%*2$s>', "a", 6; # "<     a>"
-=end code
- sprintf "<%2s>", "long";       # RESULT: «<long>␤» (does not truncate)
-
-If a field width obtained through C<*> is negative, it has the same
-effect as the C<-> flag: left-justification.
-
-B<precision, or maximum width>
-
-You can specify a precision (for numeric conversions) or a maximum
-width (for string conversions) by specifying a C<.> followed by a
-number. For floating-point formats, except C<g> and C<G>, this
-specifies how many places right of the decimal point to show (the
-default being 6). For example:
-
-  # these examples are subject to system-specific variation
-  sprintf '<%f>', 1;    # RESULT: «"<1.000000>"␤»
-  sprintf '<%.1f>', 1;  # RESULT: «"<1.0>"␤»
-  sprintf '<%.0f>', 1;  # RESULT: «"<1>"␤»
-  sprintf '<%e>', 10;   # RESULT: «"<1.000000e+01>"␤»
-  sprintf '<%.1e>', 10; # RESULT: «"<1.0e+01>"␤»
-
-For "g" and "G", this specifies the maximum number of digits to show,
-including those prior to the decimal point and those after it; for
-example:
-
-  # These examples are subject to system-specific variation.
-  sprintf '<%g>', 1;        # RESULT: «<1>␤»
-  sprintf '<%.10g>', 1;     # RESULT: «<1>␤»
-  sprintf '<%g>', 100;      # RESULT: «<100>␤»
-  sprintf '<%.1g>', 100;    # RESULT: «<1e+02>␤»
-  sprintf '<%.2g>', 100.01; # RESULT: «<1e+02>␤»
-  sprintf '<%.5g>', 100.01; # RESULT: «<100.01>␤»
-  sprintf '<%.4g>', 100.01; # RESULT: «<100>␤»
-
-For integer conversions, specifying a precision implies that the
-output of the number itself should be zero-padded to this width, where
-the C<0> flag is ignored:
-
-(Note that this feature currently works for unsigned integer conversions, but not
-for signed integer.)
-
-  =begin code :skip-test
-  sprintf '<%.6d>', 1;      # <000001>
-  NYI sprintf '<%+.6d>', 1;     # <+000001>
-  NYI sprintf '<%-10.6d>', 1;   # <000001    >
-  sprintf '<%10.6d>', 1;    # <    000001>
-  NYI sprintf '<%010.6d>', 1;   #     000001>
-  NYI sprintf '<%+10.6d>', 1;   # <   +000001>
-  sprintf '<%.6x>', 1;         # RESULT: «<000001>␤»
-  sprintf '<%#.6x>', 1;        # RESULT: «<0x000001>␤»
-  sprintf '<%-10.6x>', 1;      # RESULT: «<000001    >␤»
-  sprintf '<%10.6x>', 1;       # RESULT: «<    000001>␤»
-  sprintf '<%010.6x>', 1;      # RESULT: «<    000001>␤»
-  sprintf '<%#10.6x>', 1;      # RESULT: «<  0x000001>␤»
-  =end code
-
-For string conversions, specifying a precision truncates the string to
-fit the specified width:
-
-  sprintf '<%.5s>', "truncated";   # RESULT: «<trunc>␤»
-  sprintf '<%10.5s>', "truncated"; # RESULT: «<     trunc>␤»
-
-You can also get the precision from the next argument using C<.*>, or
-from a specified argument (e.g., with C<.*2$>):
-
-  =begin code :skip-test
-  sprintf '<%.6x>', 1;       # RESULT: «<000001>␤»
-  sprintf '<%.*x>', 6, 1;    # RESULT: «<000001>␤»
-  NYI sprintf '<%.*2$x>', 1, 6;  # "<000001>"
-  NYI sprintf '<%6.*2$x>', 1, 4; # "<  0001>"
-  =end code
-
-If a precision obtained through C<*> is negative, it counts as having
-no precision at all:
-
-  sprintf '<%.*s>',  7, "string";   # RESULT: «<string>␤»
-  sprintf '<%.*s>',  3, "string";   # RESULT: «<str>␤»
-  sprintf '<%.*s>',  0, "string";   # RESULT: «<>␤»
-  sprintf '<%.*s>', -1, "string";   # RESULT: «<string>␤»
-  sprintf '<%.*d>',  1, 0;          # RESULT: «<0>␤»
-  sprintf '<%.*d>',  0, 0;          # RESULT: «<>␤»
-  sprintf '<%.*d>', -1, 0;          # RESULT: «<0>␤»
-
-B<size>
-
-For numeric conversions, you can specify the size to interpret the
-number as using C<l>, C<h>, C<V>, C<q>, C<L>, or C<ll>. For integer
-conversions (C<d> C<u> C<o> C<x> C<X> C<b> C<i> C<D> C<U> C<O>),
-numbers are usually assumed to be whatever the default integer size is
-on your platform (usually 32 or 64 bits), but you can override this to
-use instead one of the standard C types, as supported by the compiler
-used to build Perl 6:
-
-(Note: None of the following have been implemented.)
-
-=begin table
-
-   hh          | interpret integer as C type "char" or "unsigned char"
-   h           | interpret integer as C type "short" or "unsigned short"
-   j           | interpret integer as C type "intmax_t", only with a C99 compiler (unportable)
-   l           | interpret integer as C type "long" or "unsigned long"
-   q, L, or ll | interpret integer as C type "long long", "unsigned long long", or "quad" (typically 64-bit integers)
-   t           | interpret integer as C type "ptrdiff_t"
-   z           | interpret integer as C type "size_t"
-=end table
-
-B<order of arguments>
-
-Normally, C<sprintf> takes the next unused argument as the value to
-format for each format specification. If the format specification uses
-C<*> to require additional arguments, these are consumed from the
-argument list in the order they appear in the format specification
-before the value to format. Where an argument is specified by an
-explicit index, this does not affect the normal order for the
-arguments, even when the explicitly specified index would have been
-the next argument.
-
-So:
-
-   my $a = 5; my $b = 2; my $c = 'net';
-   sprintf "<%*.*s>", $a, $b, $c; # RESULT: «<   ne>␤»
-
-uses C<$a> for the width, C<$b> for the precision, and C<$c> as the value to
-format; while:
-
-=for code :skip-test
-NYI sprintf '<%*1$.*s>', $a, $b;
-
-would use C<$a> for the width and precision and C<$b> as the value to format.
-
-Here are some more examples; be aware that when using an explicit
-index, the C<$> may need escaping:
-
-=for code :skip-test<a part is not yet implemented>
-sprintf "%2\$d %d\n",      12, 34;     # RESULT: «34 12␤␤»
-sprintf "%2\$d %d %d\n",   12, 34;     # RESULT: «34 12 34␤␤»
-sprintf "%3\$d %d %d\n",   12, 34, 56; # RESULT: «56 12 34␤␤»
-NYI sprintf "%2\$*3\$d %d\n",  12, 34,  3; # " 34 12\n"
-NYI sprintf "%*1\$.*f\n",       4,  5, 10; # "5.0000\n"
-
-Other examples:
-
-=for code :skip-test
- NYI sprintf "%ld a big number", 4294967295;
- NYI sprintf "%%lld a bigger number", 4294967296;
- sprintf('%c', 97);                  # RESULT: «a␤»
- sprintf("%.2f", 1.969);             # RESULT: «1.97␤»
- sprintf("%+.3f", 3.141592);         # RESULT: «+3.142␤»
- sprintf('%2$d %1$d', 12, 34);       # RESULT: «34 12␤»
- sprintf("%x", 255);                 # RESULT: «ff␤»
-
-Special case: C«sprintf("<b>%s</b>\n", "Perl 6")» will not work, but
-one of the following will:
-
- sprintf Q:b "<b>%s</b>\n",  "Perl 6"; # RESULT: «<b>Perl 6</b>␤␤»
- sprintf     "<b>\%s</b>\n", "Perl 6"; # RESULT: «<b>Perl 6</b>␤␤»
- sprintf     "<b>%s\</b>\n", "Perl 6"; # RESULT: «<b>Perl 6</b>␤␤»
 
 =head2 method starts-with
 
@@ -878,15 +635,14 @@ Returns the invocant string where C<$matcher> is replaced by C<$replacement>
 (or the original string, if no match was found).
 
 There is an in-place syntactic variant of C<subst> spelled
-L«C<s/matcher/replacement/>|/syntax/s$SOLIDUS%20$SOLIDUS%20$SOLIDUS» and with
+C<s/matcher/replacement/> and with
 adverb following the C<s> or inside the matcher.
 
-C<$matcher> can be a L<Regex>, or a literal C<Str>. Non-Str matcher arguments
-of type L<Cool> are coerced to C<Str> for literal matching.
-If a L<Regex> C<$matcher> is used, the
-L«C<$/> special variable|/syntax/$$SOLIDUS» will be set to C<Nil> (if no
-matches occurred), a L<Match> object, or a L<List> of L<Match> objects (if
-multi-match options like C<:g> are used).
+C<$matcher> can be a L<Regex|/type/Regex>, or a literal C<Str>. Non-Str matcher arguments of
+type L<Cool|/type/Cool> are coerced to C<Str> for literal matching. If a L<Regex|/type/Regex>
+C<$matcher> is used, the L«C<$/> special variable|/syntax/$$SOLIDUS» will be set
+to C<Nil> (if no matches occurred), a L<Match|/type/Match> object, or a L<List|/type/List> of L<Match|/type/Match>
+objects (if multi-match options like C<:g> are used).
 
 =head3 Literal replacement substitution
 
@@ -896,9 +652,9 @@ multi-match options like C<:g> are used).
 
 =head3 Callable
 
-The replacement can be a L<Callable> in which the current L<Match> object will
+The replacement can be a L<Callable|/type/Callable> in which the current L<Match|/type/Match> object will
 be placed in the C<$/> variable, as well as the C<$_> topic variable. Using a
-L<Callable> as replacement is how you can refer to any of the captures created
+L<Callable|/type/Callable> as replacement is how you can refer to any of the captures created
 in the regex:
 
     # Using capture from $/ variable (the $0 is the first positional capture)
@@ -963,18 +719,19 @@ The C<:nth> adverb has readable English-looking variants:
 
 =head2 method subst-mutate
 
-B<NOTE:> I<<< C<.subst-mutate> will be deprecated in future language
-versions. You can use L<subst> with
-L«C<.=> method call assignment operator|/routine/.=.html» or
-L«C<s///> substitution operator|/syntax/s$SOLIDUS$SOLIDUS$SOLIDUS» instead. >>>
+B<NOTE:> I<<< C<.subst-mutate> is deprecated in the 6.d version, and will be
+removed in future ones. You can use L<subst|/routine/subst> with L«C<.=> method
+call assignment operator|/routine/.=» or L«C<s///> substitution
+operator|/syntax/s$SOLIDUS$SOLIDUS$SOLIDUS» instead. >>>
 
-Where L<subst> returns the modified string and leaves the original
-unchanged, it is possible to mutate the original string by using
-C<subst-mutate>. If the match is successful, the method returns a L<Match>
-object representing the successful match, otherwise returns L<Nil>. If C<:nth>
-(or one of its aliases) with L<Iterable> value, C<:g>, C<:global>, or C<:x>
-arguments are used, returns a L<List> of L<Match> objects, or an empty L<List>
-if no matches occurred.
+Where L<subst|/routine/subst> returns the modified string and leaves the
+original unchanged, it is possible to mutate the original string by using
+C<subst-mutate>. If the match is successful, the method returns a
+L<Match|/type/Match> object representing the successful match, otherwise returns
+L<Nil|/type/Nil>. If C<:nth> (or one of its aliases) with
+L<Iterable|/type/Iterable> value, C<:g>, C<:global>, or C<:x> arguments are
+used, returns a L<List|/type/List> of L<Match|/type/Match> objects, or an empty
+L<List|/type/List> if no matches occurred.
 
     my $some-string = "Some foo";
     my $match = $some-string.subst-mutate(/foo/, "string");
@@ -982,9 +739,9 @@ if no matches occurred.
     say $match;        # OUTPUT: «｢foo｣␤»
     $some-string.subst-mutate(/<[oe]>/, '', :g); # remove every o and e, notice the :g named argument from .subst
 
-If a L<Regex> C<$matcher> is used, the
+If a L<Regex|/type/Regex> C<$matcher> is used, the
 L«C<$/> special variable|/syntax/$$SOLIDUS» will be set to C<Nil> (if no
-matches occurred), a L<Match> object, or a L<List> of L<Match> objects (if
+matches occurred), a L<Match|/type/Match> object, or a L<List|/type/List> of L<Match|/type/Match> objects (if
 multi-match options like C<:g> are used).
 
 =head2 routine substr
@@ -995,13 +752,13 @@ multi-match options like C<:g> are used).
     multi method substr(Str:D $s: Range $from-to  --> Str:D)
 
 Returns a substring of the original string, between the indices specified by
-C<$from-to>'s endpoints (coerced to L<Int>) or from index C<$from> and of
+C<$from-to>'s endpoints (coerced to L<Int|/type/Int>) or from index C<$from> and of
 length C<$chars>.
 
-Both C<$from> and C<$chars> can be specified as L<Callable>, which will be
+Both C<$from> and C<$chars> can be specified as L<Callable|/type/Callable>, which will be
 invoked with the L<length|/routine/chars> of the original string and the
 returned value will be used as the value for the argument. If C<$from> or
-C<$chars> are not L<Callable>, they'll be coerced to L<Int>.
+C<$chars> are not L<Callable|/type/Callable>, they'll be coerced to L<Int|/type/Int>.
 
 If C<$chars> is omitted or is larger than the available characters,
 the string from C<$from> until the end of the string is returned.
@@ -1156,7 +913,7 @@ character can be uniquely classified as belonging to one range of characters.
 Returns the string decremented by one.
 
 String decrementing is "magical" just like string increment (see
-L<succ>). It fails on underflow
+L<succ|/routine/succ>). It fails on underflow
 
 =for code
 'b0'.pred;           # RESULT: «a9»
@@ -1178,7 +935,7 @@ Example:
 
 =head2 method ords
 
-    multi method ords(Str:D: --> Positional)
+    multi method ords(Str:D: --> Seq)
 
 Returns a list of Unicode codepoint numbers that describe the codepoints making up the string.
 
@@ -1188,11 +945,11 @@ Example:
 
 Strings are represented as graphemes. If a character in the string is represented by multiple
 codepoints, then all of those codepoints will appear in the result of C<ords>. Therefore, the
-number of elements in the result may not always be equal to L<chars>, but will be equal to
-L<codes>; L<codes> computes the codepoints in a different way, so the result might be faster.
+number of elements in the result may not always be equal to L<chars|/routine/chars>, but will be equal to
+L<codes|/routine/codes>; L<codes|/routine/codes> computes the codepoints in a different way, so the result might be faster.
 
-The codepoints returned will represent the string in L<NFC>. See the L<NFD>, L<NFKC>, and
-L<NFKD> methods if other forms are required.
+The codepoints returned will represent the string in L<NFC|/type/NFC>. See the L<NFD|/type/NFD>, L<NFKC|/type/NFKC>, and
+L<NFKD|/type/NFKD> methods if other forms are required.
 
 =head2 method trans
 
@@ -1223,9 +980,24 @@ Example:
     "abcdefghij".trans(/<[aeiou]> \w/ => '');                     # RESULT: «cdgh»
 
     "a123b123c".trans(['a'..'z'] => 'x', :complement);            # RESULT: «axxxbxxxc»
-    "a123b123c".trans('23' => '', :delete);                       # RESULT: «a1b1c»
     "aaa1123bb123c".trans('a'..'z' => 'A'..'Z', :squash);         # RESULT: «A1123B123C»
     "aaa1123bb123c".trans('a'..'z' => 'x', :complement, :squash); # RESULT: «aaaxbbxc»
+
+In general, the strings will have the same length after the substitution:
+
+    say "a123b123c".trans('23' => '4');   # OUTPUT: «a144b144c␤»
+    say "a123b123c".trans('123' => 'þð'); # OUTPUT: «aþðþbþðþc␤»
+
+C<:squash> and C<:delete> will have the same effect in this case making it a
+strict substitution:
+
+    say "a123b123c".trans('123' => 'þð', :squash); # OUTPUT: «aþðbþðc␤»
+    say "a123b123c".trans('123' => 'þð', :delete); # OUTPUT: «aþðbþðc␤»
+
+C<:delete> will also remove non-matched characters from the original string:
+
+    say "abc".trans("abc".comb => 1..2, :delete);  # OUTPUT: «12␤»
+
 
 Please note that the behavior of the two versions of the multi method is
 slightly different. The first form will transpose only one character if the
@@ -1256,7 +1028,7 @@ output.
     multi method indent($steps where { .isa(Whatever) || .isa(Int) && $_ < 0 } )
 
 Indents each line of the string by C<$steps>. If C<$steps> is negative,
-it outdents instead. If C<$steps> is L<C<*>|*>, then the string is
+it outdents instead. If C<$steps> is L<C<*>|/routine/*>, then the string is
 outdented to the margin:
 
     "  indented by 2 spaces\n    indented even more".indent(*)
@@ -1280,19 +1052,19 @@ C<.=trim>
     $line.=trim;
     say '<' ~ $line ~ '>';             # OUTPUT: «<hello world>␤»
 
-See also L<trim-trailing> and L<trim-leading>
+See also L<trim-trailing|/routine/trim-trailing> and L<trim-leading|/routine/trim-leading>.
 
 =head2 method trim-trailing
 
     method trim-trailing(Str:D: --> Str)
 
-Removes the whitespace characters from the end of a string. See also L<trim>.
+Removes the whitespace characters from the end of a string. See also L<trim|/routine/trim>.
 
 =head2 method trim-leading
 
     method trim-leading(Str:D: --> Str)
 
-Removes the whitespace characters from the beginning of a string. See also L<trim>.
+Removes the whitespace characters from the beginning of a string. See also L<trim|/routine/trim>.
 
 =head2 method NFC
 
@@ -1326,7 +1098,7 @@ Form KD / Compatibility Decomposed).
 
     multi method ACCEPTS(Str:D: $other)
 
-Returns C<True> if the string is L<the same as|eq> C<$other>.
+Returns C<True> if the string is L<the same as|/routine/eq> C<$other>.
 
 =head2 method Capture
 
@@ -1352,6 +1124,12 @@ cannot parse the string as a number.
     say val("42e0").^name;  # OUTPUT: «NumStr␤»
     say val("42.0").^name;  # OUTPUT: «RatStr␤»
     say val("42+0i").^name; # OUTPUT: «ComplexStr␤»
+
+While characters belonging to the Unicode categories C<Nl> (number letters)
+and C<No> (other numbers) can be used as numeric literals in the language,
+they will not be converted to a number by C<val>, by design.
+See L«unival|/routine/unival» if you need to convert such characters to
+C<Numeric>.
 
 =end pod
 

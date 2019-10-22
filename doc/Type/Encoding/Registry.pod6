@@ -1,17 +1,19 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("basic")
 
 =TITLE class Encoding::Registry
 
-=SUBTITLE Holds available encodings and allows new ones to be added.
+=SUBTITLE Management of available encodings
 
     class Encoding::Registry {}
 
 C<Encoding::Registry> is initialized with a list of encoding that is
-available for any Perl 6 application, namely:
+available for any Raku application, namely:
 
 =item C<utf8>
 =item C<utf8-c8>
 =item C<utf16>
+=item C<utf16le>
+=item C<utf16be>
 =item C<utf32>, C<utf-32>
 =item C<ascii>
 =item C<iso-8859-1>, C<iso_8859-1:1987>, C<iso_8859-1>, C<iso-ir-100>, C<latin1>, C<latin-1>, C<csisolatin1>, C<l1>, C<ibm819>, C<cp819>
@@ -25,7 +27,7 @@ available for any Perl 6 application, namely:
 
     method register(Encoding $enc --> Nil)
 
-Register a new L<Encoding>.
+Register a new L<Encoding|/type/Encoding>.
 
 X<|Encoding::Encoder>
 X<|Encoding::Decoder>
@@ -33,7 +35,7 @@ X<|Encoding::Decoder>
 
     method find(Str() $name)
 
-Finds an encoding by their name. Returns an C<Encoding::Encoder> or
+Finds an encoding by its name. Returns an C<Encoding::Encoder> or
 C<Encoding::Decoder>, depending on what had been registered.
 
 =end pod

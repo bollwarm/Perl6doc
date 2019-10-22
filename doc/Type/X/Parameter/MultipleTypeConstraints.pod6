@@ -1,4 +1,4 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("exception")
 
 =TITLE class X::Parameter::MultipleTypeConstraints
 
@@ -7,7 +7,7 @@
     class X::Parameter::MultipleTypeConstraints does X::Comp { }
 
 Compile time error thrown when a parameter has multiple type constraints.
-This is not allowed in Perl 6.0.
+This is not allowed in Raku.0.
 
 Example:
 

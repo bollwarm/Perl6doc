@@ -1,4 +1,4 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("basic")
 
 =TITLE class ValueObjAt
 
@@ -6,7 +6,7 @@
 
     class ValueObjAt is ObjAt { }
 
-A subclass of L<C<ObjAt>|ObjAt> that should be used to indicate that a class
+A subclass of L<C<ObjAt>|/type/ObjAt> that should be used to indicate that a class
 produces objects that are value types (in other words: are immutable after
 they have been initialized.
 

@@ -1,4 +1,4 @@
-=begin pod :tag<perl6>
+=begin pod :kind("Language") :subkind("Language") :category("fundamental")
 
 =TITLE System interaction
 
@@ -7,7 +7,7 @@
 =head1 Getting arguments through the command line
 
 The simplest way is to use the
-L<C<@*ARGS>|/language/variables#index-entry-%24%2AARGS> variable to obtain
+L<C<@*ARGS>|/language/variables#%24%2AARGS> variable to obtain
 arguments from the command line; this array will contain the strings that follow
 the program name. L<C<%*ENV>|/language/variables#Runtime_environment> will
 contain the environment variables, so that if you use:
@@ -24,8 +24,8 @@ You can use them from your program this way:
 This will fail if the environment variable C<API_KEY> has not been defined
 previously.
 
-Perl 6 has a better way to deal with command line arguments if they represent
-file names: the L<C<$*ARGFILES>/language/variables#index-entry-%24%2AARGFILES>
+Raku has a better way to deal with command line arguments if they represent
+file names: the L<C<$*ARGFILES>|/language/variables#%24%2AARGFILES>
 dynamic variable.
 
 =begin code
@@ -54,30 +54,37 @@ my UInt $num-iters = prompt "How many iterations to run: ";
 
 There are two routines to run external programs: L<C<run>|/routine/run> and
 L<C<shell>|/routine/shell>. Both exist in the L<C<IO>|/type/IO> role and are
-thus included in all classes that mix that role in, like L<IO::Path>. Both
-return a L<Proc> object, but the main difference is that C<run> will try to
-avoid the system shell, if possible, while C<shell> will run the command through
-the default system shell.
+thus included in all classes that mix that role in, like L<IO::Path|/type/IO::Path>. Both
+return a L<Proc|/type/Proc> object, but the main difference is that C<run> will
+try to avoid the system shell, if possible, while C<shell> will run the command
+through the default system shell.
 
-The key class for running all external programs is L<Proc::Async>, which runs
+The key class for running all external programs is L<Proc::Async|/type/Proc::Async>, which runs
 processes asynchronously and allows
 L<concurrent|/language/concurrency#Proc::Async> interaction with the
 running processes. In general, it is a good practice to interact with the system
-through these high-level, abstract interfaces. However, Perl 6 provides with
+through these high-level, abstract interfaces. However, Raku provides with
 other ways of interacting with the system through a low-level interface.
 
 =head1 Making operating system calls through the native API
 
 The L<C<NativeCall>|/language/nativecall> API can be used to interact with
 system libraries, as well as any other accessible library. This
-L<short tutorial|https://docs.perl6.org/language/nativecall#Short_tutorial_on_calling_a_C_function>
+L<short tutorial|/language/nativecall#Short_tutorial_on_calling_a_C_function>
 explains, for instance, how to call system functions such as C<getaddrinfo>
 using that interface; some other functions like C<kill> can also be L<accessed
 that way, via declaration using the NativeCall
 interface|/language/5to6-perlfunc#kill>.
 
-Fortunately, you do not have to do that for all native functions. As part of her Butterfly project porting Perl 5 functions to Perl 6 as part of the ecosystem, L<Elizabeth Mattijsen|https://github.com/lizmat> is porting many system functions that were part of that language to modules such as <L<C<P5getprotobyname>|https://github.com/lizmat/P5getprotobyname>, which includes functions such as C<endprotoent>, C<getprotoent>, C<getprotobyname>, C<getprotobynumber> and
-C<setprotoent>. L<Search and install C<P5> modules|https://modules.perl6.org/search/?q=p5> if you want to use those functions already in p6y form.
+Fortunately, you do not have to do that for all native functions. As part of her
+Butterfly project porting Perl 5 functions to Raku as part of the ecosystem,
+L<Elizabeth Mattijsen|https://github.com/lizmat> is porting many system
+functions that were part of that language to modules such as
+L<C<P5getprotobyname>|https://github.com/lizmat/P5getprotobyname>, which
+includes functions such as C<endprotoent>, C<getprotoent>, C<getprotobyname>,
+C<getprotobynumber> and C<setprotoent>.
+L<Search and install C<P5> modules|https://modules.perl6.org/search/?q=p5>
+if you want to use those functions already in p6y form.
 
 =end pod
 

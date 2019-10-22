@@ -1,11 +1,11 @@
 =begin Html
 <img style="float: right; margin: 0 0 1em 1em; width:261px" src="/images/Camelia.svg" alt="" id="home_logo"/>
-Welcome to the official documentation of the <a href="https://perl6.org">Perl 6</a>
+Welcome to the official documentation of the <a href="https://perl6.org">Raku</a>
 programming language!
 Besides online browsing and searching, you can also
 <a href="/perl6.html">view everything in one file</a> or
 <a href="https://github.com/perl6/doc">contribute</a>
-by reporting mistakes or sending patches.
+by reporting issues or sending patches.
 
 <hr/>
 
@@ -16,7 +16,7 @@ by reporting mistakes or sending patches.
     A collection of documents describing, in detail, the various
     conceptual parts of the language.
 <!--
-    If you're new to Perl 6,
+    If you're new to Raku,
     language>intro is a good place to start.
 -->
 
@@ -24,7 +24,7 @@ by reporting mistakes or sending patches.
 
 <dt><a href="/type.html">Type Reference</a></dt>
 <dd>
-    Index of built-in classes and roles.
+    Index of built-in classes, roles and enums.
 </dd>
 
 <dt><a href="/routine.html">Routine Reference</a></dt>
@@ -32,29 +32,29 @@ by reporting mistakes or sending patches.
     Index of built-in subroutines and methods.
 </dd>
 
-<dt><a href="/programs.html">Perl 6 Programs</a></dt>
+<dt><a href="/programs.html">Raku Programs</a></dt>
 <dd>
-    A collection of documents describing how to
-    run the Perl 6 executable program and other utilities,
-    how to debug Perl 6 programs, and how to hack on Perl 6
+    A collection of documents describing the variables that affect the the Raku executable, how to run the p6doc documentation front-end,
+    how to debug Raku programs, and how to hack on Raku
     source code.
 </dd>
 
-<!--
-<dt><a href="/module.html">Module Reference</a></dt>
+<dt><a href="/language/faq">FAQs (Frequently Asked Questions)</a></dt>
 <dd>
-    Index of modules that are part of the official core distribution.
+    A collection of questions that have cropped up often, along with answers.
 </dd>
--->
-
-</dl>
-
+<dt><a href="/language/community">Community</a></dt>
+<dd>
+    Information about the Raku development community, email lists, IRC and IRC bots, and blogs
+</dd>
 <hr/>
 
 
-<p>The Perl 6 homepage offers <a href="https://perl6.org/resources/">a
-comprehensive list of Perl 6 resources</a>, including tutorials, how-tos
-and <a href="/language/faq">FAQs (Frequently Asked Questions)</a>.</p>
+<p>The Raku homepage offers <a href="https://perl6.org/resources/">a
+comprehensive list of Raku resources</a>, including tutorials, and how-tos.</p>
+
+<p>You may be interested in the <a href="https://perl6.org/community/">Community</a> page on the
+main perl6 website.</p>
 
 <p>
 Perl&nbsp;6 compiler developers may also be interested in
@@ -62,6 +62,9 @@ Perl&nbsp;6 compiler developers may also be interested in
 Documentation for the different but related <a href="https://www.perl.org/">Perl 5</a> language
 can be found on the <a href="http://perldoc.perl.org/">Perl 5 documentation website</a>.
 </p>
+
+<p>Part of this official documentation has been translated into Chinese. Here's the <a href='https://github.com/ohmycloud/perl6doc-zh/blob/master/index.adoc'>index to the pages that have been translated</a>.</p>
+
 =end Html
 
 # vim: expandtab softtabstop=4 shiftwidth=4 ft=perl6

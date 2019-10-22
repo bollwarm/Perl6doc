@@ -1,4 +1,4 @@
-=begin pod :tag<tutorial>
+=begin pod :kind("Language") :subkind("Language") :category("tutorial")
 
 =TITLE Grammar tutorial
 
@@ -43,17 +43,17 @@ Grammars are a special kind of class. You declare and define a grammar exactly
 as you would any other class, except that you use the I<grammar> keyword instead
 of I<class>.
 
-    =begin code :skip-test
-    grammar G { ... }
-    =end code
+=begin code :skip-test<incomplete code>
+grammar G { ... }
+=end code
 
-Grammars are made up of methods that define a regex, a token, or a rule.
-These are all varieties of different types of match methods. Once you have a
-grammar defined, you call it and pass in a string for parsing.
+As such classes, grammars are made up of methods that define a regex, a token,
+or a rule. These are all varieties of different types of match methods. Once you
+have a grammar defined, you call it and pass in a string for parsing.
 
-    =begin code :preamble<grammar G{};my $string;>
-    my $matchObject = G.parse($string);
-    =end code
+=begin code :preamble<grammar G{};my $string;>
+my $matchObject = G.parse($string);
+=end code
 
 Now, you may be wondering, if I have all these regexes defined that just return
 their results, how does that help with parsing strings that may be ahead
@@ -121,7 +121,6 @@ C«<thingy>» is defined on the next line. That means that
 C<'clever_text_keyword'> B<must> be the first thing in the string, or
 the grammar parse will fail and we'll get an empty match. This is great for
 recognizing a malformed string that should be discarded.
-
 
 =head1 Learning by example - a REST contrivance
 
@@ -323,7 +322,7 @@ Will output exactly the same as the code above.  Symptomatic of the difference
 between Classes and Roles, a conflict like defining C<token quote> twice
 using Role composition will result in an error:
 
-=begin code :skip-test<compilation error>
+=begin code :skip-test<compile-time error>
 grammar Quoted-Quotes does Letters does Quote-Quotes does Quote-Other { ... }
 # OUTPUT: ... Error while compiling ... Method 'quote' must be resolved ...
 =end code
@@ -337,7 +336,7 @@ values: create, retrieve, update or delete.
 There are several ways to accomplish this. For example, you could change the
 command method:
 
-    =begin code :skip-test
+    =begin code :solo
     token command { \w+ }
 
     # …becomes…
@@ -448,7 +447,7 @@ To work with actions, you use a named parameter called C<actions> which
 should contain an instance of your actions class. With the code above, if our
 actions class called REST-actions, we would parse the URI string like this:
 
-    =begin code :skip-test
+    =begin code :skip-test<illustrates pattern>
     my $matchObject = REST.parse($uri, actions => REST-actions.new);
 
     #   …or if you prefer…
@@ -507,12 +506,12 @@ But not really; there's a little more.
 
 If the grammar calls the action above on data, the data method will be called,
 but nothing will show up in the big C<TOP> grammar match result returned to our
-program. In order to make the action results show up, we need to call L<make>
+program. In order to make the action results show up, we need to call L<make|/routine/make>
 on that result. The result can be many things, including strings, array or
 hash structures.
 
 You can imagine that the C<make> places the result in a special contained area
-for a grammar. Everything that we C<make> can be accessed later by L<made>.
+for a grammar. Everything that we C<make> can be accessed later by L<made|/routine/made>.
 
 So instead of the REST-actions class above, we should write:
 
@@ -531,7 +530,7 @@ if we need to.
 If we want to access just the ID of 7 from that long URI, we access the first
 element of the list returned from the C<data> action that we C<made>:
 
-    =begin code :skip-test
+    =begin code :skip-test<continued example>
     my $uri = '/product/update/7/notify';
 
     my $match = REST.parse($uri, actions => REST-actions.new);
@@ -583,7 +582,7 @@ After we C<make> something in the C<TOP> method of a grammar action, we can then
 access all the custom values by calling the C<made> method on the grammar
 result object. The code now becomes
 
-    =begin code :skip-test
+    =begin code :skip-test<continued example>
     my $uri = '/product/update/7/notify';
 
     my $match = REST.parse($uri, actions => REST-actions.new);
@@ -597,7 +596,7 @@ result object. The code now becomes
 If the complete return match object is not needed, you could return only the made
 data from your action's C<TOP>.
 
-    =begin code :skip-test
+    =begin code :skip-test<continued example>
     my $uri = '/product/update/7/notify';
 
     my $rest = REST.parse($uri, actions => REST-actions.new).made;
@@ -627,7 +626,7 @@ C<subject-id> and have it set to element 0 of C«<data>».
 
 Now we can do this instead:
 
-    =begin code :skip-test
+    =begin code :skip-test<continued example>
     my $uri = '/product/update/7/notify';
 
     my $rest = REST.parse($uri, actions => REST-actions.new).made;
@@ -705,9 +704,9 @@ Second, it shows what C<make> really does, which is no more than a sugar of
 C<$/.made = ...>. And this trick introduces a way to pass messages from within
 a regex item.
 
-Hopefully this has helped introduce you to the grammars in Perl 6 and shown you
+Hopefully this has helped introduce you to the grammars in Raku and shown you
 how grammars and grammar action classes work together. For more information,
-check out the more advanced L<Perl Grammar Guide|https://docs.perl6.org/language/grammars>.
+check out the more advanced L<Perl Grammar Guide|/language/grammars>.
 
 For more grammar debugging, see
 L<Grammar::Debugger|https://github.com/jnthn/grammar-debugger>. This provides

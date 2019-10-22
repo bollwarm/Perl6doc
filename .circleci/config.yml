@@ -1,0 +1,18 @@
+version: 2
+jobs:
+  test-linux:
+    docker:
+      - image: antoniogamiz/documentable
+    steps:
+      - checkout
+      - run:
+          name: Test documentable
+          command: |
+            # test one build
+            documentable start -a
+
+workflows:
+  version: 2
+  test-deploy:
+    jobs:
+      - test-linux

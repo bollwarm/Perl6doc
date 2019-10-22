@@ -1,4 +1,4 @@
-=begin pod :tag<perl6>
+=begin pod :kind("Language") :subkind("Language") :category("fundamental")
 
 =TITLE Grammars
 
@@ -7,9 +7,9 @@
 Grammar is a powerful tool used to destructure text and often to return
 data structures that have been created by interpreting that text.
 
-For example, Perl 6 is parsed and executed using a Perl 6-style grammar.
+For example, Raku is parsed and executed using a Raku-style grammar.
 
-An example that's more practical to the common Perl 6 user is the
+An example that's more practical to the common Raku user is the
 L<JSON::Tiny module|https://github.com/moritz/json>, which can deserialize
 any valid JSON file; however, the deserializing code is written in less than
 100 lines of simple, extensible code.
@@ -21,14 +21,14 @@ methods of regular code.
 =head1 X<Named Regexes|declarator,token>
 
 The main ingredient of grammars is named L<regexes|/language/regexes>.
-While the syntax of L<Perl 6 Regexes|/language/regexes> is outside the scope
+While the syntax of L<Raku Regexes|/language/regexes> is outside the scope
 of this document, I<named> regexes have a special syntax, similar to
 subroutine definitions: N<In fact, named regexes can even take extra
 arguments, using the same syntax as subroutine parameter lists>
 
-    =begin code
-    my regex number { \d+ [ \. \d+ ]? }
-    =end code
+=begin code
+my regex number { \d+ [ \. \d+ ]? }
+=end code
 
 In this case, we have to specify that the regex is lexically scoped using
 the C<my> keyword, because named regexes are normally used within grammars.
@@ -36,10 +36,10 @@ the C<my> keyword, because named regexes are normally used within grammars.
 Being named gives us the advantage of being able to easily reuse the regex
 elsewhere:
 
-    =begin code :preamble<my regex number{...};>
-    say so "32.51" ~~ &number;                         # OUTPUT: «True␤»
-    say so "15 + 4.5" ~~ /<number>\s* '+' \s*<number>/ # OUTPUT: «True␤»
-    =end code
+=begin code :preamble<my regex number{...};>
+say so "32.51" ~~ &number;                         # OUTPUT: «True␤»
+say so "15 + 4.5" ~~ /<number>\s* '+' \s*<number>/ # OUTPUT: «True␤»
+=end code
 
 B<C<regex>> isn't the only declarator for named regexes. In fact, it's the
 least common. Most of the time, the B<C<token>> or B<C<rule>> declarators
@@ -90,14 +90,20 @@ they are declared with the C<grammar> keyword instead of C<class>. Grammars
 should only be used to parse text; if you wish to extract complex data, you can
 add actions within the grammar, or an
 L<action object|/language/grammars#Action_objects> is recommended to be used in
-conjunction with the grammar. If action objects are not used, C<.parse> returns a L<Match> object and sets, by default, the
+conjunction with the grammar. If action objects are not used, C<.parse> returns
+a L<Match|/type/Match> object and sets, by default, the
 L<default match object C<$/>|/syntax/$$SOLIDUS>, to the same value.
 
 
 =head2 X«Proto regexes| :sym<>; proto regex; declarator,grammar»
 
 L<Grammar|/type/Grammar>s are composed of rules, tokens and regexes; these are
-actually methods, since grammars are classes. These methods can share a name and
+actually methods, since grammars are classes.
+
+N<They are actually a special kind of class, but for the rest of the section,
+they behave in the same way as a I<normal> class would>
+
+These methods can share a name and
 functionality in common, and thus can use L<proto|/syntax/proto>.
 
 For instance, if you have a lot of alternations, it may become difficult to
@@ -145,7 +151,7 @@ adverbs on tokens:
 
     # OUTPUT: «5␤»
 
-In the grammar, the alternation has now been replaced with C«<calc-op>»,
+In this grammar the alternation has now been replaced with C«<calc-op>»,
 which is essentially the name of a group of values we'll create. We do so by
 defining a rule prototype with C<proto rule calc-op>. Each of our previous
 alternations have been replaced by a new C<rule calc-op> definition and the
@@ -156,11 +162,11 @@ simply take the C<.made> value from the C«$<calc-op>» match object. And the
 actions for individual alternations now follow the same naming pattern as in the
 grammar: C«method calc-op:sym<add>» and C«method calc-op:sym<sub>».
 
-The real beauty of this method can be seen when you subclass that grammar
-and actions class. Let's say we want to add a multiplication feature to the
+The real beauty of this method can be seen when you subclass the grammar
+and action classes. Let's say we want to add a multiplication feature to the
 calculator:
 
-    =begin code :skip-test
+    =begin code :preamble<grammar Calculator {}; class Calculations {}>
     grammar BetterCalculator is Calculator {
         rule calc-op:sym<mult> { <num> '*' <num> }
     }
@@ -174,7 +180,7 @@ calculator:
     # OUTPUT: «6␤»
     =end code
 
-All we had to add are additional rule and action to the C<calc-op> group and
+All we had to add are an additional rule and action to the C<calc-op> group and
 the thing works—all thanks to proto regexes.
 
 =head2 Special tokens
@@ -187,29 +193,19 @@ the thing works—all thanks to proto regexes.
     }
 
 The C<TOP> token is the default first token attempted to match
-when parsing with a grammar. Note that if you're parsing with
+when parsing with a grammar. Note that if you're parsing with the
 L<C<.parse>|/type/Grammar#method_parse> method, C<token TOP> is automatically
 anchored to the start and end of the string. If you don't want to parse the
 whole string, look up L<C<.subparse>|/type/Grammar#method_subparse>.
 
-Using C<rule TOP> or C<regex TOP> are also acceptable.
+Using C<rule TOP> or C<regex TOP> is also acceptable.
 
 A different token can be chosen to be matched first using the C<:rule> named
 argument to C<.parse>, C<.subparse>, or C<.parsefile>. These are all C<Grammar>
 methods.
 
-
-=head3 X<C<ws>|ws>
-
-When C<rule> instead of C<token> is used, any whitespace after terms and closing
-parenthesis/brackets is turned into a non-capturing call to C<ws>,
-written as C«<.ws>» where C<.> means non-capturing. That is to say:
-
-    rule entry { <key> '=' <value> }
-
-Is the same as:
-
-    token entry { <key> <.ws> '=' <.ws> <value> <.ws> }
+X<|ws>
+=head3 C<ws>
 
 The default C<ws> matches zero or more whitespace characters, as long as that
 point is not within a word (in code form, that's C«regex ws { <!ww> \s* }»):
@@ -225,6 +221,21 @@ point is not within a word (in code form, that's C«regex ws { <!ww> \s* }»):
     # Successful match: there is a word boundary between ')' and 'b'
     say ')b' ~~ /. <.ws> b/;             # OUTPUT: «｢)b｣␤»
 
+Please bear in mind that we're preceding C<ws> with a dot to avoid capturing,
+which we are not interested in. Since in general whitespace is a separator, this
+is how it's mostly found.
+
+When C<rule> is used instead of C<token>, C<:sigspace> is enabled by default and
+any whitespace after terms and closing parenthesis/brackets are turned into a
+non-capturing call to C<ws>, written as C«<.ws>» where C<.> means non-capturing.
+That is to say:
+
+    rule entry { <key> '=' <value> }
+
+Is the same as:
+
+    token entry { <key> <.ws> '=' <.ws> <value> <.ws> }
+
 You can also redefine the default C<ws> token:
 
     grammar Foo {
@@ -236,6 +247,13 @@ You can also redefine the default C<ws> token:
         token ws { \h*   }
     }.parse: "4   \n\n 5"; # Fails
 
+And even capture it, but you need to use it explicitly:
+
+=for code
+grammar Foo { rule TOP {\d <ws> \d} };
+my $parsed = Foo.parse: "3 3";
+say $parsed<ws>; # OUTPUT: «｢｣␤»
+
 
 =head3 X«C<sym>|<sym>»
 
@@ -245,11 +263,11 @@ the C<:sym> adverb for that particular regex:
     grammar Foo {
         token TOP { <letter>+ }
         proto token letter {*}
-        token letter:sym<P> { <sym> }
-        token letter:sym<e> { <sym> }
-        token letter:sym<r> { <sym> }
-        token letter:sym<l> { <sym> }
-        token letter:sym<*> {   .   }
+              token letter:sym<P> { <sym> }
+              token letter:sym<e> { <sym> }
+              token letter:sym<r> { <sym> }
+              token letter:sym<l> { <sym> }
+              token letter:sym<*> {   .   }
     }.parse("I ♥ Perl", actions => class {
         method TOP($/) { make $<letter>.grep(*.<sym>).join }
     }).made.say; # OUTPUT: «Perl␤»
@@ -258,7 +276,8 @@ This comes in handy when you're already differentiating the proto regexes with
 the strings you're going to match, as using C«<sym>» token prevents repetition
 of those strings.
 
-=head3 X«"Always succeed" assertion|<?>»
+X«|<?>»
+=head3 "Always succeed" assertion
 
 The C«<?>» is the I<always succeed> assertion. When used as a grammar
 token, it can be used to trigger an Action class method. In the following
@@ -267,9 +286,9 @@ succeed assertion.
 
 In the action class, we use calls to the C<succ> method to do set up (in this
 case, we prepare a new element in C<@!numbers>). In the C<digit> method,
-we convert an Arabic digit into a Devanagari digit and add it to the last
-element of C<@!numbers>. Thanks to C<succ>, the last element will always be
-the number for the currently parsed C<digit> digits.
+we use the Arabic digit as an index into a list of Devanagari digits and add
+it to the last element of C<@!numbers>. Thanks to C<succ>, the last element
+will always be the number for the currently parsed C<digit> digits.
 
     grammar Digifier {
         rule TOP {
@@ -281,7 +300,7 @@ the number for the currently parsed C<digit> digits.
 
     class Devanagari {
         has @!numbers;
-        method digit ($/) { @!numbers[*-1] ~= $/.ord.&[+](2358).chr }
+        method digit ($/) { @!numbers.tail ~= <०  १  २  ३  ४  ५  ६  ७  ८  ९>[$/] }
         method succ  ($)  { @!numbers.push: ''     }
         method TOP   ($/) { make @!numbers[^(*-1)] }
     }
@@ -292,7 +311,7 @@ the number for the currently parsed C<digit> digits.
 =head2 Methods in grammars
 
 It's fine to use methods instead of rules or tokens in a grammar, as long
-as they return a L<Cursor|/type/Cursor>:
+as they return a L<Match|/type/Match>:
 
     grammar DigitMatcher {
         method TOP (:$full-unicode) {
@@ -302,8 +321,8 @@ as they return a L<Cursor|/type/Cursor>:
         token num-basic { <[0..9]>+ }
     }
 
-The grammar above will attempt different matches depending on the arguments
-provided by parse methods:
+The grammar above will attempt different matches depending on the argument
+provided to the subparse methods:
 
     =begin code :preamble<grammar DigitMatcher{};>
     say +DigitMatcher.subparse: '12७१७९०९', args => \(:full-unicode);
@@ -346,70 +365,135 @@ Here, text such as "use rules for significant whitespace by default" will only
 match if the state assigned by whether rules, tokens, or regexes are mentioned
 matches with the correct guard:
 
-    =begin code :preamble<grammar GrammarAdvice{};>
-    say GrammarAdvice.subparse("use rules for significant whitespace by default");
-    # OUTPUT: «use rules for significant whitespace by default»
+=begin code :preamble<grammar GrammarAdvice{};>
+say GrammarAdvice.subparse("use rules for significant whitespace by default");
+# OUTPUT: «use rules for significant whitespace by default»
 
-    say GrammarAdvice.subparse("use tokens for insignificant whitespace by default");
-    # OUTPUT: «use tokens for insignificant whitespace by default»
+say GrammarAdvice.subparse("use tokens for insignificant whitespace by default");
+# OUTPUT: «use tokens for insignificant whitespace by default»
 
-    say GrammarAdvice.subparse("use regexes for insignificant whitespace by default");
-    # OUTPUT: «use regexes for insignificant whitespace by default»
+say GrammarAdvice.subparse("use regexes for insignificant whitespace by default");
+# OUTPUT: «use regexes for insignificant whitespace by default»
 
-    say GrammarAdvice.subparse("use regexes for significant whitespace by default")
-    # OUTPUT: #<failed match>
-    =end code
+say GrammarAdvice.subparse("use regexes for significant whitespace by default")
+# OUTPUT: #<failed match>
+=end code
 
 =head2 Attributes in grammars
 
 Attributes may be defined in grammars. However, they can only be accessed by
 methods. Attempting to use them from within a token will throw an exception
-because tokens are methods of L<Cursor|/type/Cursor>, not of the grammar
-itself. Note that mutating an attribute from within a method called in a token
-will I<only modify the attribute for that token's own match object>! Grammar
+because tokens are methods of L<Match|/type/Match>, not of the grammar itself.
+Note that mutating an attribute from within a method called in a token will
+I<only modify the attribute for that token's own match object>! Grammar
 attributes can be accessed in the match returned after parsing if made public:
 
 =begin code
-    grammar HTTPRequest {
-        has Bool $.invalid;
+grammar HTTPRequest {
+    has Bool $.invalid;
 
-        token TOP {
-            <type> <path> 'HTTP/1.1' \r\n
-            [<field> \r\n]+
-            \r\n
-            $<body>=.*
-        }
-
-        token type {
-            | GET | POST | OPTIONS | HEAD | PUT | DELETE | TRACE | CONNECT
-            | \S+ <.error>
-        }
-
-        token path {
-            | '/' [[\w+]+ % \/] [\.\w+]?
-            | '*'
-            | \S+ <.error>
-        }
-
-        token field {
-            | $<name>=\w+ : $<value>=<-[\r\n]>*
-            | <-[\r\n]>+ <.error>
-        }
-
-        method error(--> ::?CLASS:D) {
-            $!invalid = True;
-            self;
-        }
+    token TOP {
+        <type> <path> 'HTTP/1.1' \r\n
+        [<field> \r\n]+
+        \r\n
+        $<body>=.*
     }
 
-    my $header = "MEOWS / HTTP/1.1\r\nHost: docs.perl6.org\r\nsup lol\r\n\r\n";
-    my $/ = HTTPRequest.parse($header);
-    say $<type>.invalid;
-    # OUTPUT: True
-    say $<path>.invalid;
-    # OUTPUT: (Bool)
-    say $<field>».invalid;
-    # OUTPUT: [(Bool) True]
+    token type {
+        | GET | POST | OPTIONS | HEAD | PUT | DELETE | TRACE | CONNECT
+        | \S+ <.error>
+    }
+
+    token path {
+        | '/' [[\w+]+ % \/] [\.\w+]?
+        | '*'
+        | \S+ <.error>
+    }
+
+    token field {
+        | $<name>=\w+ : $<value>=<-[\r\n]>*
+        | <-[\r\n]>+ <.error>
+    }
+
+    method error(--> ::?CLASS:D) {
+        $!invalid = True;
+        self;
+    }
+}
+
+my $header = "MEOWS / HTTP/1.1\r\nHost: docs.perl6.org\r\nsup lol\r\n\r\n";
+my $/ = HTTPRequest.parse($header);
+say $<type>.invalid;
+# OUTPUT: True
+say $<path>.invalid;
+# OUTPUT: (Bool)
+say $<field>».invalid;
+# OUTPUT: [(Bool) True]
+=end code
+
+=head2 Passing arguments into grammars
+
+To pass arguments into a grammar, you can use the named argument of C<:args> on
+any of the parsing methods of grammar. The arguments passed should be in a
+C<list>.
+
+=begin code
+grammar demonstrate-arguments {
+    rule TOP ($word) {
+    "I like" $word
+    }
+}
+
+# Notice the comma after "sweets" when passed to :args to coerce it to a list
+say demonstrate-arguments.parse("I like sweets", :args(("sweets",)));
+# OUTPUT: «｢I like sweets｣␤»
+=end code
+
+Once the arguments are passed in, they can be used in a call to a named regex
+inside the grammar.
+
+=begin code
+grammar demonstrate-arguments-again {
+    rule TOP ($word) {
+    <phrase-stem><added-word($word)>
+    }
+
+    rule phrase-stem {
+       "I like"
+    }
+
+    rule added-word($passed-word) {
+       $passed-word
+    }
+}
+
+say demonstrate-arguments-again.parse("I like vegetables", :args(("vegetables",)));
+# OUTPUT: ｢I like vegetables｣␤»
+# OUTPUT:  «phrase-stem => ｢I like ｣␤»
+# OUTPUT:  «added-word => ｢vegetables｣␤»
+=end code
+
+Alternatively, you can initialize dynamic variables and use any arguments that
+way within the grammar.
+
+=begin code
+grammar demonstrate-arguments-dynamic {
+   rule TOP ($*word, $*extra) {
+      <phrase-stem><added-words>
+   }
+   rule phrase-stem {
+      "I like"
+   }
+   rule added-words {
+      $*word $*extra
+   }
+}
+
+say demonstrate-arguments-dynamic.parse("I like everything else",
+  :args(("everything", "else")));
+# OUTPUT: «｢I like everything else｣␤»
+# OUTPUT:  «phrase-stem => ｢I like ｣␤»
+# OUTPUT:  «added-words => ｢everything else｣␤»
 =end code
 
 X<|Actions>
@@ -428,89 +512,90 @@ argument. If no such method exists, it is skipped.
 
 Here is a contrived example of a grammar and actions in action:
 
-    =begin code
-    grammar TestGrammar {
-        token TOP { \d+ }
-    }
+=begin code
+grammar TestGrammar {
+    token TOP { \d+ }
+}
 
-    class TestActions {
-        method TOP($/) {
-            $/.make(2 + $/);
-        }
+class TestActions {
+    method TOP($/) {
+        $/.make(2 + $/);
     }
+}
 
-    my $match = TestGrammar.parse('40', actions => TestActions.new);
-    say $match;         # OUTPUT: «｢40｣␤»
-    say $match.made;    # OUTPUT: «42␤»
-    =end code
+my $match = TestGrammar.parse('40', actions => TestActions.new);
+say $match;         # OUTPUT: «｢40｣␤»
+say $match.made;    # OUTPUT: «42␤»
+=end code
 
 An instance of C<TestActions> is passed as named argument C<actions> to the
-L<parse> call, and when token C<TOP> has matched successfully,
+L<parse|/routine/parse> call, and when token C<TOP> has matched successfully,
 it automatically calls method C<TOP>, passing the match object as an argument.
 
 To make it clear that the argument is a match object, the example uses C<$/>
 as a parameter name to the action method, though that's just a handy
-convention, nothing intrinsic. C<$match> would have worked too. (Though using
+convention, nothing intrinsic; C<$match> would have worked too, though using
 C<$/> does give the advantage of providing C«$<capture>» as a shortcut
-for C«$/<capture>»).
+for C«$/<capture>»; we use another argument, anyway, in the action for C<TOP>.
 
 A slightly more involved example follows:
 
-    =begin code
-    grammar KeyValuePairs {
-        token TOP {
-            [<pair> \n+]*
-        }
-
-        token ws {
-            \h*
-        }
-
-        rule pair {
-            <key=.identifier> '=' <value=.identifier>
-        }
-        token identifier {
-            \w+
-        }
+=begin code
+grammar KeyValuePairs {
+    token TOP {
+        [<pair> \v+]*
     }
 
-    class KeyValuePairsActions {
-        method pair      ($/) {
-            $/.make: $<key>.made => $<value>.made
-        }
-        method identifier($/) {
-            # subroutine `make` is the same as calling .make on $/
-            make ~$/
-        }
-        method TOP ($match) {
-            # can use any variable name for parameter, not just $/
-            $match.make: $match<pair>».made
-        }
+    token pair {
+        <key=.identifier> '=' <value=.identifier>
     }
 
-    my $actions = KeyValuePairsActions;
-    my $res = KeyValuePairs.parse(q:to/EOI/, :$actions).made;
-        second=b
-        hits=42
-        perl=6
-        EOI
-
-    for @$res -> $p {
-        say "Key: $p.key()\tValue: $p.value()";
+    token identifier {
+        \w+
     }
-    =end code
+}
+
+class KeyValuePairsActions {
+    method pair      ($/) {
+        $/.make: $<key>.made => $<value>.made
+    }
+    method identifier($/) {
+        # subroutine `make` is the same as calling .make on $/
+        make ~$/
+    }
+
+    method TOP ($match) {
+        # can use any variable name for parameter, not just $/
+        $match.make: $match<pair>».made
+    }
+}
+
+
+my $actions = KeyValuePairsActions;
+my @res = KeyValuePairs.parse(q:to/EOI/, :$actions).made;
+second=b
+hits=42
+perl=6
+EOI
+
+for @res -> $p {
+    say "Key: $p.key()\tValue: $p.value()";
+}
+=end code
 
 This produces the following output:
 
-    =begin code :lang<text>
-    Key: second     Value: b
-    Key: hits       Value: 42
-    Key: perl       Value: 6
-    =end code
+=begin code :lang<text>
+Key: second     Value: b
+Key: hits       Value: 42
+Key: perl       Value: 6
+=end code
 
 Rule C<pair>, which parsed a pair separated by an equals sign, aliases the two
-calls to token C<identifier> to separate capture names to make them available
-more easily and intuitively. The corresponding action method constructs a
+calls to token C<identifier> to separate capture names so that they are
+available
+more easily and intuitively, as they will be in the corresponding Action. The
+corresponding action method constructs a
 L<Pair|/type/Pair> object, and uses the C<.made> property of the sub match
 objects. So it (like the action method C<TOP> too) exploits the fact that
 action methods for submatches are called before those of the calling/outer
@@ -523,6 +608,85 @@ the multiple matches of the C<pair> rule, and returns them in a list.
 Also note that C<KeyValuePairsActions> was passed as a type object to method
 C<parse>, which was possible because none of the action methods use attributes
 (which would only be available in an instance).
+
+We can extend above example by using inheritance.
+
+=begin code :skip-test<Incomplete example>
+use KeyValuePairs;
+
+unit grammar ConfigurationSets is KeyValuePairs;
+
+token TOP {
+    <configuration-element>+ %% \v
+}
+
+token configuration-element {
+    <pair>+ %% \v
+}
+
+token comment {
+    \s* '#' .+? $$
+}
+
+token pair {
+    <key=.identifier> '=' <value=.identifier> <comment>?
+}
+=end code
+
+We are sub-classing (actually, sub-grammaring) the previous example; we have
+overriden the definition of C<pair> by adding a C<comment>; the previous
+C<TOP> rule has been demoted to C<configuration-element>, and there's a new
+C<TOP> which now considers sets of configuration elements separated by
+vertical space. We can also reuse actions by subclassing the action class:
+
+=begin code :skip-test<Incomplete example>
+use KeyValuePairs;
+
+unit class ConfigurationSetsActions is KeyValuePairsActions;
+
+method configuration-element($match) {
+    $match.make: $match<pair>».made
+}
+
+method TOP ($match) {
+    my @made-elements = gather for $match<configuration-element> {
+        take $_.made
+    };
+    $match.make( @made-elements );
+
+}
+=end code
+
+All existing actions are reused, although obviously new ones have to be
+written for the new elements in the grammar, including C<TOP>. These can be
+used together from this script:
+
+=begin code :skip-test<Incomplete example>
+use ConfigurationSets;
+use ConfigurationSetsActions;
+
+my $actions = ConfigurationSetsActions;
+my $sets = ConfigurationSets.parse(q:to/EOI/, :$actions).made;
+second=b # Just a thing
+hits=42
+perl=6
+
+third=c # New one
+hits=33
+EOI
+
+for @$sets -> $set {
+    say "Element→ $set";
+}
+=end code
+
+Which will print
+
+=for code :lang<text>
+Element→ second b hits 42 perl 6
+Element→ third c hits 33
+
+
 
 In other cases, action methods might want to keep state in attributes. Then of
 course you must pass an instance to method parse.

@@ -1,4 +1,4 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("composite")
 
 =TITLE class Pair
 
@@ -20,6 +20,17 @@ There are many syntaxes for creating C<Pair>s:
     :key<value1 value2>;      # But this is  key => <value1 value2>
     :foo(127);                # short for  foo => 127
     :127foo;                  # the same   foo => 127
+
+Note that last form supports Non-ASCII numerics as well:
+
+    # use MATHEMATICAL DOUBLE-STRUCK DIGIT THREE
+    say (:𝟛math-three);         # OUTPUT: «math-three => 3␤»
+
+You can also use an I<identifier-like literal> as key; this will not need the
+quotes as long as it follows the syntax of
+L<ordinary identifiers|/syntax/identifiers#Ordinary_identifiers>:
+
+    (foo => 127)              # the same   foo => 127
 
 Variants of this are
 
@@ -61,34 +72,46 @@ Any variable can be turned into a C<Pair> of its name and its value.
     say $p; # OUTPUT: «bar => 10␤»
 
 
-It is worth noting that when assigning a L<Scalar|/type/Scalar> as value of a C<Pair>
-the value holds the container of the value itself. This means that it is possible to change the
-value from outside of the C<Pair> itself:
+It is worth noting that when assigning a L<Scalar|/type/Scalar> as value of a
+C<Pair> the value holds the container of the value itself. This means that it is
+possible to change the value from outside of the C<Pair> itself:
 
 =begin code
 my $v = 'value A';
 my $pair = a => $v;
-$pair.say;  # OUTPUT: a => value A
+$pair.say;  # OUTPUT: «a => value A␤»
 
 $v = 'value B';
-$pair.say; # OUTPUT: a => value B
+$pair.say;  # OUTPUT: «a => value B␤»
 =end code
 
-Please also note that this behavior is totally unrelated to the way used to build the C<Pair> itself
-(i.e., explicit usage of C<new>, use of colon, fat arrow), as well as if the C<Pair> is bound
-to a variable.
+Please also note that this behavior is totally unrelated to the way used to
+build the C<Pair> itself (i.e., explicit usage of C<new>, use of colon, fat
+arrow), as well as if the C<Pair> is bound to a variable.
 
-It is possible to change the above behaviour forcing the C<Pair> to remove the scalar container
-and to hold the effective value itself via the method L<freeze|/type/Pair#method_freeze>:
+It is possible to change the above behavior forcing the C<Pair> to remove the
+scalar container and to hold the effective value itself via the method
+L<freeze|/type/Pair#method_freeze>:
 
 =begin code
 my $v = 'value B';
 my $pair = a => $v;
 $pair.freeze;
 $v = 'value C';
-$pair.say; # OUTPUT: a => value B
+$pair.say; # OUTPUT: «a => value B␤»
 =end code
 
+As Pair implements L<Associative|/type/Associative> role, its value can be
+accessed using Associative subscription operator, however, due to X<Pair>'s
+singular nature, the pair's value will be only returned for the pair's key.
+L<Nil|/type/Nil> object will be returned for any other key. Subscript
+adverbs such as X<:exists> can be used on Pair.
+
+=for code
+my $pair = a => 5;
+say $pair<a>;           # OUTPUT: «5␤»
+say $pair<a>:exists;    # OUTPUT: «True␤»
+say $pair<no-such-key>; # OUTPUT: «Nil␤»
 
 =head1 Methods
 
@@ -99,7 +122,7 @@ Defined as:
     multi method new(Pair: Mu  $key, Mu  $value)
     multi method new(Pair: Mu :$key, Mu :$value)
 
-Constructs a new L<Pair> object.
+Constructs a new L<Pair|/type/Pair> object.
 
 =head2 method ACCEPTS
 
@@ -109,24 +132,32 @@ Defined as:
     multi method ACCEPTS(Pair:D $: Pair:D $topic)
     multi method ACCEPTS(Pair:D $: Mu $topic)
 
-If C<topic> is an L<Associative>, looks up the value using invocant's key in
+If C<%topic> is an L<Associative|/type/Associative>, looks up the value using invocant's key in
 it and checks invocant's value C<.ACCEPTS> that value:
 
     say %(:42a) ~~ :42a; # OUTPUT: «True␤»
     say %(:42a) ~~ :10a; # OUTPUT: «False␤»
 
-If C<topic> is another L<Pair>, checks the invocant's value C<.ACCEPTS> the
-C<topic's> value. Note that the keys are not considered and can be different:
+If C<$topic> is another L<Pair|/type/Pair>, checks the invocant's value
+C<.ACCEPTS> the C<$topic>'s value. Note that the keys are not considered and can
+be different:
 
     say :42a ~~ :42a; # OUTPUT: «True␤»
     say :42z ~~ :42a; # OUTPUT: «True␤»
     say :10z ~~ :42a; # OUTPUT: «False␤»
 
-If C<topic> is any other value, uses the invocant's key as the name of the
-method to call on C<topic> and check's its L«C<.Bool>|/routine/Bool» is the same
-as C<.Bool> of the invocant's value. This form can be used to check L<Bool> values
-of multiple methods on the same object, such as L<IO::Path>, by using
-L<Junctions|/type/Junction>:
+If C<$topic> is any other value, the invocant C<Pair>'s key is treated as a method name.
+This method is called on C<$topic>, the L«boolean|/routine/Bool» result of which is compared
+against the invocant C<Pair>'s L«boolean|/routine/Bool» value. For example, primality can
+be tested using smartmatch:
+
+    say 3 ~~ :is-prime;             # OUTPUT: «True␤»
+    say 3 ~~  is-prime => 'truthy'; # OUTPUT: «True␤»
+    say 4 ~~ :is-prime;             # OUTPUT: «False␤»
+
+This form can also be used to check
+L<Bool|/type/Bool> values of multiple methods on the same object, such as
+L<IO::Path|/type/IO::Path>, by using L<Junctions|/type/Junction>:
 
     say "foo" .IO ~~ :f & :rw; # OUTPUT: «False␤»
     say "/tmp".IO ~~ :!f;      # OUTPUT: «True␤»
@@ -192,7 +223,7 @@ parts of the C<Pair> formatted. Here's an example:
     say $pair.fmt("%s is %.3f AU away from the sun")
     # OUTPUT: «Earth is 1.000 AU away from the sun␤»
 
-For more about format strings, see L<sprintf>.
+For more about format strings, see L<sprintf|/routine/sprintf>.
 
 =head2 method kv
 
@@ -241,15 +272,15 @@ Defined as:
 
     method invert(Pair:D: --> Seq:D)
 
-Returns a L<Seq>. If the C<.value> of the invocant is I<NOT> an
-L<Iterable|/type/Iterable>, the L<Seq> will contain a single L<Pair> whose
+Returns a L<Seq|/type/Seq>. If the C<.value> of the invocant is I<NOT> an
+L<Iterable|/type/Iterable>, the L<Seq|/type/Seq> will contain a single L<Pair|/type/Pair> whose
 C<.key> is the C<.value> of the invocant and whose C<.value> is the C<.key> of
 the invocant:
 
     :foo<bar>.invert.perl.say; # OUTPUT: «(:bar("foo"),).Seq»
 
-If invocant's C<.value> I<is> an L<Iterable|/type/Iterable>, the returned L<Seq>
-will contain the same number of L<Pair>s as items in the C<.value>, with each
+If invocant's C<.value> I<is> an L<Iterable|/type/Iterable>, the returned L<Seq|/type/Seq>
+will contain the same number of L<Pair|/type/Pair>s as items in the C<.value>, with each
 of those items a C<.key> of a pair and the C<.key> of the invocant the C<.value>
 of that pair:
 
@@ -301,8 +332,11 @@ Makes the I<value> of the C<Pair> read-only, by removing it from its L<Scalar co
     CATCH { default { put .^name, ': ', .Str } };
     # OUTPUT: «X::Assignment::RO: Cannot modify an immutable Str (apple)␤»
 
-B<NOTE:> this method is proposed for removal in future language versions and its
-use is not recommended.
+B<NOTE:> this method is deprecated as of B<6.d> language version. Instead,
+create a new C<Pair>, with a L<decontainerized|/language/glossary#decont> key/value.
+
+=for code :preamble<my $p>
+$p.=Map.=head.say;                                    # OUTPUT: «orange␤»
 
 =head2 method Str
 
@@ -315,6 +349,17 @@ as I<key ~ \t ~ value>.
 
     my $b = eggs => 3;
     say $b.Str;                                       # OUTPUT: «eggs  3␤»
+
+=head2 method Pair
+
+Defined as:
+
+    method Pair()
+
+Returns the invocant Pair object.
+
+    my $pair = eggs => 3;
+    say $pair.Pair === $pair;                         # OUTPUT: «True␤»
 
 =end pod
 

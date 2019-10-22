@@ -230,7 +230,7 @@ td, th {
     width: 95%;
     background-color: #FFFFFF;
     color: #444;
-    transition: all .2s easeout;
+    transition: all .2s ease-out;
 }
 
 #query:focus {
@@ -239,7 +239,7 @@ td, th {
     width: 95%;
 }
 
-#query::input-placeholder {
+#query::placeholder {
     text-align: right;
 }
 
@@ -248,10 +248,6 @@ td, th {
 }
 
 #query::-webkit-placeholder {
-    text-align: right;
-}
-
-#query::-ms-placeholder {
     text-align: right;
 }
 
@@ -311,7 +307,7 @@ td, th {
     box-shadow: 0.5em 0.5em 1em #888888;
     display: inline-block;
     border-left: none;
-    border-bottom: solid inherit;
+    border-bottom: solid;
     color: black;
     text-decoration: none;
     padding-left:  0.9em;
@@ -501,6 +497,28 @@ table#TOC {
         padding-top: 3pt;
     }
 
+    tr.toc-level-3 {
+        td {
+            padding-top: 2pt;
+            font-size: 0.9em;
+        }
+
+        td.toc-text {
+            padding-left: 12px;
+        }
+    }
+
+    tr.toc-level-4 {
+        td {
+            padding-top: 2pt;
+            font-size: 0.8em;
+        }
+
+        td.toc-text {
+            padding-left: 16px;
+        }
+    }
+
     td.toc-number {
         display: none;
     }
@@ -594,4 +612,11 @@ a[href*="//"]:not([href*="perl6.org"])::after,
     .headerSortUp {
         background-image: url('data:image/svg+xml;utf8,<svg version="1.1" xmlns="https://www.w3.org/2000/svg" xmlns:xlink="https://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 490.659 490.659" style="enable-background:new 0 0 490.659 490.659;" xml:space="preserve"><path d="M489.229,442.468L254.563,37.135c-3.797-6.592-14.677-6.592-18.453,0L1.443,442.468c-1.92,3.307-1.92,7.36-0.021,10.667 c1.92,3.307,5.44,5.333,9.259,5.333h469.333c3.819,0,7.339-2.027,9.259-5.333C491.128,449.849,491.128,445.775,489.229,442.468z"/></svg>');
     }
+}
+
+.fallback {
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
 }

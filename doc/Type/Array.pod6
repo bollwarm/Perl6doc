@@ -1,4 +1,4 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("composite")
 
 =TITLE class Array
 
@@ -6,17 +6,19 @@
 
     class Array is List {}
 
-An C<Array> is a L<List> which forces all its elements to be
+An C<Array> is a L<List|/type/List> which forces all its elements to be
 scalar containers, which means you can assign to array elements.
 
 C<Array> implements C<Positional> and as such provides support for
 L<subscripts|/language/subscripts>.
 
+B<Note> from version 6.d, C<.perl> can be called on multi-dimensional arrays.
+
 =head1 Methods
 
 =head2 method gist
 
-Exactly the same as L«C<List.gist>|/type/List.html#method_gist»,
+Exactly the same as L«C<List.gist>|/type/List#method_gist»,
 except using square brackets for surrounding delimiters.
 
 =head2 routine pop
@@ -44,7 +46,7 @@ Defined as:
     multi sub    push(Array:D, **@values --> Array:D)
     multi method push(Array:D: **@values --> Array:D)
 
-Adds the C<@values> to the end of the array, and returns the modified list.
+Adds the C<@values> to the end of the array, and returns the modified array.
 Throws for lazy arrays.
 
 Example:
@@ -78,18 +80,17 @@ values that are stored in a single array.
 
 Defined as
 
-=begin code :skip-test
-sub append(\array, elems)
-=end code
+    sub append(\array, |elems)
     multi method append(Array:D: \values)
     multi method append(Array:D: **@values is raw)
 
 Appends the argument list to the array passed as the first argument.  This
-modifies the array in-place.  Returns the modified array. Throws for lazy arrays.
+modifies the array in-place.  Returns the modified array. Throws for lazy
+arrays.
 
-The difference from method C<push> is that with an array or list argument,
-C<append> appends several elements (one for each array or list element),
-whereas C<push> appends just one element.
+The difference from method C<push> is that if you append a B<single> array
+or list argument, C<append> will flatten that array / list, whereas C<push>
+appends the list / array as just a single element.
 
 Example:
 
@@ -107,7 +108,7 @@ Defined as:
 
 Returns the number of elements in the invocant. Throws C<X::Cannot::Lazy>
 exception if the invocant L<is lazy|/routine/is-lazy>. For shaped arrays,
-returns the outer dimension; see L<shape> if you need information for
+returns the outer dimension; see L<shape|/routine/shape> if you need information for
 all dimensions.
 
     say [<foo bar ber>] .elems; # OUTPUT: «3␤»
@@ -168,7 +169,7 @@ Defined as:
     multi method unshift(Array:D: **@values --> Array:D)
 
 Adds the C<@values> to the start of the array, and returns the modified array.
-Fails if C<@values> is infinite.
+Fails if C<@values> is a lazy list.
 
 Example:
 
@@ -186,9 +187,7 @@ list or array.
 
 Defined as
 
-=begin code :skip-test
-sub prepend(\array, elems)
-=end code
+    sub prepend(\array, |elems)
     multi method prepend(Array:D: \values)
     multi method prepend(Array:D: **@values is raw)
 
@@ -200,6 +199,10 @@ Example:
     my @foo = <a b c>;
     @foo.prepend: 1, 3 ... 11;
     say @foo;                   # OUTPUT: «[1 3 5 7 9 11 a b c]␤»
+
+The difference from method C<unshift> is that if you prepend a B<single> array
+or list argument, C<prepend> will flatten that array / list, whereas C<unshift>
+prepends the list / array as just a single element.
 
 =head2 routine splice
 
@@ -256,22 +259,24 @@ Defined as:
 
     method default
 
-Returns the default value of the invocant, i.e. the value which is returned
-when trying to access an element in the C<Array> which has not been
-previously initialized or when accessing an element which has explicitly
-been set to C<Nil>. Unless the C<Array> is declared as having a default
-value by using the L<is default|/routine/is default (Variable)> trait the method returns
-the type object C<(Any)>.
+Returns the default value of the invocant, i.e. the value which is returned when
+trying to access an element in the C<Array> which has not been previously
+initialized or when accessing an element which has explicitly been set to
+C<Nil>. Unless the C<Array> is declared as having a default value by using the
+L<is default|/syntax/trait is default> trait the method returns the type object
+C<(Any)>.
 
-    my @a1 = 1, "two", 2.718;
-    say @a1.default;                                       # OUTPUT: «(Any)␤»
-    say @a1[4];                                            # OUTPUT: «(Any)␤»
+=begin code
+my @a1 = 1, "two", 2.718;
+say @a1.default;                               # OUTPUT: «(Any)␤»
+say @a1[4];                                    # OUTPUT: «(Any)␤»
 
-    my @a2 is default(17) = 1, "two", 3;
-    say @a2.default;                                       # OUTPUT: «17␤»
-    say @a2[4];                                            # OUTPUT: «17␤»
-    @a2[1] = Nil;                                          # (resets element to its default)
-    say @a2[1];                                            # OUTPUT: «17␤»
+my @a2 is default(17) = 1, "two", 3;
+say @a2.default;                               # OUTPUT: «17␤»
+say @a2[4];                                    # OUTPUT: «17␤»
+@a2[1] = Nil;                                  # (resets element to its default)
+say @a2[1];                                    # OUTPUT: «17␤»
+=end code
 
 =head2 method of
 
@@ -312,7 +317,7 @@ If you declare a variable with the C<*> twigil C<is dynamic> is implied.
     my @*b;
     say @*b.dynamic;                         # OUTPUT: «True␤»
 
-Note that in the L<Scalar> case you have to use the C<VAR> method in
+Note that in the L<Scalar|/type/Scalar> case you have to use the C<VAR> method in
 order to get correct information.
 
     my $s is dynamic = [1, 2, 3];

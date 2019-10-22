@@ -1,10 +1,10 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("basic")
 
 =TITLE class Int
 
 =SUBTITLE Integer (arbitrary-precision)
 
-=for code :skip-test
+=for code :skip-test<Defined in BOOTSTRAP, this definition fails>
 class Int is Cool does Real { }
 
 C<Int> objects store integral numbers of arbitrary size. C<Int>s are immutable.
@@ -80,6 +80,12 @@ can accept non-C<Int> arguments, which will be coerced to C<Int>.
 
     say expmod(4, 2, 5);    # OUTPUT: «1␤»
     say 7.expmod(2, 5);     # OUTPUT: «4␤»
+
+C<$y> argument can also be negative, in which case, the result is
+equivalent to C<($x ** $y)> mod $mod.
+
+    say 7.expmod(-2, 5);     # OUTPUT: «4␤»
+
 
 =head2 method polymod
 
@@ -166,9 +172,9 @@ Defined as:
     multi method lsb(Int:D:)
     multi sub    lsb(Int:D)
 
-Returns L<Nil|/type/Nil> if the number is 0. Otherwise returns the zero-based
-index from the right of the least significant (rightmost) 1 in the binary
-representation of the number.
+Short for "Least Significant Bit".  Returns L<Nil|/type/Nil> if the number is
+0. Otherwise returns the zero-based index from the right of the least
+significant (rightmost) 1 in the binary representation of the number.
 
     say 0b01011.lsb;        # OUTPUT: «0␤»
     say 0b01010.lsb;        # OUTPUT: «1␤»
@@ -183,9 +189,9 @@ Defined as:
     multi method msb(Int:D:)
     multi sub    msb(Int:D)
 
-Returns L<Nil|/type/Nil> if the number is 0. Otherwise returns the zero-based
-index from the right of the most significant (leftmost) 1 in the binary
-representation of the number.
+Short for "Most Significant Bit".  Returns L<Nil|/type/Nil> if the number is 0.
+Otherwise returns the zero-based index from the right of the most significant
+(leftmost) 1 in the binary representation of the number.
 
     say 0b00001.msb;        # OUTPUT: «0␤»
     say 0b00011.msb;        # OUTPUT: «1␤»
@@ -206,6 +212,10 @@ number, or L<NaN|/type/Num#NaN> if it does not represent a number.
     say ord("¾").unival;    # OUTPUT: «0.75␤»
     say 190.unival;         # OUTPUT: «0.75␤»
     say unival(65);         # OUTPUT: «NaN␤»
+
+=head2 method Range
+
+Returns a L<Range object|/type/Range> that represents the range of values supported.
 
 =head1 Operators
 

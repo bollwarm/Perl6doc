@@ -1,4 +1,4 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("domain-specific")
 
 =TITLE class IO::Spec::Unix
 
@@ -7,7 +7,7 @@
     class IO::Spec::Unix is IO::Spec  { }
 
 On object of this type is available via the variable C<$*SPEC> if the
-Perl 6 interpreter is running on a Unix-like platform.
+Raku interpreter is running on a Unix-like platform.
 
 The C<IO::Spec::*> classes provide low-level path operations. Unless
 you're creating your own high-level path manipulation routines, you
@@ -87,7 +87,7 @@ Defined as:
 
 Takes two path fragments and concatenates them, adding or removing a
 path separator, if necessary. The first argument is ignored (it exists
-to maintain consistent interface with other C<IO::Spec> types for
+to maintain consistent interface with other C<IO::Spec|/type/IO::Spec> types for
 systems that have volumes).
 
     IO::Spec::Unix.catpath($, 'some/dir', 'and/more').say;
@@ -109,7 +109,7 @@ Defined as:
 
     method curupdir()
 
-Returns a L«C<none>|/routine/none» L<Junction> of strings representing
+Returns a L«C<none>|/routine/none» L<Junction|/type/Junction> of strings representing
 the current directory and the "one directory up":
 
 =for code
@@ -203,8 +203,8 @@ Defined as:
     method path(--> Seq:D)
 
 Splits the value of C«%*ENV<PATH>» on colons (C<":">), replaces empty parts with
-C<".">, and returns a L<Seq> with each of the resultant parts. Returns
-an empty L<Seq> if C«%*ENV<PATH>» is not set or is an empty string.
+C<".">, and returns a L<Seq|/type/Seq> with each of the resultant parts. Returns
+an empty L<Seq|/type/Seq> if C«%*ENV<PATH>» is not set or is an empty string.
 
     %*ENV<PATH> = 'foo:bar/ber::foo:';
     IO::Spec::Unix.path.perl.say;
@@ -252,9 +252,9 @@ Defined as:
     method split(Cool:D $path --> List:D)
 
 Splits the given C<$path> into "volume", "dirname", and "basename" and
-returns the result as a L<List> of three L<Pairs|/type/Pair>, in that order.
+returns the result as a L<List|/type/List> of three L<Pairs|/type/Pair>, in that order.
 The "volume" is always an empty string and exists for consistency with other
-L<IO::Spec> classes.
+L<IO::Spec|/type/IO::Spec> classes.
 
 =begin code
 IO::Spec::Unix.split('C:/foo/bar.txt').perl.say;
@@ -312,7 +312,7 @@ Defined as:
 
 Splits the given C<$path> into a list of 3 strings: volume,
 dirname, and file. The volume is always an empty string, returned for API
-compatibility with other L<IO::Spec> types. If C<:$nofile> named argument is
+compatibility with other L<IO::Spec|/type/IO::Spec> types. If C<:$nofile> named argument is
 set to C<True>, the content of the file string is undefined and should be
 ignored; this is a means to get a performance boost, as implementations may use
 faster code path when file is not needed.

@@ -1,4 +1,4 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("domain-specific")
 
 =TITLE class Attribute
 
@@ -6,31 +6,12 @@
 
     class Attribute { }
 
-In Perl 6 lingo, an I<attribute> refers to a per-instance/object storage slot.
-An C<Attribute> is used to talk about classes' and roles' attributes on the
-meta level.
+In Raku lingo, an I<attribute> refers to a per-instance/object storage slot.
+An C<Attribute> is used to talk about classes' and roles' attributes at the
+metalevel.
 
-Normal usage of attributes does not require the user to use class Attribute
+Normal usage of attributes does not require the user to use this class
 explicitly.
-
-The usual way to obtain an object of type C<Attribute> is by introspection:
-
-    class Useless {
-        has @!things;
-    }
-    my $a = Useless.^attributes(:local)[0];
-    say $a.perl;            # OUTPUT: «Attribute.new␤»
-    say $a.name;            # OUTPUT: «@!things␤»
-    say $a.package;         # OUTPUT: «(Useless)␤»
-    say $a.has_accessor;    # OUTPUT: «False␤»
-
-Modifying a private attribute from the outside is usually not possible, but since Attribute is at the level of the meta class, all is fair game
-
-=begin code :preamble<class Useless { has @!things }; my $a>
-my $instance = Useless.new;
-$a.set_value($instance, [1, 2, 3]);
-say $a.get_value($instance);        # OUTPUT: «[1 2 3]␤»
-=end code
 
 =head1 Traits
 
@@ -38,7 +19,8 @@ X<|is default (Attribute)>
 =head2 X<Trait is default>
 
 An attribute that is assigned L<Nil|/type/Nil> will revert to its default value
-set with the trait C<is default>.
+set with the trait C<is default>. In the case of arrays or associatives, the
+argument of C<is default> will set the default item value or hash value.
 
     class C {
         has $.a is default(42) is rw = 666
@@ -48,8 +30,18 @@ set with the trait C<is default>.
     $c.a = Nil;
     say $c;
     # OUTPUT: «C.new(a => 666)␤C.new(a => 42)␤»
+    class Foo {
+        has @.bar is default(42) is rw
+    };
+    my $foo = Foo.new( bar => <a b c> );
+    $foo.bar =Nil;
+    say $foo; # OUTPUT: «Foo.new(bar => [42])␤»
 
 =head2 X<Trait is required|trait,is required (Attribute)>
+
+Defined as:
+
+    multi sub trait_mod:<is> (Attribute $attr, :$required!)
 
 The trait C<is required> will mark the attribute as to be filled with a value
 when the object is instantiated. Failing to do so will result in a runtime
@@ -63,11 +55,9 @@ error.
     # OUTPUT: «X::Attribute::Required: The attribute '$!a' is required, but you did not provide a value for it.␤»
 
 B<Available as of 6.d language version> (early implementation exists in Rakudo
-compiler 2018.08+):
+compiler 2018.08+): You can specify a reason why the attribute is required:
 
-You can specify a reason why the attribute is required:
-
-=begin code :skip-test<NYI>
+=begin code
 class D {
     has $.a is required("it is a good idea");
 }
@@ -75,6 +65,10 @@ my $d = D.new;
 CATCH{ default { say .^name, ': ', .Str } }
 # OUTPUT: «X::Attribute::Required: The attribute '$!a' is required because it is a good idea,␤but you did not provide a value for it.␤»
 =end code
+
+C<is required> doesn't just affect the default constructor, it checks for the
+attribute at a lower level, so it will work for custom constructors written
+using L<bless|/routine/bless>.
 
 =head2 X<trait is DEPRECATED|trait,is DEPRECATED (Attribute)>
 
@@ -94,10 +88,44 @@ STDERR:
     # Saw 1 occurrence of deprecated code.
     # =====================================
     # Method foo (from C) seen at:
-    # script.pl6, line 5
+    # script.p6, line 5
     # Please use 'bar' instead.
 
+=head2 X<trait is rw|trait,is rw (Attribute)>
+
+Defined as:
+
+    multi sub trait_mod:<is> (Attribute:D $attr, :$rw!)
+
+Marks an attribute as read/write as opposed to the default C<readonly>.  The
+default accessor for the attribute will return a writable value.
+
+   class Boo {
+      has $.bar is rw;
+      has $.baz;
+   };
+
+   my $boo = Boo.new;
+   $boo.bar = 42; # works
+   $boo.baz = 42;
+   CATCH { default { put .^name, ': ', .Str } };
+   # OUTPUT: «X::Assignment::RO: Cannot modify an immutable Any␤»
+
 =head1 Methods
+
+The usual way to obtain an object of type C<Attribute> is by introspection:
+
+    class Useless {
+        has @!things;
+    }
+    my $a = Useless.^attributes(:local)[0];
+    say $a.perl;            # OUTPUT: «Attribute.new␤»
+    say $a.name;            # OUTPUT: «@!things␤»
+    say $a.package;         # OUTPUT: «(Useless)␤»
+    say $a.has_accessor;    # OUTPUT: «False␤»
+
+Modifying a private attribute from the outside is usually not possible, but
+since Attribute is at the level of the metaclass, all is fair game.
 
 =head2 method name
 
@@ -118,7 +146,7 @@ so if an attribute is declared as C<has $.a>, the name returned is C<$!a>.
 
 Defined as:
 
-    method package(Attribute:D: --> Mu:U)
+    method package()
 
 Returns the package (class/grammar/role) to which this attribute belongs.
 
@@ -145,6 +173,23 @@ Returns C<True> if the attribute has a public accessor method.
     say $private.has_accessor; # OUTPUT: «False␤»
     say $public.has_accessor;  # OUTPUT: «True␤»
 
+=head2 method rw
+
+Defined as:
+
+    method rw(Attribute:D: --> Bool:D)
+
+Returns C<True> for attributes that have the "is rw" trait applied to them.
+
+    class Library {
+        has $.address; # Read-only value
+        has @.new-books is rw;
+    }
+    my $addr = Library.^attributes(:local)[0];
+    my $new-books = Library.^attributes(:local)[1];
+    say $addr.rw;      # OUTPUT: «False␤»
+    say $new-books.rw; # OUTPUT: «True␤»
+
 =head2 method readonly
 
 Defined as:
@@ -162,6 +207,25 @@ attributes marked as C<is rw>.
     my $new-books = Library.^attributes(:local)[1];
     say $addr.readonly;      # OUTPUT: «True␤»
     say $new-books.readonly; # OUTPUT: «False␤»
+
+=head2 method required
+
+Defined as:
+
+    method required(Attribute:D: --> Any:D)
+
+Returns C<1> for attributes that have the "is required" trait applied, or C<Mu>
+if the attribute did not have that trait applied.  If the "is required" trait
+is applied with a string, then that string will be returned instead of C<1>.
+
+    class Library {
+        has $.address is required;
+        has @.new-books is required("we always need more books");
+    }
+    my $addr = Library.^attributes(:local)[0];
+    my $new-books = Library.^attributes(:local)[1];
+    say $addr.required;      # OUTPUT: «1␤»
+    say $new-books.readonly; # OUTPUT: «"we always need more books"␤»
 
 =head2 method type
 
@@ -186,9 +250,9 @@ Returns the type constraint of the attribute.
 
 Defined as:
 
-    method get_value(Attribute:D: Mu $instance)
+    method get_value(Mu $obj)
 
-Returns the value stored in this attribute of object C<$instance>.
+Returns the value stored in this attribute of object C<$obj>.
 
     class Violated {
         has $!private-thing = 5;
@@ -203,9 +267,9 @@ used with care.  Here be dragons.
 
 Defined as:
 
-    method set_value(Attribute:D: Mu $instance, Mu \new_val)
+    method set_value(Mu $obj, Mu \new_val)
 
-Binds the value C<new_val> to this attribute of object C<$instance>.
+Binds the value C<new_val> to this attribute of object C<$obj>.
 
     class A {
         has $!a = 5;
@@ -220,46 +284,52 @@ Binds the value C<new_val> to this attribute of object C<$instance>.
 Note that this method violates encapsulation of the object, and should be
 used with care.  Here be dragons.
 
-=head2 trait is required
+=head2 method gist
 
-    multi sub trait_mod:<is> (Attribute $attr, :$required!)
+Defined as
 
-Marks an attribute as being required.  If a value is not provided
-during object construction, an exception is thrown.
+    multi method gist(Attribute:D:)
 
-    class Foo {
-       has $.bar is required;
-       has $.baz;
-    };
+Returns the name of the type followed by the name of the attribute.
 
-    Foo.new(bar => 42); # works
-    Foo.new(baz => 42);
-    CATCH { default { put .^name, ': ', .Str } };
-    # OUTPUT: «X::Attribute::Required: The attribute '$!bar' is required, but you did not provide a value for it.␤»
+=for code
+class Hero {
+    has @!inventory;
+    has Str $.name;
+    submethod BUILD( :$name, :@inventory ) {
+        $!name = $name;
+        @!inventory = @inventory
+    }
+}
+say Hero.^attributes(:local)[0]; # OUTPUT: «Positional @!inventory»
 
-C<is required> doesn't just affect the default constructor, it checks for the
-attribute at a lower level, so it will work for custom constructors written
-using L<bless>.
+Since say implicitly calls C<.gist>, that is what produces the output here.
 
+=head1 Optional introspection
 
-=head2 trait is rw
+=head2 DEPRECATED
 
-    multi sub trait_mod:<is> (Attribute:D $attr, :$rw!)
+If an attribute is marked as C<DEPRECATED>, then calling the C<DEPRECATED>
+method is possible and will return C<"something else"> (if no specific reason
+was specified) or the string that was specified with the C<DEPRECATED> trait.
 
-Marks an attribute as read/write as opposed to the default
-C<readonly>.  The default accessor for the attribute will return a
-writable value.
+If an attribute is B<not> marked as DEPRECATED, one cannot B<not> call the
+C<DEPRECATED> method.  Therefore, the C<.?method> syntax should be used.
 
-   class Boo {
-      has $.bar is rw;
-      has $.baz;
-   };
-
-   my $boo = Boo.new;
-   $boo.bar = 42; # works
-   $boo.baz = 42;
-   CATCH { default { put .^name, ': ', .Str } };
-   # OUTPUT: «X::Assignment::RO: Cannot modify an immutable Any␤»
+    class Hangout {
+        has $.table;
+        has $.bar is DEPRECATED("the patio");
+    }
+    my $attr-table = Hangout.^attributes(:local)[0];
+    my $attr-bar = Hangout.^attributes(:local)[1];
+    with $attr-table.?DEPRECATED -> $text {     # does not trigger
+        say "Table is deprecated with '$text'";
+        # OUTPUT:
+    }
+    with $attr-table.?DEPRECATED -> $text {
+        say "Bar is deprecated with '$text'";
+        # OUTPUT: «Bar is deprecated with 'the patio'"␤»
+    }
 
 =end pod
 

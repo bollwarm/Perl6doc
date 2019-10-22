@@ -49,10 +49,29 @@ role  Metamodel::Versioning
 class Attribute
 
 [Domain-specific]
+class Telemetry
+class Telemetry::Period is Telemetry does Associative
+class Telemetry::Sampler
+class Telemetry::Instrument::ThreadPool
+class Telemetry::Instrument::Thread
+class Telemetry::Instrument::Usage
+class Collation
+class Encoding
+class Encoding::Registry
+
+
+[Domain-specific]
 # VM
+role  Systemic
+class Perl does Systemic
+class Compiler does Systemic
 class Distro
+role Distribution
+role Distribution::Locally does Distribution
+class Distribution::Hash does Distribution::Locally
+class Distribution::Path does Distribution::Locally
 class Kernel
-class VM
+class VM                            does Systemic
 
 [Basic]
 # Base types
@@ -72,6 +91,7 @@ role  Callable[::T = Mu]
 class Code                                         does Callable
 class Block                         is Code
 class Routine                       is Block
+class Routine::WrapHandle
 class Sub                           is Routine
 class Method                        is Routine
 class Submethod                     is Routine
@@ -82,6 +102,7 @@ class ForeignCode                   does Callable
 class HyperWhatever
 class Whatever
 class WhateverCode                  is Code
+enum Endian                         is Int
 
 [Basic]
 class CallFrame
@@ -96,7 +117,6 @@ class Label
 [Domain-specific]
 # Regex and Grammars
 class Match                         is Capture is Cool
-class Cursor                        aka Match is Capture is Cool
 class Grammar                       is Match
 class Regex                         is Method
 
@@ -112,7 +132,8 @@ role  Real                                         does Numeric
 class Int                           is Cool        does Real
 class Num                           is Cool        does Real
 class Complex                       is Cool        does Numeric
-class int       is Int
+class int                           is Int
+class UInt
 class atomicint                     is Int
 
 [Basic]
@@ -172,6 +193,17 @@ class Pod::Block::Table             is Pod::Block
 class Pod::FormattingCode           is Pod::Block
 class Pod::Heading                  is Pod::Block
 class Pod::Item                     is Pod::Block
+class Pod::Defn                     is Pod::Block
+
+[Domain-specific]
+# CompUnit
+class CompUnit
+class CompUnit::Repository
+role  CompUnit::Repository::Locally
+role  CompUnit::Repository
+role  CompUnit::Repository::Installable
+class CompUnit::Repository::FileSystem does CompUnit::Repository::Locally does CompUnit::Repository
+class CompUnit::Repository::Installation does CompUnit::Repository::Locally does CompUnit::Repository::Installable
 
 [Domain-specific]
 # S17 / Concurrency
@@ -190,6 +222,7 @@ enum Signal                     is Int
 enum Order                      is Int
 class Semaphore
 class Lock
+class Lock::Async
 class Proc::Async
 class Thread
 
@@ -199,8 +232,12 @@ class Thread
 # Collections: Iteration
 role  Iterable
 role  Iterator
+role PredictiveIterator does Iterator
 role  PositionalBindFailover
 class Seq                           is Cool        does Iterable does PositionalBindFailover
+class RaceSeq                                      does Iterable does Sequence
+class HyperSeq                                     does Iterable does Sequence
+role Sequence
 
 [Composite]
 # Collections: Positional
@@ -216,6 +253,7 @@ class Slip                          is List
 role  Blob[::T = uint8]             does Positional[T] does Stringy
 role  Buf[::T = uint8]  does Blob[T]
 class Uni                           does Positional[uint32] does Stringy
+class utf8                          does Blob[uint8]
 class NFD               is Uni
 class NFC               is Uni
 class NFKD              is Uni
@@ -227,6 +265,7 @@ role  Associative[::T = Mu]
 role  Enumeration
 role  NumericEnumeration
 role  StringyEnumeration
+class StrDistance is Cool
 class Pair                                         does Associative
 class Map                           does Iterable is Cool does Associative
 class Stash                         is Hash
@@ -247,7 +286,7 @@ class MixHash                       does Mixy
 ### EXCEPTIONS
 [Exceptions]
 # Exceptions: Base
-class Failure
+class Failure                       is Nil
 class Exception
 class Backtrace
 class Backtrace::Frame
@@ -296,14 +335,14 @@ class X::Buf::Pack                  is Exception
 class X::Buf::Pack::NonASCII        is Exception
 
 [Exceptions]
-# Exceptions: Proc::Async]
+# Exceptions: Proc::Async
 role X::Proc::Async                     is Exception
 class X::Proc::Async::AlreadyStarted    does X::Proc::Async
 class X::Proc::Async::CharsOrBytes      does X::Proc::Async
 class X::Proc::Async::MustBeStarted     does X::Proc::Async
 class X::Proc::Async::OpenForWriting    does X::Proc::Async
 class X::Proc::Async::TapBeforeSpawn    does X::Proc::Async
-
+class X::Proc::Async::BindOrUse         does X::Proc::Async
 [Exceptions]
 # Exceptions: Concurrency
 class X::Promise::CauseOnlyValidOnBroken is Exception
@@ -317,6 +356,7 @@ role  X::Temporal                   is Exception
 class X::Temporal::InvalidFormat    does X::Temporal
 class X::DateTime::InvalidDeltaUnit does X::Temporal
 class X::DateTime::TimezoneClash    does X::Temporal
+class X::Scheduler::CueInNaNSeconds is Exception
 
 [Exceptions]
 # Exceptions: Composition
@@ -365,6 +405,7 @@ class X::Anon::Multi                               does X::Comp
 class X::Attribute::NoPackage                      does X::Comp
 class X::Attribute::Package                        does X::Comp
 class X::Attribute::Undeclared      is X::Undeclared
+class X::Attribute::Required                  is Exception does MOP
 class X::Augment::NoSuchType                       does X::Comp
 class X::Bind                       is Exception
 class X::Bind::NativeType                          does X::Comp
@@ -411,6 +452,7 @@ class X::Signature::Placeholder                    does X::Comp
 class X::Undeclared                                does X::Comp
 class X::Undeclared::Symbols                       does X::Comp
 class X::Value::Dynamic                            does X::Comp
+class X::Dynamic::NotFound                         is Exception
 
 [Exceptions]
 # Exceptions: Syntax
@@ -467,8 +509,15 @@ class X::Syntax::VirtualCall                       does X::Syntax
 role  X::Control                    is Exception
 class CX::Next                                     does X::Control
 class CX::Redo                                     does X::Control
+class CX::Redo                                     does X::Control
+class CX::Done                                     does X::Control
 class CX::Last                                     does X::Control
+class CX::Return                                   does X::Control
+class CX::Emit                                     does X::Control
 class CX::Take                                     does X::Control
 class CX::Warn                                     does X::Control
 class CX::Succeed                                  does X::Control
 class CX::Proceed                                  does X::Control
+
+[Core]
+module Test

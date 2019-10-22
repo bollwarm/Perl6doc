@@ -1,4 +1,4 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("basic")
 
 =TITLE class Variable
 
@@ -6,17 +6,16 @@
 
     class Variable {}
 
-Variables have a wealth of compile-time information, but at runtime, accesses
-to a variable usually act on the value stored inside the variable, not the
-variable itself. The runtime class of a variable is L<Scalar>.
+Variables have a wealth of compile-time information, but at runtime, accesses to
+a variable usually act on the value stored inside it, not the variable itself.
+The runtime class of a variable is L<Scalar|/type/Scalar>.
 
 Class C<Variable> holds the compile-time information that traits can use to
 introspect and manipulate variables.
 
 =head1 Traits
 
-X<|is default (Variable)>
-=head2 X<Trait is default>
+=head2 X<trait is default|is default (Variable)>
 
 Sets the default value with which a variable is initialized, and to which it is
 reset when L<Nil|/type/Nil> is assigned to it. Trait arguments are evaluated at
@@ -32,7 +31,8 @@ to be called by hand.
     say $x;     # OUTPUT: «42␤»
 
 
-The trait C<is default> can be used also with subscripting things like arrays and hashes:
+The trait C<is default> can be used also with subscripting things like arrays
+and hashes:
 
 =begin code
 my @array is default( 'N/A' );
@@ -66,6 +66,22 @@ introspect;         # OUTPUT: «23␤»
     # not dynamic
     my $x;
     introspect()    # dies with an exception of L<type X::Caller::NotDynamic|/type/X::Caller::NotDynamic>
+}
+=end code
+
+The C<is dynamic> trait is a rather cumbersome way of creating and accessing
+dynamic variables.  A much easier way is to use the C<* twigil>:
+
+=begin code :allow<B L>
+sub introspect() {
+    say B<$*x>;
+}
+my $*x = 23;
+introspect;         # OUTPUT: «23␤»
+{
+    # not dynamic
+    my $x;
+    introspect()    # dies with an exception of L<type X::Dynamic::NotFound|/type/X::Dynamic::NotFound>
 }
 =end code
 

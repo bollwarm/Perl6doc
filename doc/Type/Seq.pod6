@@ -1,4 +1,4 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("composite")
 
 =TITLE class Seq
 
@@ -8,9 +8,19 @@
 
 A C<Seq> represents anything that can lazily produce a sequence of values. A
 C<Seq> is born in a state where iterating it will consume the values. However,
-calling .cache on a Seq will return a List that is still lazy, but stores the
-generated values for later access. The same is true when assigning a Seq to an
-array.
+calling C<.cache> on a C<Seq> will return a List that is still lazy, but stores the
+generated values for later access. However, assigning a C<Seq> to an array consumes the C<Seq>;
+alternatively, you can use the C<lazy> statement prefix to avoid it from being
+iterated during the assignment:
+
+=begin code
+# The Seq created by gather ... take is consumed on the spot here.
+my @a = gather do { say 'consuming...'; take 'one' };  # OUTPUT: «consuming...␤»
+
+# The Seq here is only consumed as we iterate over @a later.
+my @a = lazy gather do { say 'consuming...'; take 'one' };  # outputs nothing.
+.say for @a;  # OUTPUT: «consuming...␤one␤»
+=end code
 
 A typical use case is L<method C<lines> in C<IO::Handle>|/type/IO::Handle#method_lines>,
 which could use a lot of memory if it stored all the lines read from the
@@ -45,7 +55,7 @@ B<Caution:> No program should ever assume a C<Seq> may only be iterated once
 even if not cached by the program. Caching is a volatile state exposed to the
 developer as an optimization. The C<Seq> may become cached by many operations,
 including calling C<perl> on the C<Seq> (if called prior to a non-cached
-iteration). If a program assumes a Seq can only iterate once, but then is
+iteration). From version 6.d, you C<.perl> can be called on consumed <Seq>. If a program assumes a Seq can only iterate once, but then is
 later changed to call one of these operations during the loop, that assumption
 will fail.
 
@@ -63,7 +73,15 @@ Creates a new C<Seq> object from the iterator passed as the single argument.
 
 Returns the underlying iterator, and marks the invocant as consumed.
 If called on an already consumed sequence, throws an error of type
-L<X::Seq::Consumed>.
+L<X::Seq::Consumed|/type/X::Seq::Consumed>.
+
+=head2 method elems
+
+    method elems(Seq:D:)
+
+If the caller C<Seq> is not lazy, consumes and caches its values,
+returning their length. Otherwise, throws an error of type
+L<X::Cannot::Lazy|/type/X::Cannot::Lazy>.
 
 =head2 method is-lazy
 
@@ -72,7 +90,7 @@ L<X::Seq::Consumed>.
 Returns C<True> if the sequence is lazy and potentially infinite, and C<False>
 otherwise.
 If called on an already consumed sequence, throws an error of type
-L<X::Seq::Consumed>.
+L<X::Seq::Consumed|/type/X::Seq::Consumed>.
 
 =head2 method eager
 
@@ -81,7 +99,7 @@ L<X::Seq::Consumed>.
 Returns an eagerly evaluated L<List|/type/List> based on the invocant
 sequence, and marks it as consumed.
 If called on an already consumed sequence, throws an error of type
-L<X::Seq::Consumed>.
+L<X::Seq::Consumed|/type/X::Seq::Consumed>.
 
     my $s = lazy 1..5;
 

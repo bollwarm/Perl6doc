@@ -1,17 +1,17 @@
-=begin pod
+=begin pod :kind("Type") :subkind("role") :category("composite")
 
 =TITLE role Iterator
 
 =SUBTITLE Generic API for producing a sequence of values
 
-=for code :skip-test
+=for code :skip-test<compile time error>
 constant IterationEnd
 role Iterator { }
 
 A C<Iterator> is an object that can generate or provide elements of a
 sequence. Users usually don't have to care about iterators, their usage
-is hidden behind iteration APIs such as C<for @list { }>, L<map>,
-L<grep>, L<head>, L<tail>, L<skip> and list indexing with C<.[$idx]>.
+is hidden behind iteration APIs such as C<for @list { }>, L<map|/routine/map>,
+L<grep|/routine/grep>, L<head|/routine/head>, L<tail|/routine/tail>, L<skip|/routine/skip> and list indexing with C<.[$idx]>.
 
 The main API is the C<pull-one> method, which either returns the next
 value, or the sentinel value C<IterationEnd> if no more elements are
@@ -29,8 +29,8 @@ X<|IterationEnd>
 Iterators only allow one iteration over the entire sequence. It's
 forbidden to make attempts to fetch more data, once C<IterationEnd> has
 been generated, and behavior for doing so is undefined. For example, the
-following L<Seq> will not cause the L<die> to be called under normal
-use, because L<pull-one> will never be called after it returns
+following L<Seq|/type/Seq> will not cause the L<die|/routine/die> to be called under normal
+use, because L<pull-one|/routine/pull-one> will never be called after it returns
 C<IterationEnd>:
 
 =begin code
@@ -54,9 +54,9 @@ my @a := SkippingArray.new;
 
 for @a -> $a, $b {
     say [$a, $b];
-};
+}
 
-# OUTPUT: «[1 3]␤[5 8]␤»
+# OUTPUT: «[1 3]␤[5 7]␤»
 =end code
 
 The only valid use of the sentinel value C<IterationEnd> in a program is
@@ -256,7 +256,7 @@ The Iterator role implements this method in terms of C<pull-one>. In
 general, it is also not intended to be called directly as in the example
 above. It can be implemented, if unhappy with this default
 implementation, by those using this role. See
-L<the documentation for C<push-exactly>|https://docs.perl6.org/type/Iterator#method_push-exactly>
+L<the documentation for C<push-exactly>|/type/Iterator#method_push-exactly>
 for an example implementation.
 
 =head2 method push-all
@@ -413,50 +413,10 @@ if the iterator got exhausted at any point:
 The Iterator role implements this method as calling C<skip-at-least> and
 then calling C<pull-one> if it was not exhausted yet.
 
-=head2 method count-only
+=head1 Predictive iterators
 
-Defined as:
-
-    method count-only(--> Int:D) { ... }
-
-If implemented, it is expected to return the number of values the iterator
-can still produce B<without> actually producing them. The returned number B<must
-adjust itself> for items already pulled, so that the method can be called on a
-partially consumed C<Iterator>.
-
-It will be used in situations where only the B<number> of values of an iterator
-is needed, e.g. when the C<.elems> method is called.
-
-B<Important:> it's expected the C<Iterator>s that implement this method can
-return that number B<without> producing any values.  In other words,
-it's expected the user of the class will be able to still L<pull-one>
-after calling this method, and eventually receive as many values as the
-return value of this method indicated.
-
-The Iterator role does B<not> implement this method.
-
-=head2 method bool-only
-
-By default is not implemented, but expected implementation for types that
-do this role is:
-Defined as:
-
-    method bool-only(--> Bool:D) { ... }
-
-If implemented, it is expected to return C<True> if the iterator can still
-produce values B<without> actually producing them. The returned number B<must
-adjust itself> for items already pulled, so that the method can be called on a
-partially consumed C<Iterator>.
-
-It will be used in situations where the encompassing C<Seq> is evaluated
-in a C<Bool> context.
-
-B<Important:> it's expected the C<Iterator>s that implement
-this method can produce that answer B<without> producing any values.
-In other words, it's expected that the iterator can produce as many values
-as it could even if this method was B<not> called.
-
-The Iterator role does B<not> implement this method.
+Please see the L<PredictiveIterator|/type/PredictiveIterator> role if your C<Iterator> can know
+how many values it can still produce without actually producing them.
 
 =end pod
 

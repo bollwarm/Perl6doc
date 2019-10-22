@@ -1,14 +1,14 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("basic")
 
 =TITLE class Telemetry::Sampler
 
-=SUBTITLE Telemetry Instrument Pod
+=SUBTITLE Telemetry instrument pod
 
     =begin code :preamble<class Telemetry { }>
     class Telemetry::Sampler { }
     =end code
 
-B<Note: > This class is a Rakudo-specific feature and not standard Perl 6.
+B<Note: > This class is a Rakudo-specific feature and not standard Raku.
 
 =begin code
 use Telemetry;
@@ -24,13 +24,14 @@ to use when making a snapshot.
 
 =head2 method new
 
-  method new(Telemetry::Sampler: @instruments --> Telemetry::Sampler:D)
+=for code :preamble<use Telemetry>
+method new(Telemetry::Sampler: @instruments --> Telemetry::Sampler:D)
 
 The C<new> method takes a list of instruments.  If no instruments are specified,
 then it will look at the C<RAKUDO_TELEMETRY_INSTRUMENTS> environment variable
 to find specification of instruments.  If that is not available either, then
-C<Thread::Instrument::Usage> and
-C<Thread::Instrument::ThreadPool> will be
+L<C<Telemetry::Instrument::Usage>|/type/Telemetry::Instrument::Usage> and
+C<Telemetry::Instrument::ThreadPool> will be
 assumed.
 
 Instruments can be specified by either the type object of the instrument class
@@ -40,12 +41,14 @@ the same as C<Telemetry::Instrument::Usage>.
 
 =head2 method set-instruments
 
-  method set-instruments(Telemetry::Sampler:D @instruments --> Nil)
+=for code :preamble<use Telemetry>
+method set-instruments(Telemetry::Sampler:D @instruments --> Nil)
 
 Allows one to change the instruments on an existing C<Instrument::Sampler>
 object.  Generally only used by calling it on the C<$*SAMPLER> dynamic variable.
-Takes the same parameters as L<new>, except that specifying B<no> instruments
-will actually remove all of the instruments, effectively blocking any snap taking.
+Takes the same parameters as L<new|/routine/new>, except that specifying B<no>
+instruments will actually remove all of the instruments, effectively blocking
+any snap taking.
 
 =end pod
 

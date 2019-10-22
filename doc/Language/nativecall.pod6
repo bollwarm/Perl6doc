@@ -1,4 +1,4 @@
-=begin pod :tag<perl6>
+=begin pod :kind("Language") :subkind("Language") :category("fundamental")
 
 =TITLE Native calling interface
 
@@ -15,7 +15,7 @@ The simplest imaginable use of C<NativeCall> would look something like this:
     some_argless_function();
 
 The first line imports various traits and types. The next line looks like
-a relatively ordinary Perl 6 sub declaration—with a twist. We use the
+a relatively ordinary Raku sub declaration—with a twist. We use the
 "native" trait in order to specify that the sub is actually defined in a
 native library. The platform-specific extension (e.g., C<.so> or C<.dll>),
 as well as any customary prefixes (e.g., 'lib') will be added for you.
@@ -25,11 +25,12 @@ loaded and the "some_argless_function" will be located in it. A call will then
 be made. Subsequent calls will be faster, since the symbol handle is retained.
 
 Of course, most functions take arguments or return values—but everything else
-that you can do is just adding to this simple pattern of declaring a Perl 6 sub,
+that you can do is just adding to this simple pattern of declaring a Raku sub,
 naming it after the symbol you want to call and marking it with the "native"
 trait.
 
-You will also need to declare and use native types. Please check L<the native types page|/language/nativetypes> for more information.
+You will also need to declare and use native types. Please check
+L<the native types page|/language/nativetypes> for more information.
 
 =head1 Changing names
 
@@ -41,7 +42,7 @@ are trying to create.
 NativeCall provides a C<symbol> trait for you to specify the name of the native
 routine in your library that may be different from your Perl subroutine name.
 
-=begin code :skip-test
+=begin code :solo
 unit module Foo;
 use NativeCall;
 our sub init() is native('foo') is symbol('FOO_INIT') { * }
@@ -54,7 +55,7 @@ and call the subroutine whatever we want ("init" in this case).
 
 =head1 Passing and returning values
 
-Normal Perl 6 signatures and the C<returns> trait are used in order to convey
+Normal Raku signatures and the C<returns> trait are used in order to convey
 the type of arguments a native function expects and what it returns. Here is
 an example.
 
@@ -79,8 +80,8 @@ routine itself.
     use NativeCall;
     sub input_box() returns Str is encoded('utf8') is native('gui') { * }
 
-Note that a NULL string pointer can be passed by passing the Str type
-object; a NULL return will also be represented by the type object.
+Note that a C<NULL> string pointer can be passed by passing the Str type
+object; a C<NULL> return will also be represented by the type object.
 
 If the C function requires the lifetime of a string to exceed the function
 call, the argument must be manually encoded and passed as C<CArray[uint8]>:
@@ -125,13 +126,14 @@ my $result = clock_gettime( 0, $this-time);
 say "$result, $this-time"; # OUTPUT: «0, timespec<65385480>␤»
 =end code
 
-The L<original function we are calling,
-L<clock_gettime>|https://linux.die.net/man/3/clock_gettime>, uses a pointer to
-the C<timespec> struct as second argument. We declare it as a L<class> here, but
-specify its representation as C<is repr('CStruct')>, to indicate it corresponds
-to a C data structure. When we create an object of that class, we are creating
-exactly the kind of pointer C<clock_gettime> expects. This way, data can be
-transferred seamlessly to and from the native interface.
+The original function we are calling,
+L<clock_gettime|https://linux.die.net/man/3/clock_gettime>, uses a pointer to
+the C<timespec> struct as second argument. We declare it as a
+L<class|/syntax/class> here, but specify its representation as C<is
+repr('CStruct')>, to indicate it corresponds to a C data structure. When we
+create an object of that class, we are creating exactly the kind of pointer
+C<clock_gettime> expects. This way, data can be transferred seamlessly to and
+from the native interface.
 
 
 =head1 Basic use of pointers
@@ -208,7 +210,7 @@ members of Structures like, e.g., structs and unions.
 Example of invoking a function pointer "$fptr" returned by a function "f", using a
 signature defining the desired function parameters and return value:
 
-=begin code :skip-test
+=begin code :skip-test<external dependency>
 sub f() returns Pointer is native('mylib') { * }
 
 my $fptr    = f();
@@ -223,13 +225,13 @@ NativeCall has some support for arrays. It is constrained to work with machine-s
 integers, doubles and strings, sized numeric types, arrays of pointers, arrays of
 structs, and arrays of arrays.
 
-Perl 6 arrays, which support amongst other things laziness, are laid out in memory
+Raku arrays, which support amongst other things laziness, are laid out in memory
 in a radically different way to C arrays. Therefore, the NativeCall library offers
 a much more primitive CArray type, which you must use if working with C arrays.
 
 Here is an example of passing a C array.
 
-=begin code :skip-test
+=begin code :skip-test<external dependency>
 sub RenderBarChart(Str, int32, CArray[Str], CArray[num64]) is native("chart") { * }
 my @titles := CArray[Str].new;
 @titles[0]  = 'Me';
@@ -243,7 +245,7 @@ RenderBarChart('Weights (kg)', 3, @titles, @values);
 =end code
 
 Note that binding was used to C<@titles>, I<not> assignment! If you assign, you
-are putting the values into a Perl 6 array, and it will not work out. If this
+are putting the values into a Raku array, and it will not work out. If this
 all freaks you out, forget you ever knew anything about the C<@> sigil and just
 use C<$> all the way when using NativeCall.
 
@@ -264,9 +266,9 @@ C function and, for instance, return the actual number of items populated:
 In these cases it is important that the CArray has at least the number of
 elements that are going to be populated before passing it to the native
 subroutine, otherwise the C function may stomp all over Perl's memory
-leading to possibly unpredictable behaviour:
+leading to possibly unpredictable behavior:
 
-=begin code :skip-test
+=begin code :preamble<use NativeCall; sub get_n_ints($, $) {}>
 my $number_of_ints = 10;
 my $ints = CArray[int32].allocate($number_of_ints); # instantiates an array with 10 elements
 my $n = get_n_ints($ints, $number_of_ints);
@@ -275,7 +277,7 @@ my $n = get_n_ints($ints, $number_of_ints);
 I<Note>: C<allocate> was introduced in Rakudo 2018.05. Before that, you had to
 use this mechanism to extend an array to a number of elements:
 
-=begin code :skip-test
+=begin code :preamble<use NativeCall>
 my $ints = CArray[int32].new;
 my $number_of_ints = 10;
 $ints[$number_of_ints - 1] = 0; # extend the array to 10 items
@@ -301,15 +303,15 @@ X<|CArray>
 X<|CArray methods>
 =head2 CArray methods
 
-Besides the usual methods available on every Perl 6 instance,
+Besides the usual methods available on every Raku instance,
 C<CArray> provides the following methods that can be used to interact with the it
-from the Perl 6 point of view:
+from the Raku point of view:
 
 =item C<elems> provides the number of elements within the array;
 
 =item C<AT-POS> provides a specific element at the given position (starting from zero);
 
-=item C<list> provides the L<List> of elements within the array building
+=item C<list> provides the L<List|/type/List> of elements within the array building
 it from the native array iterator.
 
 As an example, consider the following simple piece of code:
@@ -336,22 +338,22 @@ for 0..$native-array.elems - 1 -> $position {
 that produces the following output
 
 =for code :lang<output>
-  Number of elements: 5
-  Current element is: 1
-  Current element is: 2
-  Current element is: 3
-  Current element is: 4
-  Current element is: 5
-  Element at position 0 is 1
-  Element at position 1 is 2
-  Element at position 2 is 3
-  Element at position 3 is 4
-  Element at position 4 is 5
+Number of elements: 5
+Current element is: 1
+Current element is: 2
+Current element is: 3
+Current element is: 4
+Current element is: 5
+Element at position 0 is 1
+Element at position 1 is 2
+Element at position 2 is 3
+Element at position 3 is 4
+Element at position 4 is 5
 
 =head1 Structs
 
 Thanks to representation polymorphism, it's possible to declare a normal looking
-Perl 6 class that, under the hood, stores its attributes in the same way a C
+Raku class that, under the hood, stores its attributes in the same way a C
 compiler would lay them out in a similar struct definition. All it takes is a
 quick use of the "repr" trait:
 
@@ -379,7 +381,7 @@ NativeCall currently doesn't put object members in containers, so assigning new 
 to them (with =) doesn't work. Instead, you have to bind new values to the private
 members:
 
-=begin code :skip-test
+=begin code :skip-test<continued example>
 class MyStruct is repr('CStruct') {
     has CArray[num64] $!arr;
     has Str $!str;
@@ -390,7 +392,7 @@ class MyStruct is repr('CStruct') {
         $arr[0] = 0.9e0;
         $arr[1] = 0.2e0;
         $!arr := $arr;
-        $!str := 'Perl 6 is fun';
+        $!str := 'Raku is fun';
         $!point := Point.new;
     }
 }
@@ -401,7 +403,7 @@ type object of the struct type.
 
 =head2 CUnions
 
-Likewise, it is possible to declare a Perl 6 class that stores its
+Likewise, it is possible to declare a Raku class that stores its
 attributes the same way a C compiler would lay them out in a similar
 C<union> definition; using the C<CUnion> representation:
 
@@ -413,7 +415,8 @@ class MyUnion is repr('CUnion') {
     has int64 $.flags64;
 }
 
-say nativesizeof(MyUnion.new);  # 8, ie. max(sizeof(MyUnion.flags32), sizeof(MyUnion.flags64))
+say nativesizeof(MyUnion.new);  # OUTPUT: «8␤»
+                                # ie. max(sizeof(MyUnion.flags32), sizeof(MyUnion.flags64))
 =end code
 
 =head2 Embedding CStructs and CUnions
@@ -423,20 +426,22 @@ surrounding CStruct and CUnion. To say the former we use C<has>
 as usual, and to do the latter we use the C<HAS> declarator
 instead:
 
-=begin code :skip-test
+=begin code :skip-test<continued example>
 class MyStruct is repr('CStruct') {
     has Point $.point;  # referenced
     has int32 $.flags;
 }
 
-say nativesizeof(MyStruct.new);  # 16, ie. sizeof(struct Point *) + sizeof(int32_t)
+say nativesizeof(MyStruct.new);  # OUTPUT: «16␤»
+                                 # ie. sizeof(struct Point *) + sizeof(int32_t)
 
 class MyStruct2 is repr('CStruct') {
     HAS Point $.point;  # embedded
     has int32 $.flags;
 }
 
-say nativesizeof(MyStruct2.new);  # 24, ie. sizeof(struct Point) + sizeof(int32_t)
+say nativesizeof(MyStruct2.new);  # OUTPUT: «24␤»
+                                  # ie. sizeof(struct Point) + sizeof(int32_t)
 =end code
 
 =head2 Notes on memory management
@@ -447,9 +452,9 @@ which needs a C<Str>/C<char*> allocated ahead of time, be sure to assign a
 container for a variable of type C<Str> prior to passing your struct into the
 function.
 
-=head3 In your Perl 6 code...
+=head3 In your Raku code...
 
-=begin code :skip-test
+=begin code :skip-test<external dependency>
 
 class AStringAndAnInt is repr("CStruct") {
   has Str $.a_string;
@@ -528,7 +533,7 @@ when dereferenced. Please note that the original
 L<C<strdup>|https://en.cppreference.com/w/c/experimental/dynamic/strdup> returns
 a pointer to C<char>; we are using C<Pointer<Str>>.
 
-=begin code :skip-test
+=begin code :skip-test<external dependency>
 my Pointer[int32] $p; #For a pointer on int32;
 my Pointer[MyCstruct] $p2 = some_c_routine();
 my MyCstruct $mc = $p2.deref;
@@ -539,7 +544,7 @@ It's quite common for a native function to return a pointer to an array of
 elements. Typed pointers can be dereferenced as an array to obtain individual
 elements.
 
-=begin code :skip-test
+=begin code :skip-test<external dependency>
 my $n = 5;
 # returns a pointer to an array of length $n
 my Pointer[Point] $plot = some_other_c_routine($n);
@@ -553,7 +558,7 @@ for 1 .. $n -> $i {
 
 Pointers can also be updated to reference successive elements in the array:
 
-=begin code :skip-test
+=begin code :skip-test<continued example>
 my Pointer[Point] $elem = $plot;
 # show differences between successive points
 for 1 ..^ $n {
@@ -576,7 +581,7 @@ for more information on the subject.
 
 Let's say there is some C code that caches strings passed, like so:
 
-=begin code :skip-test :lang<C>
+=begin code :lang<C>
 #include <stdlib.h>
 
 static char *__VERSION;
@@ -599,7 +604,7 @@ set_version(char *version)
 If you were to write bindings for C<get_version> and C<set_version>, they would
 initially look like this, but will not work as intended:
 
-=begin code :skip-test
+=begin code :skip-test<external dependency>
 sub get_version(--> Str)     is native('./version') { * }
 sub set_version(Str --> Str) is native('./version') { * }
 
@@ -613,7 +618,7 @@ the string passed on the first call after the garbage collector had already
 done so. If the garbage collector shouldn't free a string passed to a native
 function, use C<explicitly-manage> with it:
 
-=begin code :skip-test
+=begin code :skip-test<external dependency>
 say set_version(explicitly-manage('1.0.0')); # 1.0.0
 say get_version;                             # 1.0.0
 say set_version(explicitly-manage('1.0.1')); # 1.0.1
@@ -626,7 +631,7 @@ leaks.
 
 =head2 Buffers and blobs
 
-L<Blob>s and L<Buf>s are the Perl 6 way of storing binary data. We can use them
+L<Blob|/type/Blob>s and L<Buf|/type/Buf>s are the Raku way of storing binary data. We can use them
 for interchange of data with native functions and data structures, although not
 directly. We will have to use L<C<nativecast>|/routine/nativecast>.
 
@@ -636,7 +641,7 @@ my $src = nativecast(Pointer, $blob);
 
 This C<$src> can then be used as an argument for any native function that takes
 a Pointer. The opposite, putting values pointed to by a C<Pointer> into a C<Buf>
-or using it to inialize a C<Blob> is not directly supported. You might want to
+or using it to initialize a C<Blob> is not directly supported. You might want to
 use L<C<NativeHelpers::Blob>|https://github.com/salortiz/NativeHelpers-Blob> to
 do this kind of operations.
 
@@ -648,16 +653,20 @@ say $esponja;
 
 NativeCall also supports native functions that take functions as arguments.  One
 example of this is using function pointers as callbacks in an event-driven
-system.  When binding these functions via NativeCall, one need only provide the
-equivalent signature as a constraint on the code parameter:
+system.  When binding these functions via NativeCall, one needs only provide the
+equivalent signature as
+L<a constraint on the code parameter|/type/Signature#Constraining_signatures_of_Callables>.
+In the case of NativeCall, however, as of Rakudo 2019.07, a space between the
+function argument and the signature, and the colon of a normal Signature
+literal is omitted, as in:
 
     use NativeCall;
     # void SetCallback(int (*callback)(const char *))
     my sub SetCallback(&callback (Str --> int32)) is native('mylib') { * }
 
 Note: the native code is responsible for memory management of values passed to
-Perl 6 callbacks this way. In other words, NativeCall will not free() strings passed
-to callbacks.
+Raku callbacks this way. In other words, NativeCall will not free() strings
+passed to callbacks.
 
 =head1 Library paths and names
 
@@ -667,24 +676,28 @@ to be prepended with "lib" and appended with ".so" (or just appended with
 ".dll" on Windows), and will be searched for in the paths in the
 LD_LIBRARY_PATH (PATH on Windows) environment variable.
 
-=begin code :skip-test
-    use NativeCall;
-    constant LIBMYSQL = 'mysqlclient';
-    constant LIBFOO = '/usr/lib/libfoo.so.1';
-    sub LIBBAR {
-        my $path = qx/pkg-config --libs libbar/.chomp;
-        $path ~~ s/\/[[\w+]+ % \/]/\0\/bar/;
-        $path
-    }
-    # and later
+=begin code :skip-test<external dependency>
+use NativeCall;
+constant LIBMYSQL = 'mysqlclient';
+constant LIBFOO = '/usr/lib/libfoo.so.1';
+sub LIBBAR {
+    my $path = qx/pkg-config --libs libbar/.chomp;
+    $path ~~ s/\/[[\w+]+ % \/]/\0\/bar/;
+    $path
+}
+# and later
 
-    sub mysql_affected_rows returns int32 is native(LIBMYSQL) {*};
-    sub bar is native(LIBFOO) {*}
-    sub baz is native(LIBBAR) {*}
+sub mysql_affected_rows returns int32 is native(LIBMYSQL) {*};
+sub bar is native(LIBFOO) {*}
+sub baz is native(LIBBAR) {*}
 =end code
 
 You can also put an incomplete path like './foo' and NativeCall will automatically put
-the right extension according to the platform specification.
+the right extension according to the platform specification. If you wish to suppress this expansion, simply pass the string as the body of a block.
+
+=begin code :preamble<use NativeCall>
+sub bar is native({ './lib/Non Standard Naming Scheme' }) {*}
+=end code
 
 BE CAREFUL: the C<native> trait and C<constant> are evaluated at compile time. Don't write a constant
 that depends on a dynamic variable like:
@@ -697,13 +710,16 @@ keep the value it acquires when the module gets precompiled.
 
 =head2 ABI/API version
 
-If you write C<native('foo')> NativeCall will search libfoo.so under Unix like system (libfoo.dynlib on OS X, foo.dll on win32).
-In most modern system it will require you or the user of your module to install
-the development package because it's recommended to always provide an API/ABI version to a
-shared library, so libfoo.so ends often being a symbolic link provided only by a development package.
+If you write C<native('foo')> NativeCall will search libfoo.so under Unix like
+system (libfoo.dynlib on OS X, foo.dll on win32). In most modern system it will
+require you or the user of your module to install the development package
+because it's recommended to always provide an API/ABI version to a shared
+library, so libfoo.so ends often being a symbolic link provided only by a
+development package.
 
-To avoid that, the C<native> trait allows you to specify the API/ABI version. It can be a full
-version or just a part of it. (Try to stick to Major version, some BSD code does not care for Minor.)
+To avoid that, the C<native> trait allows you to specify the API/ABI version. It
+can be a full version or just a part of it. (Try to stick to Major version, some
+BSD code does not care for Minor.)
 
     use NativeCall;
     sub foo1 is native('foo', v1) {*} # Will try to load libfoo.so.1
@@ -754,7 +770,7 @@ Though of course C<$*HOME> is a much easier way :-)
 Variables exported by a library – also named "global" or "extern"
 variables – can be accessed using C<cglobal>.  For example:
 
-=for code :skip-test
+=for code :preamble<use NativeCall>
 my $var := cglobal('libc.so.6', 'errno', int32)
 
 This code binds to C<$var> a new L<Proxy|/type/Proxy> object that
@@ -778,7 +794,7 @@ data from native libraries.
 
     sub nativecast($target-type, $source) is export(:DEFAULT)
 
-This will I<cast> the Pointer C<$source> to  an object of C<$target-type>.
+This will I<cast> the Pointer C<$source> to an object of C<$target-type>.
 The source pointer will typically have been obtained from a call to a native subroutine
 that returns a pointer or as a member of a C<struct>, this may be specified as C<void *>
 in the C<C> library definition for instance, but you may also cast from a pointer to
@@ -786,7 +802,7 @@ a less specific type to a more specific one.
 
 As a special case, if a L<Signature|/type/Signature> is supplied as C<$target-type> then
 a C<subroutine> will be returned which will call the native function pointed to by C<$source>
-in the same way as a subroutine declared with the C<native> trait.  This is described in
+in the same way as a subroutine declared with the C<native> trait. This is described in
 L<Function Pointers|/language/nativecall#Function_pointers>.
 
 =head2 sub cglobal
@@ -862,7 +878,7 @@ MessageBoxA(0, "We have NativeCall", "ohai", 64);
 =head2 Short tutorial on calling a C function
 
 This is an example for calling a standard function and using the returned
-information in a Perl 6 program.
+information in a Raku program.
 
 C<getaddrinfo> is a POSIX standard function for obtaining network information
 about a network node, e.g., C<google.com>. It is an interesting function to look
@@ -876,7 +892,7 @@ int getaddrinfo(const char *node, const char *service,
        struct addrinfo **res);
 =end code
 
-The function returns a response code 0 = error, 1 = success. The data are
+The function returns a response code 0 = success, 1 = error. The data are
 extracted from a linked list of C<addrinfo> elements, with the first element
 pointed to by C<res>.
 
@@ -938,7 +954,7 @@ to the C<uint32> type.
 The complication is C<sockaddr> which differs depending on whether C<ai_socktype>
 is undefined, INET, or INET6 (a standard v4 IP address or a v6 address).
 
-So we create a Perl 6 C<class> to map to the C C<struct addrinfo>; while we're at it, we also create another class for C<SockAddr> which is needed for it.
+So we create a Raku C<class> to map to the C C<struct addrinfo>; while we're at it, we also create another class for C<SockAddr> which is needed for it.
 
 =begin code
 class SockAddr is repr('CStruct') {
@@ -977,7 +993,7 @@ rather than a bit packed integer.
 
 The most useful information in the C<sockaddr> structure is the address of
 node, which depends on the family of the Socket.  So we can add method
-C<address> to the Perl 6 class that interprets the address depending on the
+C<address> to the Raku class that interprets the address depending on the
 family.
 
 In order to get a human readable IP address, there is the C function C<inet_ntop>
@@ -986,7 +1002,7 @@ a buffer with the C<addrinfo>.
 
 Putting all these together, leads to the following program:
 
-=begin code :skip-test<Code works as is. Error with compilation maybe related to wrapping>
+=begin code :solo
 #!/usr/bin/env perl6
 
 use v6;

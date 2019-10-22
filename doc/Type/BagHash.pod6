@@ -1,4 +1,4 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("composite")
 
 =TITLE class BagHash
 
@@ -9,10 +9,10 @@
 A C<BagHash> is a mutable bag/multiset, meaning a collection of distinct
 elements in no particular order that each have an integer weight assigned to
 them signifying how many copies of that element are considered "in the bag".
-(For I<immutable> bags, see L<Bag> instead.)
+(For I<immutable> bags, see L<Bag|/type/Bag> instead.)
 
 Objects/values of any type are allowed as bag elements.  Within a C<BagHash>,
-items that would compare positively with the L<===> operator are considered the
+items that would compare positively with the L<===|/routine/===/> operator are considered the
 same element, with the number of how many there were as its weight.  But of
 course you can also easily get back the expanded list of items (without the
 order):
@@ -75,9 +75,33 @@ the bag, and the (cumulative) values become the associated integer weights:
     say $m.perl;             # OUTPUT: «("b"=>1,"a"=>1,"c"=>2).BagHash␤»
     say $n.perl;             # OUTPUT: «("b"=>1,"c"=>4).BagHash␤»
 
+You can also create C<BagHash> masquerading as a hash by using the C<is> trait:
+
+    my %bh is BagHash = <a b b c c c>;
+    say %bh<b>;  # 2
+    say %bh<d>;  # 0
+
+Since 6.d (2019.03 and later) it is also possible to specify the type of values
+you would like to allow in a C<BagHash>.  This can either be done when calling
+C<.new>:
+
+    # only allow strings
+    my $n = BagHash[Str].new: <a b b c c c>;
+
+or using the masquerading syntax:
+
+    # only allow strings
+    my %bh is BagHash[Str] = <a b b c c c>;
+    say %bh<b>;  # 2
+    say %bh<d>;  # 0
+
+    # only allow whole numbers
+    my %bh is BagHash[Int] = <a b b c c c>;
+    # Type check failed in binding; expected Int but got Str ("a")
+
 =head1 Operators
 
-Perl 6 provides common set and bag operators, which can take C<BagHash>es (or
+Raku provides common set and bag operators, which can take C<BagHash>es (or
 any other collections) as input, and return result as C<Bool>, C<Set> or C<Bag>
 values. For example:
 
@@ -86,14 +110,14 @@ my ($a, $b) = BagHash.new(2, 2, 4), BagHash.new(2, 3, 3, 4);
 
 say $a (<) $b;   # OUTPUT: «False␤»
 say $a (<+) $b;  # OUTPUT: «False␤»
-say $a (^) $b;   # OUTPUT: «bag(3(2), 2)␤»
-say $a (+) $b;   # OUTPUT: «bag(2(3), 4(2), 3(2))␤»
+say $a (^) $b;   # OUTPUT: «Bag(3(2), 2)␤»
+say $a (+) $b;   # OUTPUT: «Bag(2(3), 4(2), 3(2))␤»
 
 # Unicode versions:
 say $a ⊂ $b;  # OUTPUT: «False␤»
 say $a ≼ $b;  # OUTPUT: «False␤»
-say $a ⊖ $b;  # OUTPUT: «bag(3(2), 2)␤»
-say $a ⊎ $b;  # OUTPUT: «bag(2(3), 4(2), 3(2))␤»
+say $a ⊖ $b;  # OUTPUT: «Bag(3(2), 2)␤»
+say $a ⊎ $b;  # OUTPUT: «Bag(2(3), 4(2), 3(2))␤»
 =end code
 
 See L<Set/Bag Operators|/language/setbagmix#Set/Bag_operators> for a complete list of
@@ -101,7 +125,21 @@ set and bag operators with detailed explanations.
 
 =head1 Note on C<reverse> and ordering.
 
-This method is inherited from L<Any|/type/Any#routine_reverse>, however, C<Mix>es do not have an inherent order and you should not trust it returning a consistent output.
+BagHash inherits C<reverse> from L<Any|/type/Any#routine_reverse>,
+however, C<Bag>s do not have an inherent order and you should not trust
+it returning a consistent output.
+
+If you sort a BagHash, the result is a list of pairs, at which point
+C<reverse> makes perfect sense:
+
+=begin code
+my $a = BagHash.new(2, 2, 18, 3, 4);
+say $a;  # OUTPUT: «BagHash(18, 2(2), 3, 4)␤»
+
+say $a.sort;  # OUTPUT: «(2 => 2 3 => 1 4 => 1 18 => 1)␤»
+say $a.sort.reverse;  # OUTPUT: «(18 => 1 4 => 1 3 => 1 2 => 2)␤»
+=end code
+
 
 =head1 See Also
 

@@ -29,3 +29,7 @@ highlights/package-lock.json
 .pod-cache
 retest
 build/
+node_modules/
+package-lock.json
+*.epub
+.idea

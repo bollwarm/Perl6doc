@@ -1,4 +1,4 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("domain-specific")
 
 =TITLE class IO::Path
 
@@ -47,7 +47,7 @@ examples, unless stated otherwise.
 
 Defined as:
 
-=for code :skip-test
+=for code :skip-test<compile time error>
 multi method new(Str:D $path, IO::Spec :$SPEC = $*SPEC, Str() :$CWD = $*CWD)
 multi method new(
     :$basename!, :$dirname = '.', :$volume = ''
@@ -137,9 +137,9 @@ Defined as:
 
 Concatenates a path fragment to the invocant and returns the resultant
 C<IO::Path>. If adding C<../> to paths that end with a file, you may
-need to call L<resolve> for the resultant path to be accessible by other
-C<IO::Path> methods like L<dir> or L<open>. See also L<sibling> and
-L<parent>.
+need to call L<resolve|/routine/resolve> for the resultant path to be accessible by other
+C<IO::Path> methods like L<dir|/routine/dir> or L<open|/routine/open>. See also L<sibling|/routine/sibling> and
+L<parent|/routine/parent>.
 
     "foo/bar".IO.mkdir;
     "foo/bar".IO.add("meow")    .resolve.relative.say; # OUTPUT: «foo/bar/meow␤»
@@ -154,9 +154,9 @@ Defined as:
 
     method child(IO::Path:D: Str() $childname --> IO::Path:D)
 
-Alias for L«C<.add>|/routine/add». B<NOTE:> C<.child> exists largely for
-backwards-compatibility reasons and may become deprecated in future language
-versions. For any new code, please use L«C<.add>|/routine/add»
+Alias for L«C<.add>|/routine/add». B<NOTE:> This method has been deprecated as
+of the 6.d version, and will be removed in the future. For any new code, please
+use L«C<.add>|/routine/add»
 
 =head2 method cleanup
 
@@ -300,7 +300,7 @@ Defined as:
 
     method parts(IO::Path:D: --> Map:D)
 
-Returns a L<Map> with the keys C<volume>, C<dirname>, C<basename> whose values
+Returns a L<Map|/type/Map> with the keys C<volume>, C<dirname>, C<basename> whose values
 are the same as available via methods L«C<.volume>|/routine/volume»,
 L«C<.dirname>|/routine/dirname», and L«C<.basename>|/routine/basename»
 respectively.
@@ -357,7 +357,7 @@ Defined as:
 
     method succ(IO::Path:D: --> IO::Path:D)
 
-Returns a new L<IO::Path> constructed from the invocant, with
+Returns a new L<IO::Path|/type/IO::Path> constructed from the invocant, with
 L«C<.basename>|/routine/basename» changed by calling
 L«C<Str.succ>|/type/Str#method_succ» on it.
 
@@ -370,7 +370,7 @@ Defined as:
     method open(IO::Path:D: *%opts)
 
 Opens the path as a file; the named options control the mode, and are the
-same as the L<open> function accepts.
+same as the L<open|/routine/open> function accepts.
 
 =head2 method pred
 
@@ -378,7 +378,7 @@ Defined as:
 
     method pred(IO::Path:D: --> IO::Path:D)
 
-Returns a new L<IO::Path> constructed from the invocant, with
+Returns a new L<IO::Path|/type/IO::Path> constructed from the invocant, with
 L«C<.basename>|/routine/basename» changed by calling
 L«C<Str.pred>|/type/Str#method_pred» on it.
 
@@ -450,10 +450,10 @@ attribute the object was created with, and then is made relative to C<$base>.
 
 Defined as:
 
-    multi method parent(IO::Path:D: --> IO::Path:D)
-    multi method parent(IO::Path:D: UInt:D $level --> IO::Path:D)
+    multi method parent(IO::Path:D:)
+    multi method parent(IO::Path:D: UInt:D $level)
 
-Returns the parent path of the invocant. Note that no filesystem access
+Returns the parent path of the invocant. Note that no actual filesystem access
 is made, so the returned parent is physical and not the logical parent of
 symlinked directories.
 
@@ -465,9 +465,11 @@ symlinked directories.
     '/'       .IO.parent.say; # OUTPUT: «"/".IO␤»
     IO::Path::Win32.new('C:/').parent.say; # OUTPUT: «"C:/".IO␤»
 
-If C<$level> is specified, the call is equivalent to calling C<.parent()> C<$level> times:
+If C<$level> is specified, the call is equivalent to calling C<.parent()>
+C<$level> times:
 
-    say "/etc/foo".IO.parent(2) eqv "/etc/foo".IO.parent.parent; # OUTPUT: «True␤»
+=for code
+say "/etc/foo".IO.parent(2) eqv "/etc/foo".IO.parent.parent; # OUTPUT: «True␤»
 
 =head2 method resolve
 
@@ -500,18 +502,28 @@ Defined as:
     method dir(IO::Path:D: Mu :$test = none('.', '..'))
 
 Returns the contents of a directory as a lazy list of C<IO::Path> objects
-representing relative paths, filtered by L<smartmatching|
-/language/operators#infix_~~> their names (as strings) against the C<:test>
-parameter.
+representing relative paths, filtered by
+L<smartmatching|/language/operators#infix_~~> their names (as strings) against
+the C<:test> parameter.
+
+Since the tests are performed against C<Str> arguments, not C<IO>, the tests are
+executed in the C<$*CWD>, instead of the target directory. When testing against
+file test operators, this won't work:
+
+    dir('mydir', test => { .IO.d })
+
+while this will:
+
+    dir('mydir', test => { "mydir/$_".IO.d })
 
 B<NOTE:> a C<dir> call opens a directory for reading, which counts towards
 maximum per-process open files for your program. Be sure to exhaust returned
-L<Seq> before doing something like recursively performing more C<dir> calls.
-You can exhaust it by assigning to a C<@->sigiled variable or simply looping
-over it. Note how examples below push further dirs to look through into
-an L<Array>, rather than immediately calling C<dir> on them. See also
-L«C<IO::Dir> module|https://modules.perl6.org/dist/IO::Dir» that gives you finer
-control over closing dir handles.
+L<Seq|/type/Seq> before doing something like recursively performing more C<dir>
+calls. You can exhaust it by assigning to a C<@->sigiled variable or simply
+looping over it. Note how examples below push further dirs to look through into
+an L<Array|/type/Array>, rather than immediately calling C<dir> on them. See
+also L«C<IO::Dir> module|https://modules.perl6.org/dist/IO::Dir» that gives you
+finer control over closing dir handles.
 
 Examples:
 
@@ -559,31 +571,43 @@ my $perl-files = gather while @stack {
 For most file tests, you can do a smartmatch C<~~> or you can call a method.
 You don't need to actually open a filehandle in the traditional way (although
 you can) to do a filetest. You can simply append C<.IO> to the filename. For
-instance, here is how to check if a file is readable using smartmatch:
-C<'/path/to/file'.IO ~~ :r>
+instance, here is how to check whether a file is readable using smartmatch:
 
-You can, of course, use an already opened filehandle. Here, using the filehandle
-C<$fh>, is an example, using the method syntax for the file test:
+    '/path/to/file'.IO ~~ :r;
+
+File tests include:
+
+=item C<:d> (L«Directory|/type/IO::Path#method_d»)
+=item C<:e> (L«Exists|/type/IO::Path#method_e»)
+=item C<:f> (L«File|/type/IO::Path#method_f»)
+=item C<:l> (L«Symbolic link|/type/IO::Path#method_l»)
+=item C<:r> (L«Readable|/type/IO::Path#method_r»)
+=item C<:rw> (L«Readable and writable|/type/IO::Path#method_rw»)
+=item C<:rwx> (L«Readable, writable and executable|/type/IO::Path#method_rwx»)
+=item C<:s> (L«Size|/type/IO::Path#method_s»)
+=item C<:w> (L«Writable|/type/IO::Path#method_w»)
+=item C<:x> (L«Executable|/type/IO::Path#method_x»)
+=item C<:z> (L«Zero size|/type/IO::Path#method_z»)
+
+L«Smartmatching on Pairs|/type/Pair#method_ACCEPTS» can be used to perform
+multiple tests at once:
+
+    say :d & :x;                # OUTPUT: «all(d => True, x => True)␤»
+    say '/tmp'.IO ~~ :d & :x;   # OUTPUT: «True␤»
+    say '/'.IO    ~~ :d & :rw;  # OUTPUT: «False␤»
+
+All of the above tests can be used as methods (without the colon), though method
+tests may throw C<X::IO::DoesNotExist> as documented below.  Three tests only
+exist as methods: L«C<accessed>|#method_accessed», L«C<changed>|#method_changed»
+and L«C<modified>|#method_modified».
+
+You can also perform file tests on an already opened filehandle by testing
+against its L«C<.path>|/type/IO::Handle#method_path» method. For example, given
+filehandle C<$fh>:
 
 =for code :preamble<my $fh>
-    $fh.r
-
-File tests include
-    :e L«Exists|/type/IO::Path#method_e»
-    :d L«Directory|/type/IO::Path#method_d»
-    :f L«File|/type/IO::Path#method_f»
-    :l L«Symbolic link|/type/IO::Path#method_l»
-    :r L«Readable|/type/IO::Path#method_r»
-    :w L«Writable|/type/IO::Path#method_w»
-    :x L«Executable|/type/IO::Path#method_x»
-    :s L«Size|/type/IO::Path#method_s»
-    :z L«Zero size|/type/IO::Path#method_z»
-
-All of these tests can be used as methods (without the colon).
-Three tests, however exist only as methods:
-    $fh.modified;
-    $fh.accessed;
-    $fh.changed;
+$fh.path ~~ :r;
+$fh.path.r;       # method form
 
 =head2 method e
 
@@ -592,9 +616,6 @@ Defined as:
     method e(--> Bool:D)
 
 Returns C<True> if the invocant is a path that exists.
-
-TIP: use L«smartmatch with Pairs|/type/Pair#method_ACCEPTS» to perform multiple
-file tests.
 
 =head2 method d
 
@@ -606,21 +627,15 @@ Returns C<True> if the invocant is a path that exists and is a directory.
 The method will L«C<fail>|/routine/fail» with C<X::IO::DoesNotExist> if the
 path points to a non-existent filesystem entity.
 
-TIP: use L«smartmatch with Pairs|/type/Pair#method_ACCEPTS» to perform multiple
-file tests.
-
 =head2 method f
 
 Defined as:
 
     method f(--> Bool:D)
 
-Returns C<True> if the invocant is a path that exists and is a file.
-The method will L«C<fail>|/routine/fail» with C<X::IO::DoesNotExist> if the
-path points to a non-existent filesystem entity.
-
-TIP: use L«smartmatch with Pairs|/type/Pair#method_ACCEPTS» to perform multiple
-file tests.
+Returns C<True> if the invocant is a path that exists and is a file. The method
+will L«C<fail>|/routine/fail» with C<X::IO::DoesNotExist> if the path points to
+a non-existent filesystem entity.
 
 =head2 method s
 
@@ -629,12 +644,11 @@ Defined as:
     method s(--> Int:D)
 
 Returns the file size in bytes. May be called on paths that are directories, in
-which case the reported size is dependent on the operating system.
-The method will L«C<fail>|/routine/fail» with C<X::IO::DoesNotExist> if the
-path points to a non-existent filesystem entity.
+which case the reported size is dependent on the operating system. The method
+will L«C<fail>|/routine/fail» with C<X::IO::DoesNotExist> if the path points to
+a non-existent filesystem entity.
 
-TIP: use L«smartmatch with Pairs|/type/Pair#method_ACCEPTS» to perform multiple
-file tests.
+    say $*EXECUTABLE.IO.s; # OUTPUT : «467␤»
 
 =head2 method l
 
@@ -646,9 +660,6 @@ Returns C<True> if the invocant is a path that exists and is a symlink.
 The method will L«C<fail>|/routine/fail» with C<X::IO::DoesNotExist> if the
 path points to a non-existent filesystem entity.
 
-TIP: use L«smartmatch with Pairs|/type/Pair#method_ACCEPTS» to perform multiple
-file tests.
-
 =head2 method r
 
 Defined as:
@@ -658,9 +669,6 @@ Defined as:
 Returns C<True> if the invocant is a path that exists and is accessible.
 The method will L«C<fail>|/routine/fail» with C<X::IO::DoesNotExist> if the
 path points to a non-existent filesystem entity.
-
-TIP: use L«smartmatch with Pairs|/type/Pair#method_ACCEPTS» to perform multiple
-file tests.
 
 =head2 method w
 
@@ -672,9 +680,6 @@ Returns C<True> if the invocant is a path that exists and is writable.
 The method will L«C<fail>|/routine/fail» with C<X::IO::DoesNotExist> if the
 path points to a non-existent filesystem entity.
 
-TIP: use L«smartmatch with Pairs|/type/Pair#method_ACCEPTS» to perform multiple
-file tests.
-
 =head2 method rw
 
 Defined as:
@@ -684,9 +689,6 @@ Defined as:
 Returns C<True> if the invocant is a path that exists and is readable and
 writable. The method will L«C<fail>|/routine/fail» with C<X::IO::DoesNotExist>
 if the path points to a non-existent filesystem entity.
-
-TIP: use L«smartmatch with Pairs|/type/Pair#method_ACCEPTS» to perform multiple
-file tests.
 
 =head2 method x
 
@@ -698,9 +700,6 @@ Returns C<True> if the invocant is a path that exists and is executable.
 The method will L«C<fail>|/routine/fail» with C<X::IO::DoesNotExist> if the
 path points to a non-existent filesystem entity.
 
-TIP: use L«smartmatch with Pairs|/type/Pair#method_ACCEPTS» to perform multiple
-file tests.
-
 =head2 method rwx
 
 Defined as:
@@ -711,24 +710,17 @@ Returns C<True> if the invocant is a path that exists and is executable,
 readable, and writable. The method will L«C<fail>|/routine/fail» with
 C<X::IO::DoesNotExist> if the path points to a non-existent filesystem entity.
 
-TIP: use L«smartmatch with Pairs|/type/Pair#method_ACCEPTS» to perform multiple
-file tests.
-
 =head2 method z
 
 Defined as:
 
     method z(--> Bool:D)
 
-Returns C<True> if the invocant is a path that exists and has size of C<0>.
-May be called on paths that are directories, in
-which case the reported file size (and thus the result of this method)
-is dependent on the operating system. The method will L«C<fail>|/routine/fail»
-with C<X::IO::DoesNotExist> if the path points to a non-existent filesystem
-entity.
-
-TIP: use L«smartmatch with Pairs|/type/Pair#method_ACCEPTS» to perform multiple
-file tests.
+Returns C<True> if the invocant is a path that exists and has size of C<0>. May
+be called on paths that are directories, in which case the reported file size
+(and thus the result of this method) is dependent on the operating system. The
+method will L«C<fail>|/routine/fail» with C<X::IO::DoesNotExist> if the path
+points to a non-existent filesystem entity.
 
 =head2 method sibling
 
@@ -757,19 +749,19 @@ Defined as:
 
 Opens the invocant and returns its L«words|/type/IO::Handle#routine_words».
 
-The behaviour is equivalent to L<opening|/routine/open> the file specified by
+The behavior is equivalent to L<opening|/routine/open> the file specified by
 the invocant, forwarding the C<:$chomp>, C<:$enc>, and C<:$nl-in> arguments to
 L«C<IO::Handle.open>|/type/IO::Handle#routine_open», then calling
 L«C<IO::Handle.words>|/type/IO::Handle#routine_words» on that handle, forwarding
 any of the remaining arguments to that method, and returning the resultant
-L<Seq>.
+L<Seq|/type/Seq>.
 
-B<NOTE:> words are lazily read.
-The handle used under the hood is not closed until the returned L<Seq> is
-L<fully reified|/language/glossary#index-entry-Reify>, and this could lead
-to leaking open filehandles. It is possible to avoid leaking open filehandles
-using the L«C<$limit> argument|/type/IO::Handle#routine_words» to cut down
-the C<Seq> of words to be generated.
+B<NOTE:> words are lazily read. The handle used under the hood is not closed
+until the returned L<Seq|/type/Seq> is
+L<fully reified|/language/glossary#index-entry-Reify>, and this could lead to
+leaking open filehandles. It is possible to avoid leaking open filehandles using
+the L«C<$limit> argument|/type/IO::Handle#routine_words» to cut down the C<Seq>
+of words to be generated.
 
 =for code
 my %dict := bag 'my-file.txt'.IO.words;
@@ -783,15 +775,15 @@ Defined as:
 
 Opens the invocant and returns its L«lines|/type/IO::Handle#routine_lines».
 
-The behaviour is equivalent to L<opening|/routine/open> the file specified by
+The behavior is equivalent to L<opening|/routine/open> the file specified by
 the invocant, forwarding the C<:$chomp>, C<:$enc>, and C<:$nl-in> arguments to
 L«C<IO::Handle.open>|/type/IO::Handle#routine_open», then calling
 L«C<IO::Handle.lines>|/type/IO::Handle#routine_lines» on that handle, forwarding
 any of the remaining arguments to that method, and returning the resultant
-L<Seq>.
+L<Seq|/type/Seq>.
 
 B<NOTE:> the lines are ready lazily and the handle used under the hood won't
-get closed until the returned L<Seq> is
+get closed until the returned L<Seq|/type/Seq> is
 L<fully reified|/language/glossary#index-entry-Reify>, so ensure it is,
 or you'll be leaking open filehandles. (TIP: use the
 L«C<$limit> argument|/type/IO::Handle#routine_lines»)
@@ -809,9 +801,10 @@ Defined as:
 
     multi method slurp(IO::Path:D: :$bin, :$enc)
 
-Read all of the file's content and return it as either L<Buf>, if C<:$bin>
-is C<True>, or if not, as L<Str> decoded with C<:$enc> encoding, which defaults
-to C<utf8>. See L«C<&open>|/routine/open» for valid values for C<:$enc>.
+Read all of the file's content and return it as either L<Buf|/type/Buf>, if
+C<:$bin> is C<True>, or if not, as L<Str|/type/Str> decoded with C<:$enc>
+encoding, which defaults to C<utf8>. File will be closed afterwards. See
+L«C<&open>|/routine/open» for valid values for C<:$enc>.
 
 =head2 method spurt
 
@@ -819,10 +812,10 @@ Defined as:
 
     method spurt(IO::Path:D: $data, :$enc, :$append, :$createonly)
 
-Opens the file path for writing, and writes all of the C<$data> into it.
-Will L«C<fail>|/routine/fail» if it cannot succeed for any reason.
-The C<$data> can be any L«C<Cool>|/type/Cool» type or any L«C<Blob>|/type/Blob»
-type. Arguments are as follows:
+Opens the file path for writing, and writes all of the C<$data> into it. File
+will be closed, afterwards. Will L«C<fail>|/routine/fail» if it cannot succeed
+for any reason. The C<$data> can be any L«C<Cool>|/type/Cool» type or any
+L«C<Blob>|/type/Blob» type. Arguments are as follows:
 
 =item C<:$enc> — character encoding of the data. Takes same values as C<:$enc>
 in L«C<IO::Handle.open>|/routine/open». Defaults to C<utf8>. Ignored if C<$data>
@@ -862,9 +855,9 @@ Creates a new directory, including its parent directories, as needed (similar to
 That is, C<mkdir "foo/bar/ber/meow"> will create C<foo>, C<foo/bar>, and C<foo/bar/ber>
 directories as well if they do not exist.
 
-Returns the L<IO::Path> object pointing to
+Returns the L<IO::Path|/type/IO::Path> object pointing to
 the newly created directory on success;
-L<fails|/routine/fail> with L<X::IO::Mkdir> if directory cannot be created.
+L<fails|/routine/fail> with L<X::IO::Mkdir|/type/X::IO::Mkdir> if directory cannot be created.
 
 See also L«C<mode>|/routine/mode» for explanation and
 valid values for C<$mode>.
@@ -877,7 +870,7 @@ Defined as:
     method rmdir(IO::Path:D: --> True)
 
 Remove the invocant, or in sub form, all of the provided directories in the
-given list, which can contain any L<Cool> object. Only works on empty
+given list, which can contain any L<Cool|/type/Cool> object. Only works on empty
 directories.
 
 Method form returns C<True> on success and throws an exception of type
@@ -895,7 +888,7 @@ Defined as:
 
 Changes the POSIX permissions of a file or directory to C<$mode>.
 Returns C<True> on success; on failure,
-L<fails|/routine/fail> with L<X::IO::Chmod>.
+L<fails|/routine/fail> with L<X::IO::Chmod|/type/X::IO::Chmod>.
 
 The mode is expected as an integer following the L<standard numeric notation|https://en.wikipedia.org/wiki/File_system_permissions#Numeric_notation>, and is
 best written as an octal number:
@@ -920,7 +913,7 @@ Defined as:
     sub    rename(IO() $from, IO() $to, :$createonly = False --> Bool:D)
 
 Renames a file or directory. Returns C<True> on success; L<fails|/routine/fail>
-with L<X::IO::Rename> if C<:$createonly> is C<True> and the C<$to> path already
+with L<X::IO::Rename|/type/X::IO::Rename> if C<:$createonly> is C<True> and the C<$to> path already
 exists or if the operation failed for some other reason.
 
 B<Note:> some renames will always fail, such as when the new name is on a
@@ -934,7 +927,7 @@ Defined as:
     sub    copy(IO() $from, IO() $to, :$createonly --> Bool:D)
 
 Copies a file. Returns C<True> on success; L<fails|/routine/fail>
-with L<X::IO::Copy> if C<:$createonly> is C<True> and the C<$to> path already
+with L<X::IO::Copy|/type/X::IO::Copy> if C<:$createonly> is C<True> and the C<$to> path already
 exists or if the operation failed for some other reason, such as when
 C<$to> and C<$from> are the same file.
 
@@ -947,7 +940,7 @@ Defined as:
 
 Copies a file and then removes the original. If removal fails, it's possible
 to end up with two copies of the file. Returns C<True> on success;
-L<fails|/routine/fail> with L<X::IO::Move> if C<:$createonly> is C<True> and
+L<fails|/routine/fail> with L<X::IO::Move|/type/X::IO::Move> if C<:$createonly> is C<True> and
 the C<$to> path already exists or if the operation failed for some other reason,
 such as when C<$to> and C<$from> are the same file.
 
@@ -960,7 +953,7 @@ Defined as:
 
     method Numeric(IO::Path:D: --> Numeric:D)
 
-Coerces L«C<.basename>|/routine/basename» to L<Numeric>. L<Fails|/routine/fail>
+Coerces L«C<.basename>|/routine/basename» to L<Numeric|/type/Numeric>. L<Fails|/routine/fail>
 with C<X::Str::Numeric> if base name is not numerical.
 
 =head2 method Int
@@ -969,7 +962,7 @@ Defined as:
 
     method Int(IO::Path:D: --> Int:D)
 
-Coerces L«C<.basename>|/routine/basename» to L<Int>. L<Fails|/routine/fail>
+Coerces L«C<.basename>|/routine/basename» to L<Int|/type/Int>. L<Fails|/routine/fail>
 with C<X::Str::Numeric> if base name is not numerical.
 
 X<|symlink (sub)>
@@ -983,7 +976,7 @@ Defined as:
 
 Create a new I<symbolic> link C<$link> to existing C<$target>.
 Returns C<True> on success; L<fails|/routine/fail> with
-L<X::IO::Symlink> if the symbolic link could not be created. If C<$target>
+L<X::IO::Symlink|/type/X::IO::Symlink> if the symbolic link could not be created. If C<$target>
 does not exist, creates a dangling symbolic link.
 To create a hard link, see L«C<link>|/routine/link».
 
@@ -1001,7 +994,7 @@ Defined as:
 
 Create a new I<hard> link C<$link> to existing C<$target>.
 Returns C<True> on success; L<fails|/routine/fail> with
-L<X::IO::Link> if the hard link could not be created.
+L<X::IO::Link|/type/X::IO::Link> if the hard link could not be created.
 To create a symbolic link, see L«C<symlink>|/routine/symlink».
 
 =head2 routine unlink
@@ -1012,7 +1005,7 @@ Defined as:
     sub    unlink(*@filenames --> List:D)
 
 Delete all specified ordinary files, links, or symbolic links for which there
-are privileges to do so. See L<rmdir> to delete directories.
+are privileges to do so. See L<rmdir|/routine/rmdir> to delete directories.
 
 The subroutine form returns the names of all the files in the list, excluding
 those for which the filesystem raised some error; since trying to delete a file
@@ -1020,7 +1013,7 @@ that does not exist does not raise any error at that level, this list will
 include the names of the files in the list that do not exist.
 
 The method form returns C<True> on success, or L<fails|/routine/fail>
-with L<X::IO::Unlink> if the operation could not be completed. If the file to be
+with L<X::IO::Unlink|/type/X::IO::Unlink> if the operation could not be completed. If the file to be
 deleted does not exist, the routine treats it as success.
 
 =begin code
@@ -1064,7 +1057,7 @@ on Operating Systems where these are available:
 =head2 method modified
 
 Returns an L«C<Instant>|/type/Instant» object indicating when the content
-of the file was last modified. Compare with L<changed>.
+of the file was last modified. Compare with L<changed|/routine/changed>.
 
 =for code
 say "path/to/file".IO.modified;          # Instant:1424089165
@@ -1072,7 +1065,7 @@ say "path/to/file".IO.modified.DateTime; # 2015-02-16T12:18:50Z
 
 =head2 method accessed
 
-Return an L<Instant> object representing the timestamp when the file was
+Return an L<Instant|/type/Instant> object representing the timestamp when the file was
 last accessed. B<Note:> depending on how the filesystem was mounted, the
 last accessed time may not update on I<each access> to the file, but only
 on the first access after modifications.
@@ -1085,7 +1078,7 @@ say "path/to/file".IO.accessed.DateTime; # 2015-02-19T13:45:42Z
 
 Returns an L«C<Instant>|/type/Instant» object indicating the metadata of
 the file or directory was last changed (e.g. permissions, or files
-created/deleted in directory). Compare with L<modified>.
+created/deleted in directory). Compare with L<modified|/routine/modified>.
 
 =for code
 say "path/to/file".IO.changed;           # Instant:1424089165
@@ -1095,7 +1088,7 @@ say "path/to/file".IO.changed.DateTime;  # 2015-02-16T12:18:50Z
 
 =head2 method mode
 
-Return an L<IntStr> object representing the POSIX permissions of a file.  The
+Return an L<IntStr|/type/IntStr> object representing the POSIX permissions of a file.  The
 C<Str> part of the result is the octal representation of the file permission,
 like the form accepted by the C<chmod(1)> utility.
 

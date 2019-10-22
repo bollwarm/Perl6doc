@@ -1,4 +1,4 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("domain-specific")
 
 =TITLE class Supplier::Preserving
 
@@ -6,7 +6,7 @@
 
     class Supplier::Preserving is Supplier { }
 
-This is a factory for live L<Supply|/type/Supply> objects, which
+This is a factory for live L<Supply|/type/Supply>-type objects, and it
 provides the mechanism for emitting new values onto the supplies, whereby
 values are kept when no consumer has tapped into the C<Supply>. Any tapping
 will consume the already stored and future values.
@@ -30,7 +30,7 @@ Starting a preserving C<Supply> and consuming its values after it is C<done>:
 
 Will output:
 
-=for code :skip-test
+=for code :lang<output>
 done after 0.0638467s
 0
 1

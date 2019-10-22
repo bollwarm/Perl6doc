@@ -1,8 +1,8 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("composite")
 
 =TITLE class NFKD
 
-=SUBTITLE Codepoint-String in Normal Form KD (Compatibility Decomposed)
+=SUBTITLE Codepoint string in Normal Form KD (compatibility decomposed)
 
     class NFKD is Uni {}
 

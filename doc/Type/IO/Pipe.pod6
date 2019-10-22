@@ -1,4 +1,4 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("domain-specific")
 
 =TITLE class IO::Pipe
 
@@ -21,7 +21,7 @@ Defined as:
 
     method close(IO::Pipe: --> Proc:D)
 
-Closes the pipe and returns L<Proc> object from which the pipe originates.
+Closes the pipe and returns L<Proc|/type/Proc> object from which the pipe originates.
 
 =head2 method IO
 
@@ -29,7 +29,7 @@ Defined as:
 
     method IO(IO::Pipe: --> IO::Path:U)
 
-Returns an L<IO::Path> type object.
+Returns an L<IO::Path|/type/IO::Path> type object.
 
 =head2 method path
 
@@ -37,7 +37,7 @@ Defined as:
 
     method path(IO::Pipe: --> IO::Path:U)
 
-Returns an L<IO::Path> type object.
+Returns an L<IO::Path|/type/IO::Path> type object.
 
 =head2 method proc
 
@@ -45,6 +45,6 @@ Defined as:
 
     method proc(IO::Pipe: --> Proc:D)
 
-Returns the L<Proc> object from which the pipe originates.
+Returns the L<Proc|/type/Proc> object from which the pipe originates.
 
 =end pod

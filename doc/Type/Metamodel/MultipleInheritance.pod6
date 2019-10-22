@@ -1,10 +1,10 @@
-=begin pod
+=begin pod :kind("Type") :subkind("role") :category("metamodel")
 
 =TITLE role Metamodel::MultipleInheritance
 
 =SUBTITLE Metaobject that supports multiple inheritance
 
-    role Metamodel::MultipleInheritance { ... }
+    role Metamodel::MultipleInheritance {}
 
 Classes, roles and grammars can have parent classes, that is, classes to which
 method lookups fall back to, and to whose type the child class conforms to.
@@ -32,14 +32,15 @@ parent type is added as a hidden parent.
 
 C<$parent> must be a fully
 L<composed|/language/mop#Composition_time_and_static_reasoning> typed.
-Otherwise an exception of type L<X::Inheritance::NotComposed> is thrown.
+Otherwise an exception of type L<X::Inheritance::NotComposed|/type/X::Inheritance::NotComposed>
+is thrown.
 
 =head2 method parents
 
     method parents(Metamodel::MultipleInheritance:D: $obj, :$all, :$tree)
 
-Returns the list of parent classes. By default it stops at L<Cool>, L<Any> or
-L<Mu>, which you can suppress by supplying the C<:all> adverb. With C<:tree>,
+Returns the list of parent classes. By default it stops at L<Cool|/type/Cool>, L<Any|/type/Any> or
+L<Mu|/type/Mu>, which you can suppress by supplying the C<:all> adverb. With C<:tree>,
 a nested list is returned.
 
     class D { };
@@ -63,7 +64,8 @@ Returns a list of all hidden parent classes.
 
     method hidden(Metamodel::MultipleInheritance:D: $obj)
 
-Returns a true value if (and only if) the class is marked C<is hidden>.
+Returns a true value if (and only if) the class is marked with the trait C<is
+hidden>.
 
 =head2 method set_hidden
 

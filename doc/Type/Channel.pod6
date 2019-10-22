@@ -1,4 +1,4 @@
-=begin pod
+=begin pod :kind("Type") :subkind("class") :category("domain-specific")
 
 =TITLE class Channel
 
@@ -6,11 +6,11 @@
 
     class Channel {}
 
-A C<Channel> is a thread-safe queue that helps you to send a series of objects from
-one or more producers to one or more consumers.  Each object will arrive at only
-one such consumer, selected by the scheduler.  If there is only one consumer
-and one producer, order of objects is guaranteed to be preserved.  Sending on a
-C<Channel> is non-blocking.
+A C<Channel> is a thread-safe queue that helps you to send a series of objects
+from one or more producers to one or more consumers.  Each object will arrive at
+only one such consumer, selected by the scheduler.  If there is only one
+consumer and one producer, the order of objects is guaranteed to be preserved.
+Sending on a C<Channel> is non-blocking.
 
     my $c = Channel.new;
     await (^10).map: {
@@ -34,8 +34,8 @@ Defined as:
     method send(Channel:D: \item)
 
 Enqueues an item into the C<Channel>. Throws an exception of type
-L<X::Channel::SendOnClosed> if the channel has been closed already.
-This call will B<not> block waiting for a consumer to take the object.
+L<X::Channel::SendOnClosed|/type/X::Channel::SendOnClosed> if the channel has been
+closed already. This call will B<not> block waiting for a consumer to take the object.
 There is no set limit on the number of items that may be queued, so
 care should be taken to prevent runaway queueing.
 
@@ -55,9 +55,9 @@ Receives and removes an item from the channel. It blocks if no item is
 present, waiting for a C<send> from another thread.
 
 Throws an exception of
-type L<X::Channel::ReceiveOnClosed> if the channel has been closed, and the
-last item has been removed already, or if C<close> is called while C<receive>
-is waiting for an item to arrive.
+type L<X::Channel::ReceiveOnClosed|/type/X::Channel::ReceiveOnClosed> if the channel
+has been closed, and the last item has been removed already, or if C<close> is called
+while C<receive> is waiting for an item to arrive.
 
 If the channel has been marked as erratic with method C<fail>, and the last
 item has been removed, throws the argument that was given to C<fail> as an
@@ -97,18 +97,20 @@ Defined as:
     method close(Channel:D:)
 
 Close the C<Channel>, normally.  This makes subsequent C<send> calls die with
-L<X::Channel::SendOnClosed>.  Subsequent calls of C<.receive> may still drain
-any remaining items that were previously sent, but if the queue is empty, will
-throw an L<X::Channel::ReceiveOnClosed> exception.  A C<Seq> produced by an
-C<@()> or by the C<.list> method will not terminate until this has been done.
-A L<whenever|/language/concurrency#index-entry-whenever>-block will also
+L<X::Channel::SendOnClosed|/type/X::Channel::SendOnClosed>.  Subsequent calls of
+C<.receive> may still drain any remaining items that were previously sent, but if
+the queue is empty, will throw an L<X::Channel::ReceiveOnClosed|/type/X::Channel::ReceiveOnClosed>
+exception.  Since you can produce a C<Seq> from a Channel by contextualizing to array with C<@()>
+or by calling the C<.list> method, these methods will not terminate until the channel has been
+closed. A L<whenever|/language/concurrency#index-entry-whenever>-block will also
 terminate properly on a closed channel.
 
-    my $c = Channel.new;
-    $c.close;
-    $c.send(1);
-    CATCH { default { put .^name, ': ', .Str } };
-    # OUTPUT: «X::Channel::SendOnClosed: Cannot send a message on a closed channel␤»
+=for code
+my $c = Channel.new;
+$c.close;
+$c.send(1);
+CATCH { default { put .^name, ': ', .Str } };
+# OUTPUT: «X::Channel::SendOnClosed: Cannot send a message on a closed channel␤»
 
 Please note that any exception thrown may prevent C<.close> from being called,
 this may hang the receiving thread. Use a L<LEAVE|/language/phasers#LEAVE>
@@ -120,9 +122,9 @@ Defined as:
 
     method list(Channel:D: --> List:D)
 
-Returns a list based on the C<Seq> which will iterate items in the queue and remove each item
-from it as it iterates. This can only terminate once the C<close> method
-has been called.
+Returns a list based on the C<Seq> which will iterate items in the queue and
+remove each item from it as it iterates. This can only terminate once the
+C<close> method has been called.
 
     my $c = Channel.new; $c.send(1); $c.send(2);
     $c.close;
@@ -174,8 +176,8 @@ Defined as:
 
     method Supply(Channel:D:)
 
-This returns an C<on-demand> L<Supply> that emits a value for every value
-received on the Channel. C<done> will be called on the C<Supply> when the L<Channel>
+This returns an C<on-demand> L<Supply|/type/Supply> that emits a value for every value
+received on the Channel. C<done> will be called on the C<Supply> when the L<Channel|/type/Channel>
 is closed.
 
     my $c = Channel.new;
@@ -203,6 +205,8 @@ L<promises|/type/Promise>.
     my $c = Channel.new;
     Promise.in(1).then({$c.send(1)});
     say await $c;
+
+Since 6.d, it no longer blocks a thread while waiting.
 
 =end pod
 

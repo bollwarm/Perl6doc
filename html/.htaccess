@@ -1,4 +1,7 @@
 RewriteEngine On
+RewriteLog "/tmp/rewrite.log"
+RewriteLogLevel 3
+
 RewriteCond %{HTTPS} off
 RewriteCond %{REQUEST_URI} !^/\.well-known/
 RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [R=permanent,L]
@@ -21,7 +24,7 @@ RewriteRule          ^(/?type/.*/[^/]*?)\$COLON([^/\$COLON]*)$       $1:$2 [R=30
 
 RewriteRule       ^(/?routine/.*/[^/]*?)([^/]*?%5E[^/]*)$ $1\$CIRCUMFLEX_ACCENT$2 [N]
 RewriteRule       ^(/?routine/.*/[^/]*?)%5E([^/%5E]*)$       $1\$CIRCUMFLEX_ACCENT$2 [R=301]
-RewriteRule ^type/int(8|16|32|64)?(.html)?$ https://docs.perl6.org/language/nativecall#Passing_and_Returning_Values [R=301]
+RewriteRule ^type/int(8|16|32|64)?(.html)?$ https://docs.perl6.org/language/nativecall#Passing_and_returning_values [NE,R=301]
 RewriteRule ^language/unicode_texas(.html)?$ https://docs.perl6.org/language/unicode_ascii [R=301]
 
 RewriteRule ^type/(.*?)\$REVERSE_SOLIDUS(.*) /type/$1%5c$2 [N]

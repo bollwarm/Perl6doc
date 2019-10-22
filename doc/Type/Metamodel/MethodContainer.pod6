@@ -1,10 +1,10 @@
-=begin pod
+=begin pod :kind("Type") :subkind("role") :category("metamodel")
 
 =TITLE role Metamodel::MethodContainer
 
 =SUBTITLE Metaobject that supports storing and introspecting methods
 
-    class Metamodel::MethodContainer {}
+    role Metamodel::MethodContainer {}
 
 roles, classes, grammars and enums can contain methods. This role implements
 the API around storing and introspecting them.
@@ -22,7 +22,7 @@ the API around storing and introspecting them.
 
     method add_method(Metamodel::MethodContainer: $obj, $name, $code)
 
-Adds a method to the meta class, to be called with name C<$name>.
+Adds a method to the metaclass, to be called with name C<$name>.
 This should only be done before a type is composed.
 
 =head2 method methods
@@ -31,7 +31,7 @@ This should only be done before a type is composed.
 
 Returns a list of public methods available on the class (which includes
 methods from superclasses and roles). By default this stops at the classes
-L<Cool>, L<Any> or L<Mu>; to really get all methods, use the C<:all> adverb.
+L<Cool|/type/Cool>, L<Any|/type/Any> or L<Mu|/type/Mu>; to really get all methods, use the C<:all> adverb.
 If C<:local> is set, only methods declared directly in the class are returned.
 
     class A {
@@ -41,11 +41,11 @@ If C<:local> is set, only methods declared directly in the class are returned.
     say A.^methods();                   # x
     say A.^methods(:all);               # x infinite defined ...
 
-The returned list contains objects of type L<Method>, which you can
+The returned list contains objects of type L<Method|/type/Method>, which you can
 use to introspect their signatures and call them.
 
 Some introspection method-look-alikes like L<C<WHAT>|/language/mop#WHAT> will
-not show up, although they are present in any Perl 6 object. They are handled
+not show up, although they are present in any Raku object. They are handled
 at the grammar level and will likely remain so for bootstrap reasons.
 
 =head2 method method_table
@@ -70,6 +70,11 @@ instead.
     say 2.5.^lookup("sqrt").perl:      # OUTPUT: «method sqrt (Rat $: *%_) ...␤»
     say Str.^lookup("BUILD").perl;     # OUTPUT: «submethod BUILD (Str $: :$value = "", *%_ --> Nil) ...␤»
     say Int.^lookup("does-not-exist"); # OUTPUT: «(Mu)␤»
+
+The difference between C<find_method> and C<lookup> are that C<find_method> will
+use a default candidate for parametric roles, whereas C<lookup> throws an exception
+in this case, and that C<find_method> honors C<FALLBACK> methods, which C<lookup>
+does not.
 
 =begin comment
 
